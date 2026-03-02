@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>GenesysExtensionAudit.Core</AssemblyName>
+    <RootNamespace>GenesysExtensionAudit</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Include the Domain/Services/AuditEngine.cs from the sibling Domain folder.
+    That file defines the core audit cross-reference engine.
+    TODO: migrate this file into Core once its namespace is updated.
+  -->
+  <ItemGroup>
+    <Compile Include="..\GenesysExtensionAudit.Domain\Services\AuditEngine.cs" Link="Domain\Services\AuditEngine.cs" />
+  </ItemGroup>
+
+</Project>

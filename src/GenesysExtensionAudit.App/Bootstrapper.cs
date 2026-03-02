@@ -1,0 +1,119 @@
+using GenesysExtensionAudit.Application;
+using GenesysExtensionAudit.Domain.Paging;
+using GenesysExtensionAudit.Domain.Services;
+using GenesysExtensionAudit.Infrastructure.Application;
+using GenesysExtensionAudit.Infrastructure.Domain.Services;
+using GenesysExtensionAudit.Infrastructure.Genesys.Clients;
+using GenesysExtensionAudit.Infrastructure.Genesys.Pagination;
+using GenesysExtensionAudit.Infrastructure.Http;
+using GenesysExtensionAudit.ViewModels;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+namespace GenesysExtensionAudit;
+
+/// <summary>
+/// Central DI/hosting bootstrap for the WPF app.
+/// Keeps App.xaml.cs minimal and makes services testable.
+/// </summary>
+public static class Bootstrapper
+{
+    private static IHost? _host;
+
+    public static IServiceProvider Services
+        => _host?.Services ?? throw new InvalidOperationException("Host not initialized. Call Bootstrapper.Initialize().");
+
+    public static void Initialize()
+    {
+        if (_host is not null) return;
+
+        _host = Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration(cfg =>
+            {
+                cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            })
+            .ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddConsole();
+            })
+            .ConfigureServices((ctx, services) =>
+            {
+                // Options
+                services.Configure<GenesysRegionOptions>(ctx.Configuration.GetSection("Genesys"));
+                services.Configure<GenesysOAuthOptions>(ctx.Configuration.GetSection("GenesysOAuth"));
+
+                // Core domain services
+                services.AddSingleton<IExtensionNormalizer, ExtensionNormalizer>();
+                services.AddSingleton<IAuditAnalyzer, AuditAnalyzer>();
+                services.AddSingleton<IAuditRunner, AuditRunner>();
+
+                // HTTP handlers (must be transient for AddHttpMessageHandler)
+                services.AddTransient<OAuthBearerHandler>();
+                services.AddTransient<HttpLoggingHandler>();
+                services.AddTransient<RateLimitHandler>();
+
+                // Auth token provider (singleton — caches the token)
+                services.AddSingleton<ITokenProvider, TokenProvider>();
+
+                // Named HttpClient for the Genesys auth endpoint (used by TokenProvider)
+                services.AddHttpClient("GenesysAuth");
+
+                // Typed HTTP clients for the Genesys API (transient lifetime managed by IHttpClientFactory)
+                services.AddHttpClient<IGenesysUsersClient, GenesysUsersClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
+                services.AddHttpClient<IGenesysExtensionsClient, GenesysExtensionsClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
+                services.AddSingleton<IPaginator, Paginator>();
+
+                // Navigation / MVVM shell
+                services.AddSingleton<INavigationService, NavigationService>();
+
+                // ViewModels
+                services.AddSingleton<MainViewModel>();
+                services.AddTransient<RunAuditViewModel>();
+
+                // Shell window
+                services.AddSingleton<MainWindow>(sp =>
+                {
+                    var window = new MainWindow();
+                    window.DataContext = sp.GetRequiredService<MainViewModel>();
+                    return window;
+                });
+
+                // Seed navigation items
+                services.AddSingleton(sp =>
+                {
+                    var nav = sp.GetRequiredService<INavigationService>();
+                    nav.Register(
+                        key: "RunAudit",
+                        displayName: "Run Audit",
+                        factory: () => sp.GetRequiredService<RunAuditViewModel>());
+                    nav.Navigate("RunAudit");
+                    return nav;
+                });
+            })
+            .Build();
+    }
+
+    public static Task StartAsync()
+        => _host?.StartAsync() ?? Task.CompletedTask;
+
+    public static Task StopAsync()
+        => _host?.StopAsync() ?? Task.CompletedTask;
+
+    public static void Dispose()
+    {
+        _host?.Dispose();
+        _host = null;
+    }
+}

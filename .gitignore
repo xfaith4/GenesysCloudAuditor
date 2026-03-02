@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+*.log
+TestResults/
+logs/
+publish/
+*.msix
+*.appx
+secrets.json

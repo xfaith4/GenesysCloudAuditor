@@ -1,0 +1,221 @@
+<!-- File: src/GenesysExtensionAudit.App/Views/ResultsViews.xaml -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:vm="clr-namespace:GenesysExtensionAudit.ViewModels"
+                    xmlns:domain="clr-namespace:GenesysExtensionAudit.Domain.Services;assembly=GenesysExtensionAudit.Core">
+
+    <!--
+        Results views + grids for:
+          - DuplicatesByProfile
+          - ProfilesNotAssigned
+          - Summary
+
+        Notes:
+          * These views are designed to bind to typical MVVM properties:
+              DuplicatesByProfileItems : IEnumerable<AuditEngine.DuplicateProfileExtensionFinding>
+              ProfilesNotAssignedItems : IEnumerable<AuditEngine.ProfileExtensionNotAssignedFinding>
+              Report (or AuditReport)  : AuditEngine.AuditReport
+              SummaryItems             : IEnumerable<SummaryRow> (Key/Value)
+            If your ViewModels differ, adjust the bindings accordingly.
+    -->
+
+    <!-- Shared DataGrid style -->
+    <Style x:Key="ResultsDataGridStyle" TargetType="{x:Type DataGrid}">
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="AutoGenerateColumns" Value="False" />
+        <Setter Property="CanUserAddRows" Value="False" />
+        <Setter Property="CanUserDeleteRows" Value="False" />
+        <Setter Property="CanUserReorderColumns" Value="True" />
+        <Setter Property="CanUserResizeColumns" Value="True" />
+        <Setter Property="CanUserSortColumns" Value="True" />
+        <Setter Property="HeadersVisibility" Value="Column" />
+        <Setter Property="GridLinesVisibility" Value="All" />
+        <Setter Property="AlternatingRowBackground" Value="#0A000000" />
+        <Setter Property="RowBackground" Value="White" />
+        <Setter Property="BorderBrush" Value="#33000000" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Margin" Value="0,6,0,0" />
+    </Style>
+
+    <Style x:Key="ResultsCaptionTextStyle" TargetType="{x:Type TextBlock}">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+
+    <!-- ===========================================================
+         DuplicatesByProfile Results View
+         =========================================================== -->
+    <DataTemplate x:Key="DuplicatesByProfileResultsView">
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Style="{StaticResource ResultsCaptionTextStyle}"
+                       Text="Duplicates By Profile (Work Phone Extension)" />
+
+            <!-- Hierarchical list of findings. Each finding expands to show users. -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding DuplicatesByProfileItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#22000000" BorderThickness="1" Padding="8" Margin="0,0,0,10" Background="White">
+                                <DockPanel>
+                                    <Expander IsExpanded="False">
+                                        <Expander.Header>
+                                            <DockPanel LastChildFill="True">
+                                                <TextBlock Text="Extension: " FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding ExtensionKey}" FontWeight="SemiBold" />
+                                                <TextBlock Text="   " />
+                                                <TextBlock Foreground="#666" Text="Users: " />
+                                                <TextBlock Foreground="#666" Text="{Binding Users.Count}" />
+                                            </DockPanel>
+                                        </Expander.Header>
+
+                                        <DataGrid Style="{StaticResource ResultsDataGridStyle}"
+                                                  ItemsSource="{Binding Users}">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="User Name" Binding="{Binding UserName}" Width="2*" />
+                                                <DataGridTextColumn Header="User Id" Binding="{Binding UserId}" Width="2*" />
+                                                <DataGridTextColumn Header="State" Binding="{Binding State}" Width="*" />
+                                                <DataGridTextColumn Header="Extension (Raw)" Binding="{Binding ExtensionRaw}" Width="*" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Expander>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </DataTemplate>
+
+    <!-- ===========================================================
+         ProfilesNotAssigned Results View
+         =========================================================== -->
+    <DataTemplate x:Key="ProfilesNotAssignedResultsView">
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Style="{StaticResource ResultsCaptionTextStyle}"
+                       Text="Extensions On Profiles But Not Assigned" />
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding ProfilesNotAssignedItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#22000000" BorderThickness="1" Padding="8" Margin="0,0,0,10" Background="White">
+                                <Expander IsExpanded="False">
+                                    <Expander.Header>
+                                        <DockPanel LastChildFill="True">
+                                            <TextBlock Text="Extension: " FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding ExtensionKey}" FontWeight="SemiBold" />
+                                            <TextBlock Text="   " />
+                                            <TextBlock Foreground="#666" Text="Users: " />
+                                            <TextBlock Foreground="#666" Text="{Binding Users.Count}" />
+                                        </DockPanel>
+                                    </Expander.Header>
+
+                                    <DataGrid Style="{StaticResource ResultsDataGridStyle}"
+                                              ItemsSource="{Binding Users}">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="User Name" Binding="{Binding UserName}" Width="2*" />
+                                            <DataGridTextColumn Header="User Id" Binding="{Binding UserId}" Width="2*" />
+                                            <DataGridTextColumn Header="State" Binding="{Binding State}" Width="*" />
+                                            <DataGridTextColumn Header="Extension (Raw)" Binding="{Binding ExtensionRaw}" Width="*" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Expander>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </DataTemplate>
+
+    <!-- ===========================================================
+         Summary Results View
+         =========================================================== -->
+    <DataTemplate x:Key="SummaryResultsView">
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Style="{StaticResource ResultsCaptionTextStyle}"
+                       Text="Audit Summary" />
+
+            <!-- Preferred: bind to SummaryItems (Key/Value). -->
+            <DataGrid Grid.Row="1"
+                      Style="{StaticResource ResultsDataGridStyle}"
+                      ItemsSource="{Binding SummaryItems}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Metric" Binding="{Binding Key}" Width="2*" />
+                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Optional: show totals directly from Report if SummaryItems isn't used -->
+            <Border Grid.Row="2" BorderBrush="#22000000" BorderThickness="1" Padding="8" Margin="0,10,0,0" Background="White">
+                <StackPanel>
+                    <TextBlock FontWeight="SemiBold" Text="Totals" Margin="0,0,0,6" />
+                    <UniformGrid Columns="2">
+                        <TextBlock Foreground="#666" Text="Users Considered:" />
+                        <TextBlock Text="{Binding Report.TotalUsersConsidered}" />
+                        <TextBlock Foreground="#666" Text="Assignments Considered:" />
+                        <TextBlock Text="{Binding Report.TotalAssignmentsConsidered}" />
+                        <TextBlock Foreground="#666" Text="Duplicate Profile Extensions:" />
+                        <TextBlock Text="{Binding Report.DuplicateProfileExtensions.Count}" />
+                        <TextBlock Foreground="#666" Text="Profile Extensions Not Assigned:" />
+                        <TextBlock Text="{Binding Report.ProfileExtensionsNotAssigned.Count}" />
+                        <TextBlock Foreground="#666" Text="Invalid Profile Extensions:" />
+                        <TextBlock Text="{Binding Report.InvalidProfileExtensions.Count}" />
+                        <TextBlock Foreground="#666" Text="Invalid Assigned Extensions:" />
+                        <TextBlock Text="{Binding Report.InvalidAssignedExtensions.Count}" />
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Optional: invalids detail -->
+            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
+                <StackPanel>
+                    <TextBlock FontWeight="SemiBold" Text="Invalid Profile Extensions" />
+                    <DataGrid Style="{StaticResource ResultsDataGridStyle}"
+                              ItemsSource="{Binding Report.InvalidProfileExtensions}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="User Name" Binding="{Binding UserName}" Width="2*" />
+                            <DataGridTextColumn Header="User Id" Binding="{Binding UserId}" Width="2*" />
+                            <DataGridTextColumn Header="State" Binding="{Binding State}" Width="*" />
+                            <DataGridTextColumn Header="Extension (Raw)" Binding="{Binding ExtensionRaw}" Width="*" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
+                            <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="3*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock FontWeight="SemiBold" Text="Invalid Assigned Extensions" Margin="0,14,0,0" />
+                    <DataGrid Style="{StaticResource ResultsDataGridStyle}"
+                              ItemsSource="{Binding Report.InvalidAssignedExtensions}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Assignment Id" Binding="{Binding AssignmentId}" Width="2*" />
+                            <DataGridTextColumn Header="Extension (Raw)" Binding="{Binding ExtensionRaw}" Width="*" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*" />
+                            <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="3*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </DataTemplate>
+
+</ResourceDictionary>

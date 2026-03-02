@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <AssemblyName>GenesysExtensionAudit</AssemblyName>
+    <RootNamespace>GenesysExtensionAudit</RootNamespace>
+
+    <!-- Enables `dotnet user-secrets` for this desktop project -->
+    <UserSecretsId>GenesysExtensionAudit.App-9b5d4d7f-4b3a-4b9f-9f6c-9d9e7e7f6a11</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GenesysExtensionAudit.Core\GenesysExtensionAudit.Core.csproj" />
+    <ProjectReference Include="..\GenesysExtensionAudit.Infrastructure\GenesysExtensionAudit.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
