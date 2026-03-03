@@ -25,4 +25,7 @@ public sealed class AuditOptions
     public bool RunAuditLogs { get; set; } = false;
     public int AuditLogLookbackHours { get; set; } = 1;
     public string[] AuditLogServiceNames { get; set; } = [];
+    public bool RunOperationalEventLogs { get; set; } = false;
+    public int OperationalEventLookbackDays { get; set; } = 7;
+    public bool RunOutboundEvents { get; set; } = false;
 }

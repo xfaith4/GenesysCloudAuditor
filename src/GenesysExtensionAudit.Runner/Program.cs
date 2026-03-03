@@ -122,6 +122,16 @@ static async Task<int> RunAsync(string[] args)
                     .AddHttpMessageHandler<HttpLoggingHandler>()
                     .AddHttpMessageHandler<RateLimitHandler>();
 
+                services.AddHttpClient<IGenesysOperationalEventsClient, GenesysOperationalEventsClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
+                services.AddHttpClient<IGenesysOutboundEventsClient, GenesysOutboundEventsClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
                 services.AddSingleton<IPaginator, Paginator>();
 
                 // ── Audit + reporting ─────────────────────────────────────────
@@ -264,7 +274,10 @@ static AuditRunOptions BuildRunOptionsFromSettings(
         RunDidAudit = auditOpts.RunDidAudit,
         RunAuditLogs = auditOpts.RunAuditLogs,
         AuditLogLookbackHours = Math.Max(1, auditOpts.AuditLogLookbackHours),
-        AuditLogServiceNames = auditOpts.AuditLogServiceNames ?? []
+        AuditLogServiceNames = auditOpts.AuditLogServiceNames ?? [],
+        RunOperationalEventLogs = auditOpts.RunOperationalEventLogs,
+        OperationalEventLookbackDays = Math.Max(1, auditOpts.OperationalEventLookbackDays),
+        RunOutboundEvents = auditOpts.RunOutboundEvents
     };
 }
 
@@ -291,7 +304,10 @@ static AuditRunOptions BuildRunOptionsFromProfile(ScheduledAuditProfile profile)
         RunDidAudit = profile.RunDidAudit,
         RunAuditLogs = profile.RunAuditLogs,
         AuditLogLookbackHours = Math.Max(1, profile.AuditLogLookbackHours),
-        AuditLogServiceNames = serviceNames
+        AuditLogServiceNames = serviceNames,
+        RunOperationalEventLogs = profile.RunOperationalEventLogs,
+        OperationalEventLookbackDays = Math.Max(1, profile.OperationalEventLookbackDays),
+        RunOutboundEvents = profile.RunOutboundEvents
     };
 }
 

@@ -41,6 +41,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private bool _runInactiveUserAudit = true;
     private bool _runDidAudit = true;
     private bool _runAuditLogs;
+    private bool _runOperationalEventLogs;
+    private int _operationalEventLookbackDays = 7;
+    private bool _runOutboundEvents;
     private bool _isLoadingAuditLogEntities;
     private bool _auditLogEntitiesLoaded;
     private string _selectedAuditLogEntity = AllCatalogEntitiesOption;
@@ -178,6 +181,32 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         }
     }
 
+    public bool RunOperationalEventLogs
+    {
+        get => _runOperationalEventLogs;
+        set
+        {
+            if (SetField(ref _runOperationalEventLogs, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public int OperationalEventLookbackDays
+    {
+        get => _operationalEventLookbackDays;
+        set => SetField(ref _operationalEventLookbackDays, Math.Max(1, value));
+    }
+
+    public bool RunOutboundEvents
+    {
+        get => _runOutboundEvents;
+        set
+        {
+            if (SetField(ref _runOutboundEvents, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
     public ObservableCollection<string> AuditLogEntities => _auditLogEntities;
 
     public string SelectedAuditLogEntity
@@ -200,7 +229,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
     public bool SelectAllAudits
     {
-        get => RunExtensionAudit && RunGroupAudit && RunQueueAudit && RunFlowAudit && RunInactiveUserAudit && RunDidAudit && RunAuditLogs;
+        get => RunExtensionAudit && RunGroupAudit && RunQueueAudit && RunFlowAudit && RunInactiveUserAudit && RunDidAudit && RunAuditLogs && RunOperationalEventLogs && RunOutboundEvents;
         set
         {
             RunExtensionAudit = value;
@@ -210,11 +239,13 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             RunInactiveUserAudit = value;
             RunDidAudit = value;
             RunAuditLogs = value;
+            RunOperationalEventLogs = value;
+            RunOutboundEvents = value;
         }
     }
 
     public bool HasAnyAuditSelected =>
-        RunExtensionAudit || RunGroupAudit || RunQueueAudit || RunFlowAudit || RunInactiveUserAudit || RunDidAudit || RunAuditLogs;
+        RunExtensionAudit || RunGroupAudit || RunQueueAudit || RunFlowAudit || RunInactiveUserAudit || RunDidAudit || RunAuditLogs || RunOperationalEventLogs || RunOutboundEvents;
 
     public string? LastExportPath
     {
@@ -336,7 +367,10 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
                 RunDidAudit = RunDidAudit,
                 RunAuditLogs = RunAuditLogs,
                 AuditLogLookbackHours = 1,
-                AuditLogServiceNames = GetSelectedAuditLogServiceNames()
+                AuditLogServiceNames = GetSelectedAuditLogServiceNames(),
+                RunOperationalEventLogs = RunOperationalEventLogs,
+                OperationalEventLookbackDays = OperationalEventLookbackDays,
+                RunOutboundEvents = RunOutboundEvents
             }, progress, ct).ConfigureAwait(true);
 
             _lastReport = report;
@@ -507,7 +541,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             ("Flows", report.Options.RunFlowAudit, report.FlowFindings.Count),
             ("Inactive Users", report.Options.RunInactiveUserAudit, report.InactiveUserFindings.Count),
             ("DIDs", report.Options.RunDidAudit, report.DidFindings.Count),
-            ("Audit Logs", report.Options.RunAuditLogs, report.AuditLogFindings.Count)
+            ("Audit Logs", report.Options.RunAuditLogs, report.AuditLogFindings.Count),
+            ("Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count),
+            ("OutboundEvents", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count)
         };
 
         foreach (var item in runFlags)

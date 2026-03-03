@@ -38,6 +38,8 @@ public sealed class ExcelReportService : IExcelReportService
         WriteExtPoolVsProfileSheet(wb, report);
         WriteDidMismatchSheet(wb, report);
         WriteAuditLogsSheet(wb, report);
+        WriteOperationalEventsSheet(wb, report);
+        WriteOutboundEventsSheet(wb, report);
         WriteEmptyGroupsSheet(wb, report);
         WriteEmptyQueuesSheet(wb, report);
         WriteStaleFlowsSheet(wb, report);
@@ -68,6 +70,8 @@ public sealed class ExcelReportService : IExcelReportService
             ("Inactive_Users", "Inactive Users (No Recent Login)", report.Options.RunInactiveUserAudit, report.InactiveUserFindings.Count, "Warning", $"Users with no OAuth login in {report.Options.InactiveUserThresholdDays}+ days"),
             ("DID_Mismatches", "DID Mismatches", report.Options.RunDidAudit, report.DidFindings.Count, "Warning", "DIDs unassigned, orphaned, or assigned to inactive users"),
             ("Audit_Logs", "Audit Logs Events", report.Options.RunAuditLogs, report.AuditLogFindings.Count, "Info", "Audit transaction events returned from Genesys audit logs query"),
+            ("Operational_Events", "Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count, "Info", $"Operational events from last {report.Options.OperationalEventLookbackDays} day(s)"),
+            ("Outbound_Events", "Outbound Events", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count, "Info", "Outbound event logs"),
         };
 
         var totalFindings = rows.Where(r => r.Item3).Sum(r => r.Item4);
@@ -234,6 +238,79 @@ public sealed class ExcelReportService : IExcelReportService
                 f.EntityType,
                 f.EntityName,
                 f.AuditId);
+            ApplyAltRow(ws, row, 8);
+            row++;
+        }
+
+        AdjustColumns(ws, 8);
+    }
+
+    private static void WriteOperationalEventsSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Operational_Events");
+        var findings = report.OperationalEventFindings;
+
+        string[] headers =
+        [
+            "Timestamp (UTC)", "Event Definition", "Event Definition ID", "Entity Name", "Entity ID",
+            "Current Value", "Previous Value", "Error Code", "Conversation ID"
+        ];
+
+        WriteSheetHeader(
+            ws,
+            $"Operational Events (last {report.Options.OperationalEventLookbackDays} day(s))",
+            report,
+            findings.Count,
+            headers);
+
+        var row = 4;
+        foreach (var f in findings)
+        {
+            WriteRow(
+                ws,
+                row,
+                f.TimestampUtc?.ToString("yyyy-MM-dd HH:mm:ss"),
+                f.EventDefinitionName,
+                f.EventDefinitionId,
+                f.EntityName,
+                f.EntityId,
+                f.CurrentValue,
+                f.PreviousValue,
+                f.ErrorCode,
+                f.ConversationId);
+            ApplyAltRow(ws, row, 9);
+            row++;
+        }
+
+        AdjustColumns(ws, 9);
+    }
+
+    private static void WriteOutboundEventsSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Outbound_Events");
+        var findings = report.OutboundEventFindings;
+
+        string[] headers =
+        [
+            "Timestamp (UTC)", "Name", "Event ID", "Category", "Level", "Code", "Message", "Correlation ID"
+        ];
+
+        WriteSheetHeader(ws, "Outbound Events", report, findings.Count, headers);
+
+        var row = 4;
+        foreach (var f in findings)
+        {
+            WriteRow(
+                ws,
+                row,
+                f.TimestampUtc?.ToString("yyyy-MM-dd HH:mm:ss"),
+                f.Name,
+                f.EventId,
+                f.Category,
+                f.Level,
+                f.Code,
+                f.Message,
+                f.CorrelationId);
             ApplyAltRow(ws, row, 8);
             row++;
         }

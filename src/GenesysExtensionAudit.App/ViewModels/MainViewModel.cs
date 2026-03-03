@@ -60,7 +60,13 @@ public partial class MainViewModel : ObservableObject
             "- DID numbers not found on any user profile\n\n" +
             "7. Audit Logs\n" +
             "- Service mapping -> submit query -> poll transaction -> fetch paged results\n" +
-            "- Exposes service/action/user/entity activity rows in the exported workbook";
+            "- Exposes service/action/user/entity activity rows in the exported workbook\n\n" +
+            "8. Operational Event Logs\n" +
+            "- Queries /api/v2/usage/events/query\n" +
+            "- Defaults to last 7 days; exported with event/entity/value context\n\n" +
+            "9. OutboundEvents\n" +
+            "- Queries /api/v2/outbound/events\n" +
+            "- Exported with category, level, code/message, and correlation details";
 
         MessageBox.Show(
             helpText,

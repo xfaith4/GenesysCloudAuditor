@@ -1,6 +1,6 @@
 # Genesys Cloud Auditor — WPF Desktop App (.NET 8)
 
-Audits **Genesys Cloud** configuration and activity data (extensions, groups, queues, flows, inactive users, DIDs, and audit logs) in a navigable WPF UI with Excel export.
+Audits **Genesys Cloud** configuration and activity data (extensions, groups, queues, flows, inactive users, DIDs, audit logs, operational event logs, and outbound events) in a navigable WPF UI with Excel export.
 
 ---
 
@@ -311,6 +311,8 @@ Workbook output includes:
 - `Inactive_Users`
 - `DID_Mismatches`
 - `Audit_Logs` (when Audit Logs path is selected)
+- `Operational_Events` (when Operational Event Logs path is selected)
+- `Outbound_Events` (when OutboundEvents path is selected)
 
 ---
 

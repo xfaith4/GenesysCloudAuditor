@@ -31,10 +31,14 @@ public sealed class ScheduledAuditDefinition
     public bool RunAuditLogs { get; set; }
     public int AuditLogLookbackHours { get; set; } = 1;
     public string? AuditLogServiceName { get; set; }
+    public bool RunOperationalEventLogs { get; set; }
+    public int OperationalEventLookbackDays { get; set; } = 7;
+    public bool RunOutboundEvents { get; set; }
 
     public bool HasAnyAuditSelected =>
         RunExtensionAudit || RunGroupAudit || RunQueueAudit || RunFlowAudit ||
-        RunInactiveUserAudit || RunDidAudit || RunAuditLogs;
+        RunInactiveUserAudit || RunDidAudit || RunAuditLogs ||
+        RunOperationalEventLogs || RunOutboundEvents;
 }
 
 public sealed class ScheduledTaskInfo

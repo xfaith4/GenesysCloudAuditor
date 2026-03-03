@@ -25,6 +25,9 @@ public sealed class ScheduledAuditProfile
     public bool RunDidAudit { get; set; } = true;
     public bool RunAuditLogs { get; set; } = false;
     public int AuditLogLookbackHours { get; set; } = 1;
+    public bool RunOperationalEventLogs { get; set; } = false;
+    public int OperationalEventLookbackDays { get; set; } = 7;
+    public bool RunOutboundEvents { get; set; } = false;
 
     /// <summary>
     /// Optional single service name selected in the scheduler UI.
@@ -35,5 +38,6 @@ public sealed class ScheduledAuditProfile
     [JsonIgnore]
     public bool HasAnyAuditSelected =>
         RunExtensionAudit || RunGroupAudit || RunQueueAudit || RunFlowAudit ||
-        RunInactiveUserAudit || RunDidAudit || RunAuditLogs;
+        RunInactiveUserAudit || RunDidAudit || RunAuditLogs ||
+        RunOperationalEventLogs || RunOutboundEvents;
 }

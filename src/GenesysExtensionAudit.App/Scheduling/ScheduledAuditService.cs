@@ -53,6 +53,9 @@ public sealed class ScheduledAuditService : IScheduledAuditService
             RunDidAudit = definition.RunDidAudit,
             RunAuditLogs = definition.RunAuditLogs,
             AuditLogLookbackHours = Math.Max(1, definition.AuditLogLookbackHours),
+            RunOperationalEventLogs = definition.RunOperationalEventLogs,
+            OperationalEventLookbackDays = Math.Max(1, definition.OperationalEventLookbackDays),
+            RunOutboundEvents = definition.RunOutboundEvents,
             AuditLogServiceName = string.IsNullOrWhiteSpace(definition.AuditLogServiceName)
                 ? null
                 : definition.AuditLogServiceName!.Trim()
@@ -276,6 +279,8 @@ public sealed class ScheduledAuditService : IScheduledAuditService
         if (definition.RunInactiveUserAudit) enabledAudits.Add("InactiveUsers");
         if (definition.RunDidAudit) enabledAudits.Add("DIDs");
         if (definition.RunAuditLogs) enabledAudits.Add("AuditLogs");
+        if (definition.RunOperationalEventLogs) enabledAudits.Add("OperationalEvents");
+        if (definition.RunOutboundEvents) enabledAudits.Add("OutboundEvents");
 
         return args.ToArray();
     }

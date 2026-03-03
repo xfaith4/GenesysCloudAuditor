@@ -28,6 +28,8 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="8" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="8" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0"
@@ -48,6 +50,17 @@
                               IsChecked="{Binding IncludeInactive}"
                               VerticalAlignment="Center"
                               Content="Include users with state = inactive" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0"
+                               Text="Operational Lookback Days"
+                               VerticalAlignment="Center" />
+                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Vertical">
+                        <TextBox Text="{Binding OperationalEventLookbackDays, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="100"
+                                 HorizontalAlignment="Left" />
+                        <TextBlock Text="Used by Operational Event Logs. Default: 7 days."
+                                   Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                    </StackPanel>
                 </Grid>
             </GroupBox>
 
@@ -80,6 +93,12 @@
                                   Margin="0,0,18,8" />
                         <CheckBox Content="Audit Logs"
                                   IsChecked="{Binding RunAuditLogs}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="Operational Event Logs"
+                                  IsChecked="{Binding RunOperationalEventLogs}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="OutboundEvents"
+                                  IsChecked="{Binding RunOutboundEvents}"
                                   Margin="0,0,18,8" />
                     </WrapPanel>
 

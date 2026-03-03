@@ -43,6 +43,9 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
     private bool _runDidAudit = true;
     private bool _runAuditLogs;
     private int _auditLogLookbackHours = 1;
+    private bool _runOperationalEventLogs;
+    private int _operationalEventLookbackDays = 7;
+    private bool _runOutboundEvents;
     private string _selectedAuditLogEntity = AllCatalogEntitiesOption;
     private bool _isLoadingAuditLogEntities;
     private bool _isBusy;
@@ -164,6 +167,16 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
         set => SetField(ref _auditLogLookbackHours, Math.Max(1, value));
     }
 
+    public bool RunOperationalEventLogs { get => _runOperationalEventLogs; set => SetField(ref _runOperationalEventLogs, value); }
+
+    public int OperationalEventLookbackDays
+    {
+        get => _operationalEventLookbackDays;
+        set => SetField(ref _operationalEventLookbackDays, Math.Max(1, value));
+    }
+
+    public bool RunOutboundEvents { get => _runOutboundEvents; set => SetField(ref _runOutboundEvents, value); }
+
     public ObservableCollection<string> AuditLogEntities => _auditLogEntities;
 
     public string SelectedAuditLogEntity
@@ -279,6 +292,9 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
                 RunDidAudit = RunDidAudit,
                 RunAuditLogs = RunAuditLogs,
                 AuditLogLookbackHours = AuditLogLookbackHours,
+                RunOperationalEventLogs = RunOperationalEventLogs,
+                OperationalEventLookbackDays = OperationalEventLookbackDays,
+                RunOutboundEvents = RunOutboundEvents,
                 AuditLogServiceName = string.Equals(SelectedAuditLogEntity, AllCatalogEntitiesOption, StringComparison.Ordinal)
                     ? null
                     : SelectedAuditLogEntity

@@ -24,6 +24,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
     private readonly IGenesysFlowsClient _flowsClient;
     private readonly IGenesysDidsClient _didsClient;
     private readonly IGenesysAuditLogsClient _auditLogsClient;
+    private readonly IGenesysOperationalEventsClient _operationalEventsClient;
+    private readonly IGenesysOutboundEventsClient _outboundEventsClient;
     private readonly IPaginator _paginator;
     private readonly GenesysRegionOptions _region;
     private readonly ILogger<AuditOrchestrator> _logger;
@@ -36,6 +38,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IGenesysFlowsClient flowsClient,
         IGenesysDidsClient didsClient,
         IGenesysAuditLogsClient auditLogsClient,
+        IGenesysOperationalEventsClient operationalEventsClient,
+        IGenesysOutboundEventsClient outboundEventsClient,
         IPaginator paginator,
         IOptions<GenesysRegionOptions> regionOptions,
         ILogger<AuditOrchestrator> logger)
@@ -47,6 +51,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         _flowsClient = flowsClient ?? throw new ArgumentNullException(nameof(flowsClient));
         _didsClient = didsClient ?? throw new ArgumentNullException(nameof(didsClient));
         _auditLogsClient = auditLogsClient ?? throw new ArgumentNullException(nameof(auditLogsClient));
+        _operationalEventsClient = operationalEventsClient ?? throw new ArgumentNullException(nameof(operationalEventsClient));
+        _outboundEventsClient = outboundEventsClient ?? throw new ArgumentNullException(nameof(outboundEventsClient));
         _paginator = paginator ?? throw new ArgumentNullException(nameof(paginator));
         _region = regionOptions?.Value ?? throw new ArgumentNullException(nameof(regionOptions));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -66,17 +72,21 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             options.RunFlowAudit ||
             options.RunInactiveUserAudit ||
             options.RunDidAudit ||
-            options.RunAuditLogs;
+            options.RunAuditLogs ||
+            options.RunOperationalEventLogs ||
+            options.RunOutboundEvents;
 
         if (!runAny)
             throw new InvalidOperationException("At least one audit path must be selected.");
 
         _logger.LogInformation(
             "Audit started. PageSize={PageSize} IncludeInactive={IncludeInactive} StaleFlowDays={StaleFlowDays} InactiveUserDays={InactiveUserDays} " +
-            "RunExtension={RunExtension} RunGroups={RunGroups} RunQueues={RunQueues} RunFlows={RunFlows} RunInactiveUsers={RunInactiveUsers} RunDids={RunDids} RunAuditLogs={RunAuditLogs}",
+            "RunExtension={RunExtension} RunGroups={RunGroups} RunQueues={RunQueues} RunFlows={RunFlows} RunInactiveUsers={RunInactiveUsers} RunDids={RunDids} " +
+            "RunAuditLogs={RunAuditLogs} RunOperationalEvents={RunOperationalEvents} RunOutboundEvents={RunOutboundEvents}",
             ps, options.IncludeInactiveUsers, options.StaleFlowThresholdDays, options.InactiveUserThresholdDays,
             options.RunExtensionAudit, options.RunGroupAudit, options.RunQueueAudit, options.RunFlowAudit,
-            options.RunInactiveUserAudit, options.RunDidAudit, options.RunAuditLogs);
+            options.RunInactiveUserAudit, options.RunDidAudit, options.RunAuditLogs,
+            options.RunOperationalEventLogs, options.RunOutboundEvents);
 
         var needsUsers = options.RunExtensionAudit || options.RunInactiveUserAudit || options.RunDidAudit;
         var needsExtensions = options.RunExtensionAudit;
@@ -84,6 +94,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         var needsQueues = options.RunQueueAudit;
         var needsFlows = options.RunFlowAudit;
         var needsDids = options.RunDidAudit;
+        var needsOperationalEvents = options.RunOperationalEventLogs;
+        var needsOutboundEvents = options.RunOutboundEvents;
 
         IReadOnlyList<GenesysUserDto> userDtos = [];
         IReadOnlyList<EdgeExtensionEntityDto> extDtos = [];
@@ -92,6 +104,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<FlowDto> flowDtos = [];
         IReadOnlyList<DidDto> didDtos = [];
         IReadOnlyList<AuditLogFinding> auditLogFindings = [];
+        IReadOnlyList<OperationalEventFinding> operationalEventFindings = [];
+        IReadOnlyList<OutboundEventFinding> outboundEventFindings = [];
 
         if (needsUsers)
         {
@@ -208,7 +222,59 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             _logger.LogInformation("Fetched {Count} audit log records", auditLogFindings.Count);
         }
 
-        Report(progress, 60, "Running selected audit paths...");
+        if (needsOperationalEvents)
+        {
+            Report(progress, 60, "Fetching operational events...");
+            var now = DateTimeOffset.UtcNow;
+            var lookbackDays = Math.Max(1, options.OperationalEventLookbackDays);
+            var interval = $"{now.AddDays(-lookbackDays):o}/{now:o}";
+
+            var request = new OperationalEventsQueryRequestDto
+            {
+                Interval = interval,
+                SortOrder = "DESC"
+            };
+
+            var records = new List<OperationalEventDto>();
+            string? afterCursor = null;
+            var boundedPageSize = Math.Clamp(ps, 1, 200);
+
+            while (true)
+            {
+                ct.ThrowIfCancellationRequested();
+                var page = await _operationalEventsClient
+                    .QueryEventsAsync(request, boundedPageSize, afterCursor, ct)
+                    .ConfigureAwait(false);
+
+                if (page.Entities is { Count: > 0 })
+                    records.AddRange(page.Entities);
+
+                var nextAfter = ExtractCursorValue(page.NextUri, "after");
+                if (string.IsNullOrWhiteSpace(nextAfter) ||
+                    string.Equals(nextAfter, afterCursor, StringComparison.Ordinal))
+                {
+                    break;
+                }
+
+                afterCursor = nextAfter;
+            }
+
+            operationalEventFindings = AnalyzeOperationalEvents(records);
+            _logger.LogInformation("Fetched {Count} operational event records", operationalEventFindings.Count);
+        }
+
+        if (needsOutboundEvents)
+        {
+            Report(progress, 62, "Fetching outbound events...");
+            var outboundDtos = await _paginator.FetchAllAsync(
+                pn => _outboundEventsClient.GetOutboundEventsPageAsync(pn, ps, ct), ct)
+                .ConfigureAwait(false);
+
+            outboundEventFindings = AnalyzeOutboundEvents(outboundDtos);
+            _logger.LogInformation("Fetched {Count} outbound event records", outboundEventFindings.Count);
+        }
+
+        Report(progress, 70, "Running selected audit paths...");
         var extensionReport = options.RunExtensionAudit
             ? RunExtensionAudit(userDtos, extDtos, options)
             : new AuditEngine.AuditReport();
@@ -238,12 +304,14 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             + extensionReport.InvalidAssignedExtensions.Count
             + groupFindings.Count + queueFindings.Count
             + flowFindings.Count + inactiveUserFindings.Count
-            + didFindings.Count + auditLogFindings.Count;
+            + didFindings.Count + auditLogFindings.Count
+            + operationalEventFindings.Count + outboundEventFindings.Count;
 
         _logger.LogInformation(
-            "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} InactiveUsers={InactiveUsers} DIDs={DIDs}",
+            "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} InactiveUsers={InactiveUsers} DIDs={DIDs} OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents}",
             totalFindings, groupFindings.Count, queueFindings.Count,
-            flowFindings.Count, inactiveUserFindings.Count, didFindings.Count);
+            flowFindings.Count, inactiveUserFindings.Count, didFindings.Count,
+            operationalEventFindings.Count, outboundEventFindings.Count);
 
         Report(progress, 100,
             $"Complete — {totalFindings} total findings across all checks.",
@@ -262,7 +330,9 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             FlowFindings = flowFindings,
             InactiveUserFindings = inactiveUserFindings,
             DidFindings = didFindings,
-            AuditLogFindings = auditLogFindings
+            AuditLogFindings = auditLogFindings,
+            OperationalEventFindings = operationalEventFindings,
+            OutboundEventFindings = outboundEventFindings
         };
     }
 
@@ -642,6 +712,73 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 JsonValueKind.False => "false",
                 _ => null
             };
+    }
+
+    private static IReadOnlyList<OperationalEventFinding> AnalyzeOperationalEvents(
+        IReadOnlyList<OperationalEventDto> records)
+    {
+        return records
+            .Select(r => new OperationalEventFinding(
+                TimestampUtc: r.DateCreated,
+                EventDefinitionId: r.EventDefinition?.Id,
+                EventDefinitionName: r.EventDefinition?.Name,
+                EntityId: r.EntityId,
+                EntityName: r.EntityName,
+                CurrentValue: r.CurrentValue,
+                PreviousValue: r.PreviousValue,
+                ErrorCode: r.ErrorCode,
+                ConversationId: r.Conversation?.Id))
+            .OrderByDescending(f => f.TimestampUtc ?? DateTimeOffset.MinValue)
+            .ToList();
+    }
+
+    private static IReadOnlyList<OutboundEventFinding> AnalyzeOutboundEvents(
+        IReadOnlyList<OutboundEventDto> records)
+    {
+        return records
+            .Select(r => new OutboundEventFinding(
+                TimestampUtc: r.Timestamp,
+                EventId: r.Id,
+                Name: r.Name,
+                Category: r.Category,
+                Level: r.Level,
+                Code: r.EventMessage?.Code,
+                Message: r.EventMessage?.Message,
+                CorrelationId: r.CorrelationId))
+            .OrderByDescending(f => f.TimestampUtc ?? DateTimeOffset.MinValue)
+            .ToList();
+    }
+
+    private static string? ExtractCursorValue(string? uriOrPath, string key)
+    {
+        if (string.IsNullOrWhiteSpace(uriOrPath) || string.IsNullOrWhiteSpace(key))
+            return null;
+
+        var query = string.Empty;
+        if (Uri.TryCreate(uriOrPath, UriKind.Absolute, out var absolute))
+        {
+            query = absolute.Query;
+        }
+        else
+        {
+            var idx = uriOrPath.IndexOf('?', StringComparison.Ordinal);
+            if (idx >= 0 && idx < uriOrPath.Length - 1)
+                query = uriOrPath[(idx + 1)..];
+        }
+
+        if (string.IsNullOrWhiteSpace(query))
+            return null;
+
+        var trimmedQuery = query.TrimStart('?');
+        var segments = trimmedQuery.Split('&', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var segment in segments)
+        {
+            var pair = segment.Split('=', 2);
+            if (pair.Length == 2 && string.Equals(pair[0], key, StringComparison.OrdinalIgnoreCase))
+                return Uri.UnescapeDataString(pair[1]);
+        }
+
+        return null;
     }
 
     private static void Report(IProgress<AuditProgress> progress, int percent, string message, string? status = null)

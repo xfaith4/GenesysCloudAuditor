@@ -59,6 +59,27 @@ public sealed record AuditLogFinding(
     string? EntityType,
     string? EntityName);
 
+public sealed record OperationalEventFinding(
+    DateTimeOffset? TimestampUtc,
+    string? EventDefinitionId,
+    string? EventDefinitionName,
+    string? EntityId,
+    string? EntityName,
+    string? CurrentValue,
+    string? PreviousValue,
+    string? ErrorCode,
+    string? ConversationId);
+
+public sealed record OutboundEventFinding(
+    DateTimeOffset? TimestampUtc,
+    string? EventId,
+    string? Name,
+    string? Category,
+    string? Level,
+    string? Code,
+    string? Message,
+    string? CorrelationId);
+
 // ─── Combined report ─────────────────────────────────────────────────────────
 
 /// <summary>
@@ -82,4 +103,6 @@ public sealed class AuditReportData
     public IReadOnlyList<InactiveUserFinding> InactiveUserFindings { get; init; } = [];
     public IReadOnlyList<DidFinding> DidFindings { get; init; } = [];
     public IReadOnlyList<AuditLogFinding> AuditLogFindings { get; init; } = [];
+    public IReadOnlyList<OperationalEventFinding> OperationalEventFindings { get; init; } = [];
+    public IReadOnlyList<OutboundEventFinding> OutboundEventFindings { get; init; } = [];
 }

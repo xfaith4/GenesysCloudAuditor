@@ -73,4 +73,20 @@ public sealed class AuditRunOptions
     /// Empty means "all catalog entities" from service mapping.
     /// </summary>
     public IReadOnlyList<string> AuditLogServiceNames { get; init; } = [];
+
+    /// <summary>
+    /// Run operational events query path.
+    /// </summary>
+    public bool RunOperationalEventLogs { get; init; } = false;
+
+    /// <summary>
+    /// Lookback window in days for operational events query.
+    /// Default: 7 days.
+    /// </summary>
+    public int OperationalEventLookbackDays { get; init; } = 7;
+
+    /// <summary>
+    /// Run outbound events query path.
+    /// </summary>
+    public bool RunOutboundEvents { get; init; } = false;
 }
