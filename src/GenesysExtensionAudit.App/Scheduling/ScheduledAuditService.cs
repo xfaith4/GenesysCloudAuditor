@@ -4,7 +4,6 @@ using System.Text;
 using System.Text.Json;
 using GenesysExtensionAudit.Infrastructure.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.VisualBasic.FileIO;
 
 namespace GenesysExtensionAudit.Scheduling;
 
@@ -93,38 +92,40 @@ public sealed class ScheduledAuditService : IScheduledAuditService
 
     public async Task<IReadOnlyList<ScheduledTaskInfo>> ListAsync(CancellationToken ct)
     {
-        var output = await RunSchtasksAsync(
-            ["/Query", "/FO", "CSV", "/V"],
-            ct,
-            allowNonZeroExit: true).ConfigureAwait(false);
-
-        var rows = ParseCsv(output.StandardOutput);
-        if (rows.Count == 0)
+        var json = await QueryScheduledTasksAsJsonAsync(ct).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(json))
             return [];
 
-        var results = new List<ScheduledTaskInfo>();
-        var folderPrefix = NormalizeTaskFolderPath();
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() == 0)
+            return [];
+
+        var rows = root.ValueKind switch
+        {
+            JsonValueKind.Array => root.EnumerateArray().ToArray(),
+            JsonValueKind.Object => [root],
+            _ => []
+        };
+
+        var results = new List<ScheduledTaskInfo>(rows.Length);
         foreach (var row in rows)
         {
-            var taskPath = GetValue(row, "TaskName");
-            if (string.IsNullOrWhiteSpace(taskPath) ||
-                !taskPath.StartsWith(folderPrefix, StringComparison.OrdinalIgnoreCase))
-            {
+            var taskName = GetJsonString(row, "TaskName");
+            var taskPath = GetJsonString(row, "TaskPath");
+            var taskToRun = $"{GetJsonString(row, "Execute")} {GetJsonString(row, "Arguments")}".Trim();
+            if (string.IsNullOrWhiteSpace(taskName) || string.IsNullOrWhiteSpace(taskPath))
                 continue;
-            }
-
-            var taskName = taskPath[(taskPath.LastIndexOf('\\') + 1)..];
-            var taskToRun = GetValue(row, "Task To Run");
 
             results.Add(new ScheduledTaskInfo
             {
                 TaskName = taskName,
                 TaskPath = taskPath,
-                NextRunTime = GetValue(row, "Next Run Time"),
-                LastRunTime = GetValue(row, "Last Run Time"),
-                LastResult = GetValue(row, "Last Result"),
-                Recurrence = GetValue(row, "Schedule Type"),
-                IsEnabled = !GetValue(row, "Scheduled Task State").Contains("Disabled", StringComparison.OrdinalIgnoreCase),
+                NextRunTime = GetJsonString(row, "NextRunTime"),
+                LastRunTime = GetJsonString(row, "LastRunTime"),
+                LastResult = GetJsonString(row, "LastTaskResult"),
+                Recurrence = GetJsonString(row, "Recurrence"),
+                IsEnabled = GetJsonBool(row, "Enabled"),
                 ProfilePath = ScheduledAuditCommandLine.TryExtractProfilePath(taskToRun)
             });
         }
@@ -341,57 +342,86 @@ public sealed class ScheduledAuditService : IScheduledAuditService
         return (process.ExitCode, stdout, stderr);
     }
 
-    private static List<Dictionary<string, string>> ParseCsv(string csv)
+    private async Task<string> QueryScheduledTasksAsJsonAsync(CancellationToken ct)
     {
-        var rows = new List<Dictionary<string, string>>();
-        if (string.IsNullOrWhiteSpace(csv))
-            return rows;
+        var taskPath = NormalizeTaskFolderPath().Replace("'", "''", StringComparison.Ordinal);
+        var script = $@"
+$ErrorActionPreference = 'Stop'
+$taskPath = '{taskPath}'
+$tasks = @(Get-ScheduledTask -TaskPath $taskPath -ErrorAction SilentlyContinue)
+if ($tasks.Count -eq 0) {{
+  '[]'
+  exit 0
+}}
 
-        using var reader = new StringReader(csv);
-        using var parser = new TextFieldParser(reader)
+$rows = foreach ($t in $tasks) {{
+  $info = Get-ScheduledTaskInfo -TaskName $t.TaskName -TaskPath $t.TaskPath
+  $action = $t.Actions | Select-Object -First 1
+  $recurrence = ($t.Triggers | ForEach-Object {{ $_.CimClass.CimClassName }}) -join ';'
+  [pscustomobject]@{{
+    TaskName       = $t.TaskName
+    TaskPath       = $t.TaskPath
+    NextRunTime    = if ($info.NextRunTime -and $info.NextRunTime.Year -gt 1900) {{ $info.NextRunTime.ToString('s') }} else {{ '' }}
+    LastRunTime    = if ($info.LastRunTime -and $info.LastRunTime.Year -gt 1900) {{ $info.LastRunTime.ToString('s') }} else {{ '' }}
+    LastTaskResult = [string]$info.LastTaskResult
+    Recurrence     = $recurrence
+    Enabled        = [bool]$t.Settings.Enabled
+    Execute        = [string]$action.Execute
+    Arguments      = [string]$action.Arguments
+  }}
+}}
+
+$rows | ConvertTo-Json -Depth 5 -Compress
+";
+
+        var psi = new ProcessStartInfo("powershell.exe")
         {
-            Delimiters = [","],
-            HasFieldsEnclosedInQuotes = true,
-            TrimWhiteSpace = false
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
         };
+        psi.ArgumentList.Add("-NoProfile");
+        psi.ArgumentList.Add("-NonInteractive");
+        psi.ArgumentList.Add("-ExecutionPolicy");
+        psi.ArgumentList.Add("Bypass");
+        psi.ArgumentList.Add("-Command");
+        psi.ArgumentList.Add(script);
 
-        if (parser.EndOfData)
-            return rows;
+        using var process = new Process { StartInfo = psi };
+        process.Start();
 
-        var headers = parser.ReadFields() ?? [];
-        while (!parser.EndOfData)
-        {
-            var fields = parser.ReadFields() ?? [];
-            if (fields.Length == 0)
-                continue;
+        var stdoutTask = process.StandardOutput.ReadToEndAsync(ct);
+        var stderrTask = process.StandardError.ReadToEndAsync(ct);
+        await process.WaitForExitAsync(ct).ConfigureAwait(false);
 
-            var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            for (var i = 0; i < headers.Length; i++)
-            {
-                var key = headers[i];
-                var value = i < fields.Length ? fields[i] : string.Empty;
-                row[key] = value;
-            }
-            rows.Add(row);
-        }
+        var stdout = await stdoutTask.ConfigureAwait(false);
+        var stderr = await stderrTask.ConfigureAwait(false);
+        if (process.ExitCode != 0)
+            throw new InvalidOperationException(
+                $"Failed to enumerate scheduled tasks (PowerShell exit {process.ExitCode}). STDERR: {stderr}");
 
-        return rows;
+        return stdout.Trim();
     }
 
-    private static string GetValue(Dictionary<string, string> row, string key)
+    private static string GetJsonString(JsonElement element, string propertyName)
     {
-        if (row.TryGetValue(key, out var value))
-            return value ?? string.Empty;
-
-        // Gracefully handle localized/variant headers by checking a compact match.
-        var normalized = key.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase);
-        foreach (var kvp in row)
-        {
-            var candidate = kvp.Key.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase);
-            if (string.Equals(candidate, normalized, StringComparison.OrdinalIgnoreCase))
-                return kvp.Value ?? string.Empty;
-        }
-
+        if (element.TryGetProperty(propertyName, out var value))
+            return value.ValueKind == JsonValueKind.String ? (value.GetString() ?? string.Empty) : value.ToString();
         return string.Empty;
+    }
+
+    private static bool GetJsonBool(JsonElement element, string propertyName)
+    {
+        if (element.TryGetProperty(propertyName, out var value))
+        {
+            if (value.ValueKind == JsonValueKind.True) return true;
+            if (value.ValueKind == JsonValueKind.False) return false;
+            if (value.ValueKind == JsonValueKind.String && bool.TryParse(value.GetString(), out var parsed))
+                return parsed;
+        }
+        return false;
     }
 }

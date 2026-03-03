@@ -27,9 +27,9 @@ public sealed class HttpLoggingHandler : DelegatingHandler
             sw.Stop();
 
             _logger.LogInformation(
-                "HTTP {Method} {Path} → {StatusCode} in {ElapsedMs}ms",
+                "HTTP {Method} {PathAndQuery} → {StatusCode} in {ElapsedMs}ms",
                 request.Method.Method,
-                request.RequestUri?.GetLeftPart(UriPartial.Path),
+                request.RequestUri?.PathAndQuery,
                 (int)response.StatusCode,
                 sw.ElapsedMilliseconds);
 
@@ -42,7 +42,7 @@ public sealed class HttpLoggingHandler : DelegatingHandler
                 ex,
                 "HTTP {Method} {Path} failed after {ElapsedMs}ms",
                 request.Method.Method,
-                request.RequestUri?.GetLeftPart(UriPartial.Path),
+                request.RequestUri?.PathAndQuery,
                 sw.ElapsedMilliseconds);
             throw;
         }

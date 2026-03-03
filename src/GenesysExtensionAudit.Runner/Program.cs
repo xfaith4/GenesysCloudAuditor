@@ -27,6 +27,10 @@ static async Task<int> RunAsync(string[] args)
     var dryRun = parsed.DryRun;
     var scheduleProfilePath = parsed.ScheduleProfilePath;
 
+    var runnerLogDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
+    Directory.CreateDirectory(runnerLogDirectory);
+    CleanupOldLogFiles(runnerLogDirectory, retainedDays: 8);
+
     // Bootstrap logger active before host is built (captures startup errors).
     Log.Logger = new LoggerConfiguration()
         .MinimumLevel.Information()
@@ -34,9 +38,11 @@ static async Task<int> RunAsync(string[] args)
         .Enrich.FromLogContext()
         .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
         .WriteTo.File(
-            path: "logs/runner-.log",
+            path: Path.Combine(runnerLogDirectory, "runner-.log"),
             rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 30,
+            fileSizeLimitBytes: 20 * 1024 * 1024,
+            rollOnFileSizeLimit: true,
+            retainedFileCountLimit: 64,
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
         .CreateLogger();
 
@@ -306,4 +312,24 @@ static async Task<ScheduledAuditProfile> LoadScheduledProfileAsync(string path, 
         throw new InvalidOperationException($"Failed to deserialize schedule profile: {path}");
 
     return profile;
+}
+
+static void CleanupOldLogFiles(string logDirectory, int retainedDays)
+{
+    if (retainedDays <= 0 || !Directory.Exists(logDirectory))
+        return;
+
+    var cutoffUtc = DateTime.UtcNow.AddDays(-retainedDays);
+    foreach (var file in Directory.EnumerateFiles(logDirectory, "*.log*"))
+    {
+        try
+        {
+            if (File.GetLastWriteTimeUtc(file) < cutoffUtc)
+                File.Delete(file);
+        }
+        catch
+        {
+            // best effort only
+        }
+    }
 }

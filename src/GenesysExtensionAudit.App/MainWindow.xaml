@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Genesys Cloud Extension Audit"
+        Title="Genesys Cloud Auditor"
         Height="720" Width="1100"
         WindowStartupLocation="CenterScreen">
 
@@ -19,7 +19,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="Genesys Cloud Extension Audit"
+                    <TextBlock Text="Genesys Cloud Auditor"
                                Foreground="White"
                                FontSize="18"
                                FontWeight="SemiBold" />

@@ -52,7 +52,10 @@ public static class Logging
                .Enrich.WithThreadId();
 
             // Friendly/compact JSON logs to file for diagnostics
-            var logDir = string.IsNullOrWhiteSpace(options.LogDirectory) ? "logs" : options.LogDirectory;
+            var rawLogDir = string.IsNullOrWhiteSpace(options.LogDirectory) ? "logs" : options.LogDirectory;
+            var logDir = Path.IsPathRooted(rawLogDir)
+                ? rawLogDir
+                : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, rawLogDir));
             var filePath = Path.Combine(logDir, "app-.log");
 
             if (options.EnableConsole)
@@ -65,11 +68,14 @@ public static class Logging
             if (options.EnableFile)
             {
                 Directory.CreateDirectory(logDir);
+                CleanupOldLogFiles(logDir, options.RetainedDays);
                 cfg.WriteTo.File(
                     formatter: new CompactJsonFormatter(),
                     path: filePath,
                     rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: options.RetainedFileCount,
+                    fileSizeLimitBytes: options.MaxFileSizeMb * 1024L * 1024L,
+                    rollOnFileSizeLimit: true,
                     restrictedToMinimumLevel: options.FileMinimumLevel);
             }
 
@@ -85,7 +91,7 @@ public static class Logging
     /// </summary>
     public static void EnableSerilogSelfLog(string? path = null)
     {
-        path ??= Path.Combine("logs", "serilog-selflog.txt");
+        path ??= Path.Combine(AppContext.BaseDirectory, "logs", "serilog-selflog.txt");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
         SelfLog.Enable(message =>
@@ -157,6 +163,27 @@ public static class Logging
     {
         public void Dispose() => action();
     }
+
+    private static void CleanupOldLogFiles(string logDirectory, int retainedDays)
+    {
+        if (retainedDays <= 0 || !Directory.Exists(logDirectory))
+            return;
+
+        var cutoffUtc = DateTime.UtcNow.AddDays(-retainedDays);
+        foreach (var file in Directory.EnumerateFiles(logDirectory, "*.log*"))
+        {
+            try
+            {
+                var lastWrite = File.GetLastWriteTimeUtc(file);
+                if (lastWrite < cutoffUtc)
+                    File.Delete(file);
+            }
+            catch
+            {
+                // best effort; do not fail app startup because of log cleanup
+            }
+        }
+    }
 }
 
 /// <summary>
@@ -179,6 +206,12 @@ public sealed class LoggingOptions
 
     /// <summary>If true, enables Serilog internal selflog file output.</summary>
     public bool EnableSerilogSelfLog { get; set; } = false;
+
+    /// <summary>Max file size (MB) before rolling to a new file.</summary>
+    public int MaxFileSizeMb { get; set; } = 20;
+
+    /// <summary>Maximum age of log files in days.</summary>
+    public int RetainedDays { get; set; } = 8;
 }
 
 /// <summary>

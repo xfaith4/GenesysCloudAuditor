@@ -1,6 +1,6 @@
-# Genesys Extension Audit — WPF Desktop App (.NET 8)
+# Genesys Cloud Auditor — WPF Desktop App (.NET 8)
 
-Audits **Genesys Cloud** extension data by cross-referencing user profile *Work Phone extension* fields against the Edge telephony assignment list. Surfaces duplicates, orphaned profile values, and unassigned extensions in a navigable WPF UI with CSV export.
+Audits **Genesys Cloud** configuration and activity data (extensions, groups, queues, flows, inactive users, DIDs, and audit logs) in a navigable WPF UI with Excel export.
 
 ---
 
