@@ -63,6 +63,7 @@ static async Task<int> RunAsync(string[] args)
             {
                 cfg.SetBasePath(AppContext.BaseDirectory);
                 cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+                cfg.AddEnvironmentVariables();
             })
             .ConfigureServices((ctx, services) =>
             {
@@ -349,3 +350,5 @@ static void CleanupOldLogFiles(string logDirectory, int retainedDays)
         }
     }
 }
+
+

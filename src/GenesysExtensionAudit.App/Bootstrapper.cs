@@ -36,6 +36,7 @@ public static class Bootstrapper
             {
                 cfg.SetBasePath(AppContext.BaseDirectory);
                 cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                cfg.AddEnvironmentVariables();
             })
             .ConfigureServices((ctx, services) =>
             {
@@ -157,3 +158,5 @@ public static class Bootstrapper
         _host = null;
     }
 }
+
+
