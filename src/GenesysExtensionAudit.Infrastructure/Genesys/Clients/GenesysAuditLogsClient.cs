@@ -195,4 +195,3 @@ public sealed class GenesysAuditLogsClient : GenesysCloudApiClient, IGenesysAudi
            || name.Equals("nextUri", StringComparison.OrdinalIgnoreCase)
            || name.Equals("previousUri", StringComparison.OrdinalIgnoreCase);
 }
-}
