@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Genesys Cloud Auditor</title>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:      #0066cc;
+      --brand-dark: #004a99;
+      --accent:     #ff6600;
+      --bg:         #f4f7fb;
+      --surface:    #ffffff;
+      --text:       #1a1a2e;
+      --muted:      #5a6275;
+      --border:     #d8e1ef;
+      --critical:   #c0392b;
+      --warning:    #e67e22;
+      --info:       #2980b9;
+      --radius:     12px;
+      --shadow:     0 4px 24px rgba(0,0,0,0.10);
+      --transition: 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── Navigation ───────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 1.1rem; color: var(--brand);
+      text-decoration: none;
+    }
+
+    .nav-brand svg { width: 28px; height: 28px; }
+
+    .nav-links { display: flex; gap: 1.8rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 0.9rem;
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: var(--brand); }
+
+    .nav-cta {
+      background: var(--brand); color: #fff; border: none;
+      padding: 8px 20px; border-radius: 6px; font-size: 0.9rem;
+      font-weight: 600; cursor: pointer; text-decoration: none;
+      transition: background var(--transition);
+    }
+    .nav-cta:hover { background: var(--brand-dark); }
+
+    /* ─── Hero ─────────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center;
+      padding: 100px 2rem 60px;
+      background: linear-gradient(150deg, #0a1628 0%, #0d2b5e 55%, #1a3f7a 100%);
+      position: relative; overflow: hidden;
+      text-align: center;
+    }
+
+    .hero-tagline {
+      display: inline-block;
+      background: rgba(255,255,255,0.1);
+      color: #93c5fd;
+      border: 1px solid rgba(147,197,253,0.3);
+      padding: 6px 18px; border-radius: 999px;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 1.5rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 800; color: #fff;
+      line-height: 1.15; margin-bottom: 1.2rem;
+      max-width: 780px;
+    }
+
+    .hero h1 span { color: #60a5fa; }
+
+    .hero p {
+      font-size: 1.15rem; color: #93c5fd; max-width: 580px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none;
+      padding: 14px 32px; border-radius: 8px; font-size: 1rem;
+      font-weight: 700; cursor: pointer; text-decoration: none;
+      transition: transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 4px 16px rgba(255,102,0,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,102,0,0.45); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.1); color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 14px 32px; border-radius: 8px; font-size: 1rem;
+      font-weight: 600; cursor: pointer; text-decoration: none;
+      transition: background var(--transition);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.18); }
+
+    /* ─── Floating Bubbles ─────────────────────────────────────────────── */
+    .bubbles-section {
+      padding: 90px 2rem;
+      background: var(--bg);
+      text-align: center;
+    }
+
+    .section-label {
+      display: inline-block;
+      color: var(--brand); font-weight: 700; font-size: 0.8rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+      font-weight: 800; color: var(--text);
+      margin-bottom: 0.8rem;
+    }
+
+    .section-sub {
+      color: var(--muted); font-size: 1rem; max-width: 540px;
+      margin: 0 auto 3.5rem;
+    }
+
+    .bubbles-container {
+      display: flex; flex-wrap: wrap; gap: 1.4rem;
+      justify-content: center; max-width: 960px; margin: 0 auto;
+    }
+
+    .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 14px 26px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.92rem; font-weight: 600; color: var(--text);
+      box-shadow: var(--shadow);
+      cursor: default;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+      animation: floatIn 0.6s ease both;
+    }
+
+    .bubble:hover {
+      transform: translateY(-5px) scale(1.04);
+      box-shadow: 0 10px 32px rgba(0,0,0,0.14);
+      border-color: var(--brand);
+    }
+
+    .bubble .bubble-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+
+    .bubble.critical .bubble-icon { background: #fde8e8; }
+    .bubble.warning  .bubble-icon { background: #fef3e2; }
+    .bubble.blue     .bubble-icon { background: #dbeafe; }
+    .bubble.green    .bubble-icon { background: #dcfce7; }
+    .bubble.purple   .bubble-icon { background: #f3e8ff; }
+
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ─── Walkthrough ──────────────────────────────────────────────────── */
+    .walkthrough {
+      padding: 90px 2rem;
+      background: var(--surface);
+    }
+
+    .walkthrough-inner {
+      max-width: 1100px; margin: 0 auto; text-align: center;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem; margin-top: 3.5rem; text-align: left;
+    }
+
+    .step {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      position: relative;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .step:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+    }
+
+    .step-number {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--brand); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1rem; margin-bottom: 1rem;
+    }
+
+    .step h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .step p  { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    .step-icon { font-size: 1.4rem; margin-bottom: 0.6rem; }
+
+    /* ─── Report Sheets Grid ───────────────────────────────────────────── */
+    .reports {
+      padding: 90px 2rem;
+      background: var(--bg);
+    }
+
+    .reports-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
+
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.2rem; margin-top: 3rem; text-align: left;
+    }
+
+    .report-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.6rem;
+      display: flex; gap: 1rem; align-items: flex-start;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .report-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+
+    .report-badge {
+      flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .badge-critical { background: #fde8e8; }
+    .badge-warning  { background: #fef3e2; }
+    .badge-info     { background: #dbeafe; }
+
+    .report-body h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .report-body p  { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+    .severity-tag {
+      display: inline-block; margin-top: 0.5rem;
+      padding: 2px 10px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tag-critical { background: #fde8e8; color: var(--critical); }
+    .tag-warning  { background: #fef3e2; color: var(--warning); }
+    .tag-info     { background: #dbeafe; color: var(--info); }
+
+    /* ─── Correction Engine Preview ────────────────────────────────────── */
+    .correction {
+      padding: 90px 2rem;
+      background: linear-gradient(135deg, #0d2b5e 0%, #1a3f7a 100%);
+      color: #fff; text-align: center;
+    }
+
+    .correction h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); font-weight: 800; margin-bottom: 1rem; }
+    .correction p  { color: #93c5fd; max-width: 560px; margin: 0 auto 2.5rem; font-size: 1rem; }
+
+    .correction-flow {
+      display: flex; flex-wrap: wrap; gap: 0;
+      justify-content: center; align-items: center;
+      max-width: 900px; margin: 0 auto;
+    }
+
+    .cf-step {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px; padding: 1.2rem 1.8rem;
+      min-width: 160px;
+    }
+
+    .cf-step .cf-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .cf-step h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .cf-step p  { font-size: 0.78rem; color: #93c5fd; }
+
+    .cf-arrow {
+      color: rgba(255,255,255,0.4); font-size: 1.6rem;
+      padding: 0 0.5rem;
+    }
+
+    .coming-soon-badge {
+      display: inline-block;
+      background: rgba(255,102,0,0.25); color: #fdba74;
+      border: 1px solid rgba(255,102,0,0.4);
+      padding: 4px 14px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 1.2rem;
+    }
+
+    /* ─── Footer ───────────────────────────────────────────────────────── */
+    footer {
+      background: var(--text);
+      color: rgba(255,255,255,0.55);
+      text-align: center; padding: 2.5rem 2rem;
+      font-size: 0.85rem;
+    }
+
+    footer a { color: rgba(255,255,255,0.75); text-decoration: none; }
+    footer a:hover { color: #fff; }
+
+    /* ─── Responsive ───────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .cf-arrow  { display: none; }
+      .correction-flow { flex-direction: column; gap: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="#" class="nav-brand">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="14" r="13" fill="#0066cc"/>
+        <path d="M8 18 L14 8 L20 18" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="14" cy="20" r="1.5" fill="white"/>
+      </svg>
+      Genesys Cloud Auditor
+    </a>
+    <ul class="nav-links">
+      <li><a href="#capabilities">Capabilities</a></li>
+      <li><a href="#walkthrough">How It Works</a></li>
+      <li><a href="#reports">Reports</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+    </ul>
+    <a href="https://github.com/xfaith4/GenesysCloudAuditor" class="nav-cta" target="_blank" rel="noopener">
+      View on GitHub
+    </a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <span class="hero-tagline">Open Source · .NET 8 · WPF · Windows</span>
+    <h1>
+      Audit your<br/>
+      <span>Genesys Cloud</span><br/>
+      org with confidence
+    </h1>
+    <p>
+      Detect duplicate extensions, platform sync bugs, orphaned DIDs, stale flows,
+      and configuration gaps — all in a single desktop run with Excel export.
+    </p>
+    <div class="hero-buttons">
+      <a href="https://github.com/xfaith4/GenesysCloudAuditor/releases" class="btn-primary" target="_blank" rel="noopener">
+        ⬇ Download Latest Release
+      </a>
+      <a href="https://github.com/xfaith4/GenesysCloudAuditor" class="btn-secondary" target="_blank" rel="noopener">
+        View Source
+      </a>
+    </div>
+  </section>
+
+  <!-- Floating Capability Bubbles -->
+  <section class="bubbles-section" id="capabilities">
+    <span class="section-label">Capabilities</span>
+    <h2 class="section-title">What GenesysCloudAuditor can do for your org</h2>
+    <p class="section-sub">
+      Each bubble represents a distinct audit capability. Hover to see it in action.
+    </p>
+
+    <div class="bubbles-container">
+      <div class="bubble critical" style="animation-delay:0.05s">
+        <div class="bubble-icon">🔴</div>
+        Duplicate Extension Detection
+      </div>
+      <div class="bubble critical" style="animation-delay:0.1s">
+        <div class="bubble-icon">🔴</div>
+        Platform Sync Bug Detection
+      </div>
+      <div class="bubble warning" style="animation-delay:0.15s">
+        <div class="bubble-icon">📞</div>
+        DID Orphan &amp; Mismatch Analysis
+      </div>
+      <div class="bubble warning" style="animation-delay:0.2s">
+        <div class="bubble-icon">👥</div>
+        Empty Group &amp; Queue Audit
+      </div>
+      <div class="bubble warning" style="animation-delay:0.25s">
+        <div class="bubble-icon">⚙️</div>
+        Stale Flow Detection
+      </div>
+      <div class="bubble warning" style="animation-delay:0.3s">
+        <div class="bubble-icon">🔤</div>
+        Extension Normalization &amp; Validation
+      </div>
+      <div class="bubble blue" style="animation-delay:0.35s">
+        <div class="bubble-icon">💤</div>
+        Inactive User Identification
+      </div>
+      <div class="bubble blue" style="animation-delay:0.4s">
+        <div class="bubble-icon">📋</div>
+        Audit Log Export
+      </div>
+      <div class="bubble green" style="animation-delay:0.45s">
+        <div class="bubble-icon">📊</div>
+        Multi-Sheet Excel Export
+      </div>
+      <div class="bubble green" style="animation-delay:0.5s">
+        <div class="bubble-icon">⏰</div>
+        Scheduled Headless Runs
+      </div>
+      <div class="bubble purple" style="animation-delay:0.55s">
+        <div class="bubble-icon">🔁</div>
+        Retry &amp; Rate-Limit Resilience
+      </div>
+      <div class="bubble purple" style="animation-delay:0.6s">
+        <div class="bubble-icon">🔐</div>
+        OAuth Client Credentials Auth
+      </div>
+    </div>
+  </section>
+
+  <!-- Walkthrough -->
+  <section class="walkthrough" id="walkthrough">
+    <div class="walkthrough-inner">
+      <span class="section-label">How It Works</span>
+      <h2 class="section-title">Running an audit in six steps</h2>
+      <p class="section-sub">
+        From credential setup to a reviewed, exported report — the entire process takes minutes.
+      </p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-icon">🔐</div>
+          <div class="step-number">1</div>
+          <h3>Configure OAuth Credentials</h3>
+          <p>
+            Create a Client Credentials OAuth client in your Genesys Cloud Admin portal.
+            Store the Client ID and Secret using .NET user secrets or environment variables —
+            they are never written to disk or committed to source control.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-icon">🎯</div>
+          <div class="step-number">2</div>
+          <h3>Select Audit Scope</h3>
+          <p>
+            Choose which audit paths to run: extensions, groups, queues, flows, DIDs,
+            inactive users, or event log exports. Toggle whether inactive users should
+            be included in the scan.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-icon">▶️</div>
+          <div class="step-number">3</div>
+          <h3>Run the Audit</h3>
+          <p>
+            Click <strong>Start</strong>. The auditor fetches all paginated data from the
+            Genesys Cloud API, normalizes extensions to canonical form, and cross-references
+            users and telephony assignments. A live progress bar and status log keep you informed.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-icon">📑</div>
+          <div class="step-number">4</div>
+          <h3>Review Findings</h3>
+          <p>
+            Results appear in tabbed sheets — one per finding type. Critical findings
+            (duplicate extensions, ownership mismatches) are highlighted at the top.
+            Drill into each group to see which users or assignments are involved.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-icon">📤</div>
+          <div class="step-number">5</div>
+          <h3>Export to Excel</h3>
+          <p>
+            Click <strong>Export Last Report…</strong> to save a multi-sheet Excel workbook.
+            Each sheet maps to one audit check, with a Summary sheet showing finding counts
+            and severity across the full run.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-icon">✅</div>
+          <div class="step-number">6</div>
+          <h3>Act on Recommendations</h3>
+          <p>
+            Each finding includes context for remediation: which user, which extension,
+            and what the mismatch is. Clear the stale value, reassign the DID,
+            republish the flow — then re-run the audit to confirm zero findings.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Report Sheets -->
+  <section class="reports" id="reports">
+    <div class="reports-inner">
+      <span class="section-label">Output Sheets</span>
+      <h2 class="section-title">What's in your Excel workbook</h2>
+      <p class="section-sub">
+        Every export includes a Summary sheet plus one sheet per finding type below.
+      </p>
+
+      <div class="reports-grid">
+        <div class="report-card">
+          <div class="report-badge badge-critical">🔴</div>
+          <div class="report-body">
+            <h4>Ext_Duplicates_Profile</h4>
+            <p>Multiple users sharing the same Work Phone extension — causes call routing ambiguity.</p>
+            <span class="severity-tag tag-critical">Critical</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-critical">🔴</div>
+          <div class="report-body">
+            <h4>Ext_Ownership_Mismatch</h4>
+            <p>Extension claimed by a user profile but assigned to a different entity in telephony — known platform bug.</p>
+            <span class="severity-tag tag-critical">Critical</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-warning">🟡</div>
+          <div class="report-body">
+            <h4>Ext_Assign_vs_Profile</h4>
+            <p>Extensions present in only one of user profiles or telephony assignments.</p>
+            <span class="severity-tag tag-warning">Warning</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-warning">🟡</div>
+          <div class="report-body">
+            <h4>Invalid_Extensions</h4>
+            <p>Malformed, non-numeric, or out-of-range extension values on profiles or assignments.</p>
+            <span class="severity-tag tag-warning">Warning</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-warning">🟡</div>
+          <div class="report-body">
+            <h4>Empty_Groups</h4>
+            <p>Groups with zero or one member that may be stale or abandoned.</p>
+            <span class="severity-tag tag-warning">Warning</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-warning">🟡</div>
+          <div class="report-body">
+            <h4>Empty_Queues</h4>
+            <p>Queues with no agents, or queues sharing a duplicate name causing reporting confusion.</p>
+            <span class="severity-tag tag-warning">Warning</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-warning">🟡</div>
+          <div class="report-body">
+            <h4>Stale_Flows</h4>
+            <p>Architect flows not republished within a configurable threshold — may contain outdated routing logic.</p>
+            <span class="severity-tag tag-warning">Warning</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-warning">🟡</div>
+          <div class="report-body">
+            <h4>Inactive_Users</h4>
+            <p>Deactivated user accounts, particularly those with extensions or admin roles still set.</p>
+            <span class="severity-tag tag-warning">Warning</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-warning">🟡</div>
+          <div class="report-body">
+            <h4>DID_Mismatches</h4>
+            <p>Unassigned, orphaned, or misassigned Direct Inward Dial numbers.</p>
+            <span class="severity-tag tag-warning">Warning</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-info">ℹ️</div>
+          <div class="report-body">
+            <h4>Audit_Logs</h4>
+            <p>Genesys Cloud audit transaction log entries for the selected time window.</p>
+            <span class="severity-tag tag-info">Info</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-info">ℹ️</div>
+          <div class="report-body">
+            <h4>Operational_Events</h4>
+            <p>Operational event log entries for the org.</p>
+            <span class="severity-tag tag-info">Info</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="report-badge badge-info">ℹ️</div>
+          <div class="report-body">
+            <h4>Outbound_Events</h4>
+            <p>Outbound campaign and interaction event log exports.</p>
+            <span class="severity-tag tag-info">Info</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Correction Engine Roadmap -->
+  <section class="correction" id="roadmap">
+    <span class="coming-soon-badge">Coming Soon</span>
+    <h2>Automated Correction Engine</h2>
+    <p>
+      The auditor is evolving beyond read-only detection. The next major capability will allow
+      GenesysCloudAuditor to apply approved fixes directly — closing the loop between audit
+      findings and org remediation.
+    </p>
+
+    <div class="correction-flow">
+      <div class="cf-step">
+        <div class="cf-icon">🔍</div>
+        <h4>Audit</h4>
+        <p>Detect every anomaly in the org</p>
+      </div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-step">
+        <div class="cf-icon">📋</div>
+        <h4>Review</h4>
+        <p>Inspector reviews proposed corrections</p>
+      </div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-step">
+        <div class="cf-icon">✅</div>
+        <h4>Approve</h4>
+        <p>Selectively approve or reject each fix</p>
+      </div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-step">
+        <div class="cf-icon">⚡</div>
+        <h4>Apply</h4>
+        <p>Auditor writes corrections back to Genesys Cloud API</p>
+      </div>
+      <div class="cf-arrow">→</div>
+      <div class="cf-step">
+        <div class="cf-icon">🔁</div>
+        <h4>Verify</h4>
+        <p>Immediate re-audit confirms zero findings</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      GenesysCloudAuditor is an open-source project. &nbsp;·&nbsp;
+      <a href="https://github.com/xfaith4/GenesysCloudAuditor" target="_blank" rel="noopener">GitHub Repository</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/xfaith4/GenesysCloudAuditor/blob/main/README.md" target="_blank" rel="noopener">Documentation</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/xfaith4/GenesysCloudAuditor/releases" target="_blank" rel="noopener">Releases</a>
+    </p>
+    <p style="margin-top:0.6rem; font-size:0.78rem; opacity:0.6;">
+      Not affiliated with or endorsed by Genesys Telecommunications Laboratories.
+    </p>
+  </footer>
+
+</body>
+</html>
