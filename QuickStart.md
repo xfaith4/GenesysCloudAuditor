@@ -11,7 +11,7 @@ Use this document for:
 - workbook output validation
 - basic troubleshooting
 
-For product direction and planned capabilities, see [ROADMAP.md](ROADMAP.md).  
+For product direction and planned capabilities, see [ROADMAP.md](ROADMAP.md).
 For the project overview, see [README.md](README.md).
 
 ---
@@ -138,14 +138,14 @@ Examples may include:
 This must match the org you are auditing.
 
 #### `Genesys:PageSize`
-Controls collection page sizes for API retrieval.  
+Controls collection page sizes for API retrieval.
 Larger values may reduce calls but can stress memory or amplify retry pain if something goes sideways.
 
 #### `Genesys:IncludeInactive`
 Determines whether inactive users are included in certain audit paths.
 
 #### `Genesys:MaxRequestsPerSecond`
-Use a conservative starting value.  
+Use a conservative starting value.
 It is better to be slightly slower than to get smacked repeatedly with `429` responses like an impatient API goblin.
 
 #### `Audit:*`
@@ -173,7 +173,7 @@ If the build fails:
 ## 6. Run the Desktop Application
 
 ```powershell
-dotnet run --project src\GenesysExtensionAudit.App\GenesysExtensionAudit.App.csproj
+dotnet run --project GenesysExtensionAudit.App.csproj
 ```
 
 ### Expected desktop behavior
