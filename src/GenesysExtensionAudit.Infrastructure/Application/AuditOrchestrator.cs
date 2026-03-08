@@ -21,7 +21,9 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
     private readonly IGenesysExtensionsClient _extensionsClient;
     private readonly IGenesysGroupsClient _groupsClient;
     private readonly IGenesysQueuesClient _queuesClient;
+    private readonly IGenesysQueueMembersClient _queueMembersClient;
     private readonly IGenesysFlowsClient _flowsClient;
+    private readonly IGenesysIvrsClient _ivrsClient;
     private readonly IGenesysDidsClient _didsClient;
     private readonly IGenesysAuditLogsClient _auditLogsClient;
     private readonly IGenesysOperationalEventsClient _operationalEventsClient;
@@ -35,7 +37,9 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IGenesysExtensionsClient extensionsClient,
         IGenesysGroupsClient groupsClient,
         IGenesysQueuesClient queuesClient,
+        IGenesysQueueMembersClient queueMembersClient,
         IGenesysFlowsClient flowsClient,
+        IGenesysIvrsClient ivrsClient,
         IGenesysDidsClient didsClient,
         IGenesysAuditLogsClient auditLogsClient,
         IGenesysOperationalEventsClient operationalEventsClient,
@@ -48,7 +52,9 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         _extensionsClient = extensionsClient ?? throw new ArgumentNullException(nameof(extensionsClient));
         _groupsClient = groupsClient ?? throw new ArgumentNullException(nameof(groupsClient));
         _queuesClient = queuesClient ?? throw new ArgumentNullException(nameof(queuesClient));
+        _queueMembersClient = queueMembersClient ?? throw new ArgumentNullException(nameof(queueMembersClient));
         _flowsClient = flowsClient ?? throw new ArgumentNullException(nameof(flowsClient));
+        _ivrsClient = ivrsClient ?? throw new ArgumentNullException(nameof(ivrsClient));
         _didsClient = didsClient ?? throw new ArgumentNullException(nameof(didsClient));
         _auditLogsClient = auditLogsClient ?? throw new ArgumentNullException(nameof(auditLogsClient));
         _operationalEventsClient = operationalEventsClient ?? throw new ArgumentNullException(nameof(operationalEventsClient));
@@ -69,9 +75,12 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             options.RunExtensionAudit ||
             options.RunGroupAudit ||
             options.RunQueueAudit ||
+            options.RunQueueServiceabilityAudit ||
             options.RunFlowAudit ||
+            options.RunFlowDependencyAudit ||
             options.RunInactiveUserAudit ||
             options.RunDidAudit ||
+            options.RunUserTelephonyAudit ||
             options.RunAuditLogs ||
             options.RunOperationalEventLogs ||
             options.RunOutboundEvents;
@@ -82,18 +91,21 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         _logger.LogInformation(
             "Audit started. PageSize={PageSize} IncludeInactive={IncludeInactive} StaleFlowDays={StaleFlowDays} InactiveUserDays={InactiveUserDays} " +
             "RunExtension={RunExtension} RunGroups={RunGroups} RunQueues={RunQueues} RunFlows={RunFlows} RunInactiveUsers={RunInactiveUsers} RunDids={RunDids} " +
+            "RunUserTelephony={RunUserTelephony} RunQueueServiceability={RunQueueServiceability} RunFlowDependency={RunFlowDependency} " +
             "RunAuditLogs={RunAuditLogs} RunOperationalEvents={RunOperationalEvents} RunOutboundEvents={RunOutboundEvents}",
             ps, options.IncludeInactiveUsers, options.StaleFlowThresholdDays, options.InactiveUserThresholdDays,
             options.RunExtensionAudit, options.RunGroupAudit, options.RunQueueAudit, options.RunFlowAudit,
-            options.RunInactiveUserAudit, options.RunDidAudit, options.RunAuditLogs,
-            options.RunOperationalEventLogs, options.RunOutboundEvents);
+            options.RunInactiveUserAudit, options.RunDidAudit,
+            options.RunUserTelephonyAudit, options.RunQueueServiceabilityAudit, options.RunFlowDependencyAudit,
+            options.RunAuditLogs, options.RunOperationalEventLogs, options.RunOutboundEvents);
 
-        var needsUsers = options.RunExtensionAudit || options.RunInactiveUserAudit || options.RunDidAudit;
-        var needsExtensions = options.RunExtensionAudit;
+        var needsUsers = options.RunExtensionAudit || options.RunInactiveUserAudit || options.RunDidAudit
+                         || options.RunUserTelephonyAudit || options.RunQueueServiceabilityAudit;
+        var needsExtensions = options.RunExtensionAudit || options.RunUserTelephonyAudit;
         var needsGroups = options.RunGroupAudit;
-        var needsQueues = options.RunQueueAudit;
-        var needsFlows = options.RunFlowAudit;
-        var needsDids = options.RunDidAudit;
+        var needsQueues = options.RunQueueAudit || options.RunQueueServiceabilityAudit;
+        var needsFlows = options.RunFlowAudit || options.RunFlowDependencyAudit;
+        var needsDids = options.RunDidAudit || options.RunUserTelephonyAudit;
         var needsOperationalEvents = options.RunOperationalEventLogs;
         var needsOutboundEvents = options.RunOutboundEvents;
 
@@ -107,6 +119,10 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<OperationalEventFinding> operationalEventFindings = [];
         IReadOnlyList<OutboundEventFinding> outboundEventFindings = [];
         IReadOnlyList<NoLocationUserFinding> noLocationUserFindings = [];
+        IReadOnlyList<UserTelephonyIntegrityFinding> userTelephonyIntegrityFindings = [];
+        IReadOnlyList<QueueServiceabilityFinding> queueServiceabilityFindings = [];
+        IReadOnlyList<IvrDto> ivrDtos = [];
+        IReadOnlyList<IvrFlowBindingFinding> ivrFlowBindingFindings = [];
 
         if (needsUsers)
         {
@@ -151,6 +167,15 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 pn => _flowsClient.GetFlowsPageAsync(pn, ps, ct), ct)
                 .ConfigureAwait(false);
             _logger.LogInformation("Fetched {Count} flows", flowDtos.Count);
+        }
+
+        if (options.RunFlowDependencyAudit)
+        {
+            Report(progress, 48, "Fetching IVR configurations...");
+            ivrDtos = await _paginator.FetchAllAsync(
+                pn => _ivrsClient.GetIvrsPageAsync(pn, ps, ct), ct)
+                .ConfigureAwait(false);
+            _logger.LogInformation("Fetched {Count} IVRs", ivrDtos.Count);
         }
 
         if (needsDids)
@@ -298,6 +323,31 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             ? AnalyzeUsersMissingLocation(userDtos)
             : [];
 
+        // Phase 1.2 — User telephony integrity (uses already-fetched users/extensions/DIDs)
+        if (options.RunUserTelephonyAudit)
+        {
+            Report(progress, 75, "Analyzing user telephony integrity...");
+            userTelephonyIntegrityFindings = AnalyzeUserTelephonyIntegrity(userDtos, extDtos, didDtos);
+            _logger.LogInformation("User telephony integrity check complete. Findings={Count}", userTelephonyIntegrityFindings.Count);
+        }
+
+        // Phase 1.3 — Queue serviceability (requires member fetch per queue)
+        if (options.RunQueueServiceabilityAudit && queueDtos.Count > 0)
+        {
+            Report(progress, 80, "Analyzing queue serviceability (fetching members)...");
+            queueServiceabilityFindings = await AnalyzeQueueServiceabilityAsync(
+                queueDtos, userDtos, options, ct).ConfigureAwait(false);
+            _logger.LogInformation("Queue serviceability check complete. Findings={Count}", queueServiceabilityFindings.Count);
+        }
+
+        // Phase 1.4 — IVR flow dependency (IVR → flow binding integrity)
+        if (options.RunFlowDependencyAudit && ivrDtos.Count > 0)
+        {
+            Report(progress, 83, "Analyzing IVR flow dependency bindings...");
+            ivrFlowBindingFindings = AnalyzeIvrFlowBindings(ivrDtos, flowDtos, options.StaleFlowThresholdDays);
+            _logger.LogInformation("IVR flow dependency check complete. Findings={Count}", ivrFlowBindingFindings.Count);
+        }
+
         Report(progress, 90, "Composing report...");
 
         var totalFindings = extensionReport.DuplicateProfileExtensions.Count
@@ -311,12 +361,18 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             + flowFindings.Count + inactiveUserFindings.Count
             + noLocationUserFindings.Count
             + didFindings.Count + auditLogFindings.Count
-            + operationalEventFindings.Count + outboundEventFindings.Count;
+            + operationalEventFindings.Count + outboundEventFindings.Count
+            + userTelephonyIntegrityFindings.Count
+            + queueServiceabilityFindings.Count
+            + ivrFlowBindingFindings.Count;
 
         _logger.LogInformation(
-            "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} StaleTokenUsers={StaleTokenUsers} NoLocationUsers={NoLocationUsers} DIDs={DIDs} OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents}",
+            "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} StaleTokenUsers={StaleTokenUsers} NoLocationUsers={NoLocationUsers} DIDs={DIDs} " +
+            "UserTelephonyIntegrity={UserTelephonyIntegrity} QueueServiceability={QueueServiceability} IvrFlowBindings={IvrFlowBindings} " +
+            "OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents}",
             totalFindings, groupFindings.Count, queueFindings.Count,
             flowFindings.Count, inactiveUserFindings.Count, noLocationUserFindings.Count, didFindings.Count,
+            userTelephonyIntegrityFindings.Count, queueServiceabilityFindings.Count, ivrFlowBindingFindings.Count,
             operationalEventFindings.Count, outboundEventFindings.Count);
 
         Report(progress, 100,
@@ -339,7 +395,10 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             DidFindings = didFindings,
             AuditLogFindings = auditLogFindings,
             OperationalEventFindings = operationalEventFindings,
-            OutboundEventFindings = outboundEventFindings
+            OutboundEventFindings = outboundEventFindings,
+            UserTelephonyIntegrityFindings = userTelephonyIntegrityFindings,
+            QueueServiceabilityFindings = queueServiceabilityFindings,
+            IvrFlowBindingFindings = ivrFlowBindingFindings
         };
     }
 
@@ -649,6 +708,403 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         }
 
         return findings.OrderBy(f => f.Issue).ThenBy(f => f.PhoneNumber).ToList();
+    }
+
+    // ─── Phase 1.4 — IVR flow dependency ─────────────────────────────────────
+
+    /// <summary>
+    /// Cross-references IVR binding slots against the known flow list to detect:
+    /// <list type="bullet">
+    ///   <item>IVR binds to a flow that is in draft (never published) — callers reach a broken entry point.</item>
+    ///   <item>IVR binds to a flow that is stale (last published &gt;N days ago) — routing may be outdated.</item>
+    ///   <item>IVR binds to a flow ID not found in the flow list — the flow was likely deleted.</item>
+    ///   <item>IVR has DNIS numbers but no open-hours flow binding — all inbound calls have no route.</item>
+    /// </list>
+    /// Uses only already-fetched IVR and flow data — no additional API calls.
+    /// </summary>
+    private static IReadOnlyList<IvrFlowBindingFinding> AnalyzeIvrFlowBindings(
+        IReadOnlyList<IvrDto> ivrs,
+        IReadOnlyList<FlowDto> flows,
+        int staleFlowThresholdDays)
+    {
+        var findings = new List<IvrFlowBindingFinding>();
+
+        // Build fast lookup of flow ID → FlowDto
+        var flowById = flows
+            .Where(f => f.Id is not null)
+            .ToDictionary(f => f.Id!, f => f, StringComparer.OrdinalIgnoreCase);
+
+        var staleCutoff = DateTime.UtcNow.AddDays(-staleFlowThresholdDays);
+
+        foreach (var ivr in ivrs)
+        {
+            if (ivr.Id is null) continue;
+
+            var dnis = (IReadOnlyList<string>)(ivr.Dnis?.Where(d => !string.IsNullOrWhiteSpace(d)).ToList()
+                       ?? []);
+
+            // Check each binding slot
+            var slots = new[]
+            {
+                ("OpenHours",    ivr.OpenHoursFlow),
+                ("ClosedHours",  ivr.ClosedHoursFlow),
+                ("HolidayHours", ivr.HolidayHoursFlow),
+            };
+
+            bool hasAnyBinding = slots.Any(s => s.Item2?.Id is not null);
+
+            // Check 1: IVR has DNIS but no open-hours flow at all
+            if (dnis.Count > 0 && ivr.OpenHoursFlow?.Id is null)
+            {
+                findings.Add(new IvrFlowBindingFinding(
+                    IvrId: ivr.Id,
+                    IvrName: ivr.Name,
+                    Dnis: dnis,
+                    BindingSlot: "OpenHours",
+                    BoundFlowId: null,
+                    BoundFlowName: null,
+                    FlowDaysSincePublished: null,
+                    FindingCode: IvrBindingCode.NoOpenHoursFlow,
+                    Issue: $"IVR '{ivr.Name ?? ivr.Id}' has {dnis.Count} DNIS number(s) but no open-hours flow binding. " +
+                           "Inbound calls during open hours have no route.",
+                    Severity: FindingSeverity.Critical,
+                    Category: FindingCategory.LocalConfigFix,
+                    RecommendedAction: "Assign an active, published Architect flow to the open-hours slot of this IVR."));
+            }
+
+            // Check 2–4: for each populated binding slot, verify the bound flow's health
+            foreach (var (slot, flowRef) in slots)
+            {
+                if (flowRef?.Id is null) continue;
+
+                if (!flowById.TryGetValue(flowRef.Id, out var flow))
+                {
+                    // Flow ID referenced by IVR does not exist in our flow list
+                    findings.Add(new IvrFlowBindingFinding(
+                        IvrId: ivr.Id,
+                        IvrName: ivr.Name,
+                        Dnis: dnis,
+                        BindingSlot: slot,
+                        BoundFlowId: flowRef.Id,
+                        BoundFlowName: flowRef.Name,
+                        FlowDaysSincePublished: null,
+                        FindingCode: IvrBindingCode.FlowNotFound,
+                        Issue: $"IVR '{ivr.Name ?? ivr.Id}' {slot} slot references flow '{flowRef.Name ?? flowRef.Id}' " +
+                               "which was not found in the Architect flow list. The flow may have been deleted.",
+                        Severity: FindingSeverity.Critical,
+                        Category: FindingCategory.LocalConfigFix,
+                        RecommendedAction: "Re-bind this IVR slot to an existing, published flow, or restore the deleted flow."));
+                    continue;
+                }
+
+                // Flow exists — check published state
+                if (flow.PublishedVersion is null)
+                {
+                    findings.Add(new IvrFlowBindingFinding(
+                        IvrId: ivr.Id,
+                        IvrName: ivr.Name,
+                        Dnis: dnis,
+                        BindingSlot: slot,
+                        BoundFlowId: flow.Id,
+                        BoundFlowName: flow.Name,
+                        FlowDaysSincePublished: null,
+                        FindingCode: IvrBindingCode.FlowIsDraft,
+                        Issue: $"IVR '{ivr.Name ?? ivr.Id}' {slot} slot is bound to flow '{flow.Name ?? flow.Id}' " +
+                               "which has never been published (draft). Callers reaching this slot will experience an error.",
+                        Severity: FindingSeverity.Critical,
+                        Category: FindingCategory.LocalConfigFix,
+                        RecommendedAction: "Publish the flow or bind the IVR slot to an already-published flow."));
+                    continue;
+                }
+
+                // Flow is published — check if it's stale
+                var publishedDate = flow.PublishedVersion.PublishedDate;
+                if (publishedDate.HasValue && publishedDate.Value < staleCutoff)
+                {
+                    var days = (int)(DateTime.UtcNow - publishedDate.Value).TotalDays;
+                    findings.Add(new IvrFlowBindingFinding(
+                        IvrId: ivr.Id,
+                        IvrName: ivr.Name,
+                        Dnis: dnis,
+                        BindingSlot: slot,
+                        BoundFlowId: flow.Id,
+                        BoundFlowName: flow.Name,
+                        FlowDaysSincePublished: days,
+                        FindingCode: IvrBindingCode.FlowIsStale,
+                        Issue: $"IVR '{ivr.Name ?? ivr.Id}' {slot} slot is bound to flow '{flow.Name ?? flow.Id}' " +
+                               $"which has not been republished in {days} days (threshold: {staleFlowThresholdDays}). " +
+                               "Routing behaviour may not reflect the current intended configuration.",
+                        Severity: FindingSeverity.Medium,
+                        Category: FindingCategory.ChangeReviewRequired,
+                        RecommendedAction: "Review the flow and republish if the configuration is still current, or update routing to a newer flow version."));
+                }
+            }
+        }
+
+        return findings
+            .OrderByDescending(f => f.Severity)
+            .ThenBy(f => f.IvrName ?? "", StringComparer.OrdinalIgnoreCase)
+            .ThenBy(f => f.BindingSlot, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    // ─── Phase 1.2 — User telephony integrity ────────────────────────────────
+
+    /// <summary>
+    /// Correlates each user's profile extension, station assignment, and DID ownership
+    /// to detect contradictions that indicate misconfiguration or platform sync issues.
+    /// Uses only already-fetched data — no additional API calls.
+    /// </summary>
+    private static IReadOnlyList<UserTelephonyIntegrityFinding> AnalyzeUserTelephonyIntegrity(
+        IReadOnlyList<GenesysUserDto> users,
+        IReadOnlyList<EdgeExtensionEntityDto> extensions,
+        IReadOnlyList<DidDto> dids)
+    {
+        var findings = new List<UserTelephonyIntegrityFinding>();
+
+        // Build lookup: normalized extension key → user IDs that own the assignment
+        var assignedExtToUserIds = extensions
+            .Where(e => e.Id is not null
+                && string.Equals(e.AssignedTo?.Type, "USER", StringComparison.OrdinalIgnoreCase)
+                && e.AssignedTo?.Id is not null)
+            .GroupBy(e => e.Extension?.Trim() ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+            .Where(g => !string.IsNullOrWhiteSpace(g.Key))
+            .ToDictionary(g => g.Key, g => g.Select(e => e.AssignedTo!.Id!).ToHashSet(StringComparer.OrdinalIgnoreCase),
+                StringComparer.OrdinalIgnoreCase);
+
+        // Build lookup: user ID → DIDs assigned to that user
+        var didsByUserId = dids
+            .Where(d => d.Owner is not null
+                && string.Equals(d.Owner.Type, "User", StringComparison.OrdinalIgnoreCase)
+                && d.Owner.Id is not null)
+            .GroupBy(d => d.Owner!.Id!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
+        foreach (var user in users)
+        {
+            if (user.Id is null) continue;
+
+            var profileExt = ExtractWorkPhoneExtension(user);
+            var stationId = user.Station?.Id;
+            var stationName = user.Station?.Name;
+            var hasProfileExt = !string.IsNullOrWhiteSpace(profileExt);
+            var hasStation = !string.IsNullOrWhiteSpace(stationId);
+
+            // Check 1: User has a work-phone extension on profile but no station assignment.
+            // Indicates telephony provisioning is incomplete or the station was removed
+            // after the extension was configured.
+            if (hasProfileExt && !hasStation)
+            {
+                findings.Add(new UserTelephonyIntegrityFinding(
+                    UserId: user.Id,
+                    UserName: user.Name,
+                    Email: user.Email,
+                    UserState: user.State,
+                    ProfileExtensionRaw: profileExt,
+                    StationId: null,
+                    StationName: null,
+                    RelatedDidNumber: null,
+                    FindingCode: TelephonyIntegrityCode.ExtensionWithoutStation,
+                    Issue: $"User has work-phone extension '{profileExt}' on profile but no station is assigned. " +
+                           "Telephony provisioning appears incomplete.",
+                    Severity: FindingSeverity.High,
+                    Category: FindingCategory.LocalConfigFix,
+                    RecommendedAction: "Assign a station to this user or remove the extension from the profile if telephony is no longer needed."));
+            }
+
+            // Check 2: User has a station assigned but no work-phone extension on their profile.
+            // A station without a mapped extension number means the station cannot be reached.
+            if (hasStation && !hasProfileExt)
+            {
+                findings.Add(new UserTelephonyIntegrityFinding(
+                    UserId: user.Id,
+                    UserName: user.Name,
+                    Email: user.Email,
+                    UserState: user.State,
+                    ProfileExtensionRaw: null,
+                    StationId: stationId,
+                    StationName: stationName,
+                    RelatedDidNumber: null,
+                    FindingCode: TelephonyIntegrityCode.StationWithoutExtension,
+                    Issue: $"User has station '{stationName ?? stationId}' assigned but no work-phone extension on the profile. " +
+                           "The station cannot be dialled by extension.",
+                    Severity: FindingSeverity.Medium,
+                    Category: FindingCategory.LocalConfigFix,
+                    RecommendedAction: "Add a work-phone extension to this user's profile contact info to complete the telephony configuration."));
+            }
+
+            // Check 3: A DID is assigned (by owner user ID) to this user, but the DID's phone number
+            // does not appear on any of the user's profile contact info fields.
+            // This means the DID assignment and the user's identity disagree — either the DID
+            // was moved without updating the profile, or the profile was updated without re-assigning the DID.
+            if (didsByUserId.TryGetValue(user.Id, out var userDids))
+            {
+                var profileNumbers = GetAllWorkPhoneContactInfo(user)
+                    .Select(ci => NormalizePhoneNumber(ci.Address ?? string.Empty))
+                    .Where(n => n is not null)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+
+                foreach (var did in userDids)
+                {
+                    if (string.IsNullOrWhiteSpace(did.PhoneNumber)) continue;
+                    var normalized = NormalizePhoneNumber(did.PhoneNumber);
+                    if (normalized is null) continue;
+
+                    if (!profileNumbers.Contains(normalized))
+                    {
+                        findings.Add(new UserTelephonyIntegrityFinding(
+                            UserId: user.Id,
+                            UserName: user.Name,
+                            Email: user.Email,
+                            UserState: user.State,
+                            ProfileExtensionRaw: profileExt,
+                            StationId: stationId,
+                            StationName: stationName,
+                            RelatedDidNumber: did.PhoneNumber,
+                            FindingCode: TelephonyIntegrityCode.DidOwnerExtensionMismatch,
+                            Issue: $"DID {did.PhoneNumber} is assigned to this user in the telephony system, " +
+                                   "but that number does not appear on the user's profile contact info. " +
+                                   "The DID assignment and user profile are out of sync.",
+                            Severity: FindingSeverity.High,
+                            Category: FindingCategory.LocalConfigFix,
+                            RecommendedAction: "Add the DID number to the user's profile contact info, or re-assign the DID to the correct user."));
+                    }
+                }
+            }
+        }
+
+        return findings
+            .OrderBy(f => f.FindingCode)
+            .ThenBy(f => f.UserName ?? "", StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    // ─── Phase 1.3 — Queue serviceability ────────────────────────────────────
+
+    /// <summary>
+    /// For each non-empty queue (within the configured member cap), fetches the first page
+    /// of joined members and cross-references them against the user active-state lookup.
+    /// Queues where all checked members are inactive or unresolvable are flagged as
+    /// non-serviceable.
+    /// </summary>
+    private async Task<IReadOnlyList<QueueServiceabilityFinding>> AnalyzeQueueServiceabilityAsync(
+        IReadOnlyList<QueueDto> queues,
+        IReadOnlyList<GenesysUserDto> users,
+        AuditRunOptions options,
+        CancellationToken ct)
+    {
+        var findings = new List<QueueServiceabilityFinding>();
+
+        // Build user lookup for fast cross-reference
+        var userById = users
+            .Where(u => u.Id is not null)
+            .ToDictionary(u => u.Id!, u => u, StringComparer.OrdinalIgnoreCase);
+
+        var memberPageSize = Math.Clamp(options.QueueServiceabilityMemberPageSize, 1, 100);
+        var maxMembersToCheck = options.QueueServiceabilityMaxMembersToCheck;
+
+        // Only check queues that have members; skip if above the configured size cap
+        var candidateQueues = queues
+            .Where(q => q.Id is not null && (q.MemberCount ?? 0) > 0)
+            .Where(q => maxMembersToCheck <= 0 || (q.MemberCount ?? 0) <= maxMembersToCheck)
+            .ToList();
+
+        _logger.LogInformation(
+            "Queue serviceability: checking {Count} queues (of {Total} total, skipping empty and >cap)",
+            candidateQueues.Count, queues.Count);
+
+        // Fetch members for candidate queues with bounded concurrency to respect rate limits
+        var semaphore = new SemaphoreSlim(5, 5);
+
+        var tasks = candidateQueues.Select(async queue =>
+        {
+            await semaphore.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+
+                var page = await _queueMembersClient
+                    .GetQueueMembersPageAsync(queue.Id!, 1, memberPageSize, ct)
+                    .ConfigureAwait(false);
+
+                var members = page.Entities ?? [];
+                if (members.Count == 0) return null;
+
+                int active = 0, inactive = 0, unresolvable = 0;
+
+                foreach (var member in members)
+                {
+                    // The user ID is the top-level "id" field on the member entity
+                    var userId = member.Id
+                        ?? member.User?.Id;
+
+                    if (userId is null)
+                    {
+                        unresolvable++;
+                        continue;
+                    }
+
+                    if (!userById.TryGetValue(userId, out var userDto))
+                    {
+                        // Not in our user list — either fetched inactive-excluded or genuinely gone
+                        unresolvable++;
+                        continue;
+                    }
+
+                    if (string.Equals(userDto.State, "inactive", StringComparison.OrdinalIgnoreCase))
+                        inactive++;
+                    else
+                        active++;
+                }
+
+                var membersChecked = members.Count;
+                var allNonServiceable = active == 0;
+
+                if (!allNonServiceable) return null;
+
+                var issue = inactive > 0 && unresolvable == 0
+                    ? $"All {membersChecked} checked member(s) are inactive. Queue cannot service work."
+                    : unresolvable > 0 && inactive == 0
+                        ? $"None of the {membersChecked} checked member(s) could be resolved to an active user. Queue serviceability is unknown."
+                        : $"Checked {membersChecked} member(s): {inactive} inactive, {unresolvable} unresolvable, 0 active. Queue cannot service work.";
+
+                var severity = inactive + unresolvable == membersChecked
+                    ? FindingSeverity.High
+                    : FindingSeverity.Medium;
+
+                return new QueueServiceabilityFinding(
+                    QueueId: queue.Id!,
+                    QueueName: queue.Name,
+                    TotalMembersOnRecord: queue.MemberCount ?? membersChecked,
+                    MembersChecked: membersChecked,
+                    ActiveMemberCount: active,
+                    InactiveMemberCount: inactive,
+                    UnresolvableMemberCount: unresolvable,
+                    Issue: issue,
+                    Severity: severity,
+                    Category: FindingCategory.LocalConfigFix,
+                    RecommendedAction: "Review queue membership. Remove inactive users and add active, appropriately-skilled agents.");
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogWarning(ex, "Failed to fetch members for queue {QueueId}. Skipping.", queue.Id);
+                return null;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        findings.AddRange(results.Where(f => f is not null)!);
+
+        return findings
+            .OrderByDescending(f => f.Severity)
+            .ThenByDescending(f => f.InactiveMemberCount)
+            .ThenBy(f => f.QueueName)
+            .ToList();
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────

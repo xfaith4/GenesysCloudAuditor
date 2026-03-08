@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Domain.Services;
 
 namespace GenesysExtensionAudit.Infrastructure.Reporting;
@@ -38,6 +39,9 @@ public sealed class ExcelReportService : IExcelReportService
         WriteExtOwnershipMismatchSheet(wb, report);
         WriteExtAssignVsProfileSheet(wb, report);
         WriteDidMismatchSheet(wb, report);
+        WriteIvrFlowBindingsSheet(wb, report);
+        WriteUserTelephonyIntegritySheet(wb, report);
+        WriteQueueServiceabilitySheet(wb, report);
         WriteAuditLogsSheet(wb, report);
         WriteOperationalEventsSheet(wb, report);
         WriteOutboundEventsSheet(wb, report);
@@ -73,6 +77,9 @@ public sealed class ExcelReportService : IExcelReportService
             ("Stale_Tokens", "Users with Stale Token", report.Options.RunInactiveUserAudit, report.InactiveUserFindings.Count, "Warning", $"Users with token last-issued older than {report.Options.InactiveUserThresholdDays} days"),
             ("Users_No_Location", "Users Missing Location", report.Options.RunInactiveUserAudit, report.NoLocationUserFindings.Count, "Warning", "Users with no location configured on their account"),
             ("DID_Mismatches", "DID Mismatches", report.Options.RunDidAudit, report.DidFindings.Count, "Warning", "DIDs unassigned, orphaned, or assigned to inactive users"),
+            ("IVR_Flow_Bindings", "IVR Flow Bindings", report.Options.RunFlowDependencyAudit, report.IvrFlowBindingFindings.Count, "Critical", "IVR entry points bound to draft, stale, or deleted flows — callers may be unable to connect"),
+            ("User_Telephony_Integrity", "User Telephony Integrity", report.Options.RunUserTelephonyAudit, report.UserTelephonyIntegrityFindings.Count, "High", "User extension / station / DID ownership contradictions across API surfaces"),
+            ("Queue_Serviceability", "Queue Serviceability", report.Options.RunQueueServiceabilityAudit, report.QueueServiceabilityFindings.Count, "High", "Queues with zero active or resolvable members — cannot service work"),
             ("Audit_Logs", "Audit Logs Events", report.Options.RunAuditLogs, report.AuditLogFindings.Count, "Info", "Audit transaction events returned from Genesys audit logs query"),
             ("Operational_Events", "Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count, "Info", $"Operational events from last {report.Options.OperationalEventLookbackDays} day(s)"),
             ("Outbound_Events", "Outbound Events", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count, "Info", "Outbound event logs"),
@@ -101,7 +108,7 @@ public sealed class ExcelReportService : IExcelReportService
             // Color-code severity + row
             var rowRange = ws.Range(row, 1, row, 6);
             var severityCell = ws.Cell(row, 5);
-            if (severity == "Critical")
+            if (severity is "Critical" or "High")
                 severityCell.Style.Fill.BackgroundColor = SeverityCritical;
             else if (severity == "Warning")
                 severityCell.Style.Fill.BackgroundColor = SeverityWarning;
@@ -528,6 +535,151 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 6);
+    }
+
+    // ─── IVR Flow Bindings (Phase 1.4) ──────────────────────────────────────
+
+    private static void WriteIvrFlowBindingsSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("IVR_Flow_Bindings");
+        var findings = report.IvrFlowBindingFindings;
+
+        string[] headers =
+        [
+            "Finding Code", "IVR Name", "IVR ID", "Binding Slot", "DNIS Count", "DNIS Numbers",
+            "Bound Flow Name", "Bound Flow ID", "Days Since Published",
+            "Severity", "Category", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "IVR Flow Dependency — Entry Point Binding Integrity", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.FindingCode;
+            ws.Cell(row, 2).Value = f.IvrName;
+            ws.Cell(row, 3).Value = f.IvrId;
+            ws.Cell(row, 4).Value = f.BindingSlot;
+            ws.Cell(row, 5).Value = f.Dnis.Count;
+            ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 6).Value = f.Dnis.Count > 0 ? string.Join(", ", f.Dnis) : "";
+            ws.Cell(row, 7).Value = f.BoundFlowName;
+            ws.Cell(row, 8).Value = f.BoundFlowId;
+            if (f.FlowDaysSincePublished.HasValue)
+                ws.Cell(row, 9).Value = f.FlowDaysSincePublished.Value;
+            else
+                ws.Cell(row, 9).Value = f.BoundFlowId is null ? "N/A — no binding" : "N/A — never published";
+            ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 10).Value = f.Severity.ToString();
+            ws.Cell(row, 11).Value = f.Category.ToString();
+            ws.Cell(row, 12).Value = f.Issue;
+            ws.Cell(row, 13).Value = f.RecommendedAction;
+
+            var severityCell = ws.Cell(row, 10);
+            if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
+                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
+            else if (f.Severity == FindingSeverity.Medium)
+                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
+
+            ApplyAltRow(ws, row, 13);
+            row++;
+        }
+
+        AdjustColumns(ws, 13);
+    }
+
+    // ─── User Telephony Integrity (Phase 1.2) ───────────────────────────────
+
+    private static void WriteUserTelephonyIntegritySheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("User_Telephony_Integrity");
+        var findings = report.UserTelephonyIntegrityFindings;
+
+        string[] headers =
+        [
+            "Finding Code", "User Name", "User ID", "Email", "State",
+            "Profile Extension", "Station ID", "Station Name",
+            "Related DID", "Severity", "Category", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "User Telephony Integrity — Cross-Endpoint Contradictions", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.FindingCode;
+            ws.Cell(row, 2).Value = f.UserName;
+            ws.Cell(row, 3).Value = f.UserId;
+            ws.Cell(row, 4).Value = f.Email;
+            ws.Cell(row, 5).Value = f.UserState;
+            ws.Cell(row, 6).Value = f.ProfileExtensionRaw;
+            ws.Cell(row, 7).Value = f.StationId;
+            ws.Cell(row, 8).Value = f.StationName;
+            ws.Cell(row, 9).Value = f.RelatedDidNumber;
+            ws.Cell(row, 10).Value = f.Severity.ToString();
+            ws.Cell(row, 11).Value = f.Category.ToString();
+            ws.Cell(row, 12).Value = f.Issue;
+            ws.Cell(row, 13).Value = f.RecommendedAction;
+
+            var severityCell = ws.Cell(row, 10);
+            if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
+                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
+            else if (f.Severity == FindingSeverity.Medium)
+                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
+
+            ApplyAltRow(ws, row, 13);
+            row++;
+        }
+
+        AdjustColumns(ws, 13);
+    }
+
+    // ─── Queue Serviceability (Phase 1.3) ───────────────────────────────────
+
+    private static void WriteQueueServiceabilitySheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Queue_Serviceability");
+        var findings = report.QueueServiceabilityFindings;
+
+        string[] headers =
+        [
+            "Queue Name", "Queue ID", "Members (Record)", "Members Checked",
+            "Active", "Inactive", "Unresolvable", "Severity", "Category", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "Queue Serviceability — Non-Serviceable Queue Membership", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.QueueName;
+            ws.Cell(row, 2).Value = f.QueueId;
+            ws.Cell(row, 3).Value = f.TotalMembersOnRecord;
+            ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 4).Value = f.MembersChecked;
+            ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 5).Value = f.ActiveMemberCount;
+            ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 6).Value = f.InactiveMemberCount;
+            ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 7).Value = f.UnresolvableMemberCount;
+            ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 8).Value = f.Severity.ToString();
+            ws.Cell(row, 9).Value = f.Category.ToString();
+            ws.Cell(row, 10).Value = f.Issue;
+            ws.Cell(row, 11).Value = f.RecommendedAction;
+
+            var severityCell = ws.Cell(row, 8);
+            if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
+                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
+            else if (f.Severity == FindingSeverity.Medium)
+                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
+
+            if (f.ActiveMemberCount == 0)
+                ws.Cell(row, 5).Style.Fill.BackgroundColor = SeverityCritical;
+
+            ApplyAltRow(ws, row, 11);
+            row++;
+        }
+
+        AdjustColumns(ws, 11);
     }
 
     // ─── Shared helpers ──────────────────────────────────────────────────────

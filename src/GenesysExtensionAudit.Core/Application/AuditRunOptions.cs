@@ -89,4 +89,47 @@ public sealed class AuditRunOptions
     /// Run outbound events query path.
     /// </summary>
     public bool RunOutboundEvents { get; init; } = false;
+
+    // ─── Phase 1.4 — Flow dependency audit ───────────────────────────────────
+
+    /// <summary>
+    /// Fetch IVR configurations and cross-reference bound flows against the flow list to detect
+    /// IVRs bound to draft flows, stale flows, deleted flows, or with no flow binding at all
+    /// (ROADMAP Phase 1.4).
+    /// Also requires <see cref="RunFlowAudit"/> to be true so flow data is fetched.
+    /// </summary>
+    public bool RunFlowDependencyAudit { get; init; } = true;
+
+    // ─── Phase 1.2 — User telephony integrity ────────────────────────────────
+
+    /// <summary>
+    /// Cross-reference user profile extensions, station assignments, and DID ownership
+    /// to detect telephony identity contradictions (ROADMAP Phase 1.2).
+    /// Requires users, extensions, and DIDs to be fetched.
+    /// </summary>
+    public bool RunUserTelephonyAudit { get; init; } = true;
+
+    // ─── Phase 1.3 — Queue serviceability ────────────────────────────────────
+
+    /// <summary>
+    /// Fetch queue members for non-empty queues and cross-reference against user active state
+    /// to detect queues with no serviceable membership (ROADMAP Phase 1.3).
+    /// Fetches up to <see cref="QueueServiceabilityMemberPageSize"/> members per queue.
+    /// </summary>
+    public bool RunQueueServiceabilityAudit { get; init; } = true;
+
+    /// <summary>
+    /// Number of members fetched per queue for serviceability analysis.
+    /// Capped at 100 to limit API call volume on large tenants.
+    /// Default: 100.
+    /// </summary>
+    public int QueueServiceabilityMemberPageSize { get; init; } = 100;
+
+    /// <summary>
+    /// Queues with a member count above this threshold are skipped during serviceability
+    /// member fetching to prevent excessive API load on extremely large queues.
+    /// Set to 0 to disable the cap (check all queues regardless of size).
+    /// Default: 500.
+    /// </summary>
+    public int QueueServiceabilityMaxMembersToCheck { get; init; } = 500;
 }
