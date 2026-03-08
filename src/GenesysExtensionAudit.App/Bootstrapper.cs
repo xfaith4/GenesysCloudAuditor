@@ -15,6 +15,7 @@ using GenesysExtensionAudit.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.IO;
 
 namespace GenesysExtensionAudit;
 
@@ -25,6 +26,16 @@ namespace GenesysExtensionAudit;
 public static class Bootstrapper
 {
     private static IHost? _host;
+
+    /// <summary>
+    /// %APPDATA%\GenesysCloudAuditor\user-settings.json
+    /// Loaded after appsettings.json so user values take precedence.
+    /// Written by UserSettingsService; IOptionsMonitor picks up changes immediately.
+    /// </summary>
+    private static readonly string UserSettingsPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "GenesysCloudAuditor",
+        "user-settings.json");
 
     public static IServiceProvider Services
         => _host?.Services ?? throw new InvalidOperationException("Host not initialized. Call Bootstrapper.Initialize().");
@@ -38,6 +49,8 @@ public static class Bootstrapper
             {
                 cfg.SetBasePath(AppContext.BaseDirectory);
                 cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                // User-editable overrides (Settings tab writes here; higher priority than appsettings.json)
+                cfg.AddJsonFile(UserSettingsPath, optional: true, reloadOnChange: true);
                 cfg.AddEnvironmentVariables();
             })
             .ConfigureServices((ctx, services) =>
@@ -47,6 +60,9 @@ public static class Bootstrapper
                 services.Configure<GenesysOAuthOptions>(ctx.Configuration.GetSection("GenesysOAuth"));
                 services.Configure<ScheduledAuditOptions>(ctx.Configuration.GetSection("Scheduling"));
                 services.Configure<GitHubOptions>(ctx.Configuration.GetSection("GitHub"));
+
+                // User settings persistence
+                services.AddSingleton<IUserSettingsService, UserSettingsService>();
 
                 // Core domain services
                 services.AddSingleton<IExtensionNormalizer, ExtensionNormalizer>();
@@ -135,6 +151,7 @@ public static class Bootstrapper
                 services.AddSingleton<MainViewModel>();
                 services.AddTransient<RunAuditViewModel>();
                 services.AddTransient<ScheduleAuditViewModel>();
+                services.AddTransient<SettingsViewModel>();
 
                 // Shell window
                 services.AddSingleton<MainWindow>(sp =>
@@ -158,6 +175,10 @@ public static class Bootstrapper
             key: "ScheduleAudit",
             displayName: "Schedule Audits",
             factory: () => _host.Services.GetRequiredService<ScheduleAuditViewModel>());
+        navigation.Register(
+            key: "Settings",
+            displayName: "Settings",
+            factory: () => _host.Services.GetRequiredService<SettingsViewModel>());
         navigation.Navigate("RunAudit");
     }
 
@@ -173,5 +194,3 @@ public static class Bootstrapper
         _host = null;
     }
 }
-
-

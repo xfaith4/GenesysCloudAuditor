@@ -2,10 +2,12 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="clr-namespace:GenesysExtensionAudit.Views"
-             xmlns:vm="clr-namespace:GenesysExtensionAudit.ViewModels">
+             xmlns:vm="clr-namespace:GenesysExtensionAudit.ViewModels"
+             xmlns:conv="clr-namespace:GenesysExtensionAudit.Converters">
     <Application.Resources>
         <!-- Converters -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <conv:StringToVisibilityConverter x:Key="StringToVisibility" />
 
         <!-- ViewModel -> View mappings (navigation/content host uses DataTemplates) -->
         <DataTemplate DataType="{x:Type vm:RunAuditViewModel}">
@@ -14,13 +16,8 @@
         <DataTemplate DataType="{x:Type vm:ScheduleAuditViewModel}">
             <views:ScheduleAuditView />
         </DataTemplate>
-        <!-- Future mappings:
-        <DataTemplate DataType="{x:Type vm:ResultsViewModel}">
-            <views:ResultsView />
-        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
             <views:SettingsView />
         </DataTemplate>
-        -->
     </Application.Resources>
 </Application>

@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Infrastructure.Application;
-using GenesysExtensionAudit.Infrastructure.Genesys.Clients;
+using GenesysExtensionAudit.Infrastructure.Configuration;
 using GenesysExtensionAudit.Infrastructure.Reporting;
 using GenesysExtensionAudit.Services;
+using Microsoft.Extensions.Options;
 using Microsoft.Win32;
 
 namespace GenesysExtensionAudit.ViewModels;
@@ -29,6 +30,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private readonly IExcelReportService _excelService;
     private readonly IAuditLogCatalogCache _auditLogCatalogCache;
     private readonly IGitHubUploadService _gitHubUploadService;
+    private readonly IOptionsMonitor<GitHubOptions> _gitHubOptions;
     private readonly ObservableCollection<string> _auditLogEntities = [];
     private readonly ObservableCollection<RunSummaryRow> _lastRunSummary = [];
 
@@ -63,12 +65,17 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         IAuditOrchestrator orchestrator,
         IExcelReportService excelService,
         IAuditLogCatalogCache auditLogCatalogCache,
-        IGitHubUploadService gitHubUploadService)
+        IGitHubUploadService gitHubUploadService,
+        IOptionsMonitor<GitHubOptions> gitHubOptions)
     {
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
         _auditLogCatalogCache = auditLogCatalogCache ?? throw new ArgumentNullException(nameof(auditLogCatalogCache));
         _gitHubUploadService = gitHubUploadService ?? throw new ArgumentNullException(nameof(gitHubUploadService));
+        _gitHubOptions = gitHubOptions ?? throw new ArgumentNullException(nameof(gitHubOptions));
+
+        // Refresh IsGitHubConfigured binding when settings change (e.g. after saving in Settings tab).
+        _gitHubOptions.OnChange(_ => OnPropertyChanged(nameof(IsGitHubConfigured)));
 
         StartCommand = new RelayCommand(StartAsync, () => !IsRunning);
         CancelCommand = new RelayCommand(Cancel, () => IsRunning);
@@ -230,8 +237,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         set => SetField(ref _pushToGitHub, value);
     }
 
-    /// <summary>True when the GitHub configuration in appsettings.json is complete.</summary>
-    public bool IsGitHubConfigured => _gitHubUploadService.IsConfigured;
+    /// <summary>True when GitHub credentials are configured (appsettings.json or Settings tab).</summary>
+    public bool IsGitHubConfigured => _gitHubOptions.CurrentValue.IsConfigured;
 
     public bool IsLoadingAuditLogEntities
     {

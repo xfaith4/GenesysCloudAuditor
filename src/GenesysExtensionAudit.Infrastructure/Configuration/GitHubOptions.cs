@@ -31,6 +31,20 @@ public sealed class GitHubOptions
     /// <summary>Commit message used when pushing the report. Supports a {fileName} placeholder.</summary>
     public string CommitMessage { get; set; } = "chore: add audit report {fileName}";
 
+    /// <summary>
+    /// When true, the report is pushed to a new short-lived branch and a draft
+    /// pull request is opened targeting <see cref="Branch"/> instead of
+    /// committing the file directly to that branch.
+    /// </summary>
+    public bool CreateDraftPr { get; set; } = false;
+
+    /// <summary>
+    /// Prefix for the auto-generated PR source branch.
+    /// The full branch name will be "{PrBranchPrefix}{yyyyMMdd_HHmmss}",
+    /// e.g. "audit/20260308_143022".
+    /// </summary>
+    public string PrBranchPrefix { get; set; } = "audit/";
+
     /// <summary>True when all required fields are present.</summary>
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(Token) &&

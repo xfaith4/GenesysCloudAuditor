@@ -7,4 +7,20 @@
     <WarningLevel>5</WarningLevel>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
+
+  <!--
+    MinVer derives the version from git tags at build time.
+    Tag the repo with "v1.0.0" (or similar) to anchor the version.
+    Between tags, the informational version becomes e.g. "1.0.0-alpha.0.3+abc1234".
+    MainWindow.xaml.cs strips the "+..." suffix so the UI shows "1.0.0-alpha.0.3".
+    To release a new version: git tag v1.2.0 and push the tags.
+  -->
+  <PropertyGroup>
+    <!-- Tell MinVer that tags use the "v" prefix (e.g. v1.0.0, v1.2.3). -->
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="4.3.0" PrivateAssets="All" />
+  </ItemGroup>
 </Project>

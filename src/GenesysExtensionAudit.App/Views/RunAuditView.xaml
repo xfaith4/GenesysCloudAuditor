@@ -165,11 +165,11 @@
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsGitHubConfigured}" Value="True">
                                         <Setter Property="Text"
-                                                Value="The report will be saved locally first, then pushed to the configured GitHub repository." />
+                                                Value="The report will be saved locally first, then pushed to the configured GitHub repository. Enable 'Create draft PR' in Settings to open a pull request instead of committing directly." />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsGitHubConfigured}" Value="False">
                                         <Setter Property="Text"
-                                                Value="GitHub push is disabled. Configure GitHub:Token, GitHub:Owner, and GitHub:Repository in appsettings.json to enable." />
+                                                Value="GitHub push is disabled. Go to the Settings tab to configure your repository and personal access token." />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
