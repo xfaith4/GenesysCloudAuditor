@@ -1,59 +1,28 @@
-This scaffold was generated from orchestrator artifacts. See /docs for additional design notes and patch snippets.
+# Documentation Notes and Verification Queue
 
-Here is a prompt for Codex to make it into a buildable .NET 8 WFT solution:
+This file tracks documentation claims that need human verification or periodic review.
 
-You are working in a repo generated from GenesysExtensionAudit_scaffold.zip.
+Audience: maintainers and release owners.
 
-GOAL
-Turn this scaffold into a buildable .NET 8 WPF solution with clean layering and consistent namespaces.
+Use this file before publishing external docs or customer-facing release notes.
 
-REQUIRED OUTCOME
-- A real Visual Studio solution: GenesysExtensionAudit.sln
-- Projects:
-  1) src/GenesysExtensionAudit.App (WPF net8.0-windows)
-  2) src/GenesysExtensionAudit.Domain (class library)
-  3) src/GenesysExtensionAudit.Infrastructure (class library)
-  4) tests/GenesysExtensionAudit.Tests (xUnit)
-- App references Domain + Infrastructure
-- Infrastructure references Domain
-- Tests reference Domain + Infrastructure
+## Current Verification Items
 
-STRUCTURE WORK
-- Move/keep AuditEngine.cs under Domain and set its namespace to GenesysExtensionAudit.Domain (or GenesysExtensionAudit.Domain.Services).
-- Replace any namespace "GenesysCloudExtensionAudit" with "GenesysExtensionAudit.Domain" (or the correct layer) consistently.
-- Ensure DTOs + API services live in Infrastructure with namespace GenesysExtensionAudit.Infrastructure.*.
-- Ensure WPF ViewModels live in App with namespace GenesysExtensionAudit.App.ViewModels (or GenesysExtensionAudit.ViewModels, but be consistent).
+| Item | Why verification is required | Source |
+| --- | --- | --- |
+| Exact Genesys permission labels in each tenant | Permission names vary by Genesys org and UI terminology | [setup guide](docs/setup-and-operations.md) |
+| SharePoint Graph permission readiness (`Sites.ReadWrite.All`) | Depends on Azure app registration and tenant consent | [release guide](docs/release-packaging-and-signing.md) |
+| Scheduler behavior under restricted local security policy | Windows Task Scheduler policies can block task creation or execution | [UI workflow guide](docs/run-audit-workflow.md) |
+| Performance expectations for very large tenants | Tenant size and API limits vary; benchmark data is environment-specific | [QA matrix](docs/detailed-qa-matrix.md) |
 
-DEPENDENCIES
-- Add required NuGet packages where needed:
-  - App: CommunityToolkit.Mvvm, Microsoft.Extensions.Hosting, Microsoft.Extensions.Http, Microsoft.Extensions.Configuration.Json, logging
-  - Infrastructure: Serilog + Serilog.Sinks.File (and whatever your Logging.cs requires), plus Options/Http packages
-  - Tests: xunit, xunit.runner.visualstudio, Microsoft.NET.Test.Sdk
-- Make sure all package references match the code usage.
+## Documentation Debt
 
-APP WIRING
-- Implement DI bootstrapping in App.xaml.cs (HostBuilder)
-- Register:
-  - HttpClientFactory + typed client(s)
-  - UsersService, ExtensionsService
-  - PagingOrchestrator options
-  - Logging (Serilog)
-  - ViewModels
-- Ensure long-running calls run async without freezing UI:
-  - Use async commands
-  - CancellationToken support
-  - Progress reporting bound to UI
+- Historical filenames in `docs/` are intentionally preserved for traceability but should be renamed in a future cleanup pass.
+- Add screenshots for `Run Audit`, `Schedule Audits`, and report output once UI stabilizes.
+- Add a contributor documentation standard (`docs/style-guide.md`) if the repository grows.
 
-CONFIG
-- appsettings.json should load and bind options objects (OAuth clientId/clientSecret, paging settings, retry/backoff settings).
-- Support user-secrets for OAuth client secret.
+## Review Cadence
 
-BUILD QUALITY
-- Fix all compile errors
-- Add minimal missing types referenced by XAML bindings (e.g., record types for DataGrid rows) as needed.
-- Ensure solution builds and tests run.
-
-DELIVERABLES
-- Commit-ready code changes only. No pseudocode.
-- Provide a short “How to run” in README.md: configure secrets, build, run, export.
+- Review this file before each tagged release.
+- Close or refresh stale verification items every 90 days.
 
