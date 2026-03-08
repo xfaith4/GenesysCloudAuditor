@@ -1,214 +1,152 @@
 # Genesys Cloud Auditor
 
-<<<<<<< HEAD
-This repository contains a .NET 8 Windows desktop auditor for Genesys Cloud configuration and operational data.
-=======
-A Windows desktop application (.NET 8 / WPF) that audits **Genesys Cloud** tenant configuration for telephony anomalies, platform synchronization bugs, and data quality issues. Findings are presented in a tabbed UI and exported to a multi-sheet Excel workbook.
->>>>>>> 512975b0dbf161da32bc57e0e50e9c9eb84e83b7
+Genesys Cloud Auditor is a Windows desktop and headless audit application for evaluating a **Genesys Cloud** organization for:
 
-Audience: platform administrators, support engineers, and developers maintaining audit workflows.
+- tenant misconfigurations
+- cross-endpoint inconsistencies
+- stale or orphaned routing dependencies
+- telephony ownership contradictions
+- data hygiene problems
+- operational patterns that may indicate a **probable platform-side issue**
 
-<<<<<<< HEAD
-Use this documentation when you need to configure credentials, run audits interactively or on a schedule, interpret findings, or package releases.
-
-## Quick Start
-
-1. Configure OAuth credentials and region in `src/GenesysExtensionAudit.App/appsettings.json` (or environment variables).
-2. Build:
-=======
-## What It Audits
-
-| Check | Sheet | Severity |
-|---|---|---|
-| Duplicate Work Phone extensions across user profiles | `Ext_Duplicates_Profile` | 🔴 Critical |
-| Extension claimed by a profile but assigned to a different entity in telephony | `Ext_Ownership_Mismatch` | 🔴 Critical |
-| Extensions present in only one of profile or telephony assignment | `Ext_Assign_vs_Profile` | 🟡 Warning |
-| Malformed or non-numeric extension values | `Invalid_Extensions` | 🟡 Warning |
-| Groups with zero or one member | `Empty_Groups` | 🟡 Warning |
-| Queues with no agents or duplicate names | `Empty_Queues` | 🟡 Warning |
-| Architect flows not republished within a configurable threshold | `Stale_Flows` | 🟡 Warning |
-| Inactive or deactivated user accounts | `Inactive_Users` | 🟡 Warning |
-| Unassigned, orphaned, or misassigned DIDs | `DID_Mismatches` | 🟡 Warning |
-| Genesys Cloud audit log exports | `Audit_Logs` | ℹ️ Info |
-| Operational and outbound event log exports | `Operational_Events` / `Outbound_Events` | ℹ️ Info |
+The application collects and correlates data from multiple Genesys Cloud API domains, presents findings in a desktop UI, and exports structured audit results for investigation, change management, and support escalation.
 
 ---
 
-## Quick Start
+## Why This Exists
 
-### Prerequisites
+Genesys Cloud environments often contain issues that are difficult to prove from a single admin screen or a single API response.
 
-- Windows 10/11 (64-bit)
-- .NET SDK 8.x
-- A Genesys Cloud OAuth client (Client Credentials grant type) with user-read and telephony-read permissions
+A queue may appear healthy but have no realistically serviceable agents.
+A user profile may claim an extension while telephony assigns it elsewhere.
+A number may still point to a flow that is stale, deleted, or operationally fragile.
+An object may look valid in one API surface and contradictory in another.
 
-### 1. Configure credentials
+Genesys Cloud Auditor is designed to detect those situations by comparing multiple authoritative sources and producing **evidence-backed findings** rather than isolated raw data dumps.
 
-```powershell
-cd src\GenesysExtensionAudit.App
-dotnet user-secrets set "GenesysOAuth:ClientId"     "YOUR_CLIENT_ID"
-dotnet user-secrets set "GenesysOAuth:ClientSecret" "YOUR_CLIENT_SECRET"
-```
+---
 
-Edit `src\GenesysExtensionAudit.App\appsettings.json` to set your org's region:
+## Product Goals
 
-```json
-{
-  "Genesys": {
-    "Region": "mypurecloud.com",
-    "PageSize": 100,
-    "IncludeInactive": false,
-    "MaxRequestsPerSecond": 3
-  }
-}
-```
+Genesys Cloud Auditor is built to answer five practical questions:
 
-### 2. Build and run
->>>>>>> 512975b0dbf161da32bc57e0e50e9c9eb84e83b7
+1. **What is wrong right now?**
+2. **Which APIs disagree about the same object or relationship?**
+3. **What changed recently that may explain the issue?**
+4. **Who should act on this finding, and what should they do next?**
+5. **Does this appear to be a tenant-side misconfiguration or a probable Genesys platform issue?**
 
-```powershell
-dotnet restore
-dotnet build -c Release
-```
+---
 
-3. Run the desktop app:
+## Current Capabilities
 
-```powershell
-dotnet run --project src\GenesysExtensionAudit.App\GenesysExtensionAudit.App.csproj
-```
+The current application already provides a strong audit foundation.
 
-<<<<<<< HEAD
-4. Optional: run the headless runner:
+### Implemented audit checks
 
-```powershell
-dotnet run --project src\GenesysExtensionAudit.Runner\GenesysExtensionAudit.Runner.csproj -- --dry-run
-```
+| Check                                    | Sheet                    | Severity |
+| ---------------------------------------- | ------------------------ | -------- |
+| Duplicate profile extensions             | `Ext_Duplicates_Profile` | Critical |
+| Extension ownership mismatch             | `Ext_Ownership_Mismatch` | Critical |
+| Assignment vs profile extension mismatch | `Ext_Assign_vs_Profile`  | Warning  |
+| Invalid extension values                 | `Invalid_Extensions`     | Warning  |
+| Empty or single-member groups            | `Empty_Groups`           | Warning  |
+| Empty or duplicate queues                | `Empty_Queues`           | Warning  |
+| Stale / unpublished Architect flows      | `Stale_Flows`            | Warning  |
+| Stale token users                        | `Stale_Tokens`           | Warning  |
+| Users missing location                   | `Users_No_Location`      | Warning  |
+| DID mismatches                           | `DID_Mismatches`         | Warning  |
+| Audit log export                         | `Audit_Logs`             | Info     |
+| Operational event export                 | `Operational_Events`     | Info     |
+| Outbound event export                    | `Outbound_Events`        | Info     |
 
-## Repository Layout
+### Current delivery model
+
+- Windows desktop application for interactive auditing
+- Headless runner for scheduled execution
+- Multi-sheet Excel workbook export
+- Optional scheduled task integration
+- Optional SharePoint upload in runner mode
+
+---
+
+## What Makes This Tool Different
+
+The long-term direction of the project is not merely “more checks.”
+
+It is to become a **correlation-driven investigation workbench** that can:
+
+- compare multiple API domains that should describe the same state
+- identify contradictions across user, telephony, queue, routing, flow, and topology data
+- preserve historical baselines
+- classify findings by severity, confidence, and likely owner
+- generate escalation-ready evidence for **Genesys Care** when a finding appears platform-side
+
+This is the core product direction described in [ROADMAP.md](ROADMAP.md).
+
+---
+
+## Roadmap Direction
+
+The roadmap is organized around five capability layers:
+
+1. **Configuration Integrity**
+2. **Cross-Endpoint Correlation**
+3. **Operational and Temporal Intelligence**
+4. **Actionability and Escalation**
+5. **Reporting, History, and UX**
+
+Key roadmap themes include:
+
+- user–station–extension–DID–site integrity correlation
+- queue serviceability analysis
+- flow dependency and dead-route detection
+- edge / site / trunk topology integrity checks
+- change-to-symptom timeline correlation
+- flapping / instability detection
+- historical drift analysis
+- support case evidence packet generation
+
+See [ROADMAP.md](ROADMAP.md) for the full feature plan.
+
+---
+
+## Audience
+
+This project is intended for:
+
+- Genesys Cloud platform administrators
+- cloud telephony and routing engineers
+- support engineers and escalation teams
+- internal change management teams
+- developers building tenant health and audit workflows
+
+---
+
+## Solution Structure
 
 ```text
 GenesysCloudAuditor/
 |-- src/
-|   |-- GenesysExtensionAudit.App/            # WPF UI + scheduling UI
-|   |-- GenesysExtensionAudit.Runner/         # Headless runner for scheduled tasks
-|   |-- GenesysExtensionAudit.Core/           # Contracts + domain models
-|   |-- GenesysExtensionAudit.Domain/         # Audit engine
+|   |-- GenesysExtensionAudit.App/            # WPF desktop UI
+|   |-- GenesysExtensionAudit.Runner/         # Headless runner for scheduled execution
+|   |-- GenesysExtensionAudit.Core/           # Contracts and shared models
+|   |-- GenesysExtensionAudit.Domain/         # Audit rules and domain logic
 |   `-- GenesysExtensionAudit.Infrastructure/ # API clients, orchestration, export, logging
 |-- tests/
 |   `-- GenesysExtensionAudit.Infrastructure.Tests/
 |-- docs/
-|   `-- reference and operational guides
+|   `-- supporting architecture and operator documentation
+|-- ROADMAP.md
 |-- QA.md
 `-- NOTES.md
-```
 
-## Documentation Map
+## Getting Started
 
-| Document | Purpose |
-| --- | --- |
-| [QA.md](QA.md) | QA strategy, acceptance gates, and execution model |
-| [NOTES.md](NOTES.md) | Verification backlog and documentation debt tracker |
-| [docs/setup-and-operations.md](docs/setup-and-operations.md) | Operator runbook for setup and execution |
-| [docs/oauth-and-api-resilience.md](docs/oauth-and-api-resilience.md) | Authentication and token lifecycle design |
-| [docs/application-architecture.md](docs/application-architecture.md) | Application architecture and layering |
-| [docs/data-model-and-audit-algorithms.md](docs/data-model-and-audit-algorithms.md) | Data model and audit logic |
-| [docs/extension-normalization-policy.md](docs/extension-normalization-policy.md) | Extension normalization policy |
-| [docs/detailed-qa-matrix.md](docs/detailed-qa-matrix.md) | Detailed end-to-end QA matrix |
-| [docs/release-packaging-and-signing.md](docs/release-packaging-and-signing.md) | Release packaging and signing |
+For setup, configuration, local execution, and runner usage, see:
 
-## Core Capabilities
+- [QuickStart.md](QuickStart.md)
+- [ROADMAP.md](ROADMAP.md)
+- [docs/](docs/)
+- [QA.md](QA.md)
 
-- Extension consistency checks (profiles vs assigned extensions)
-- Group, queue, flow, DID, and inactive-user audits
-- Optional audit logs, operational events, and outbound events
-- Excel report generation (`.xlsx`)
-- Windows scheduled task integration through the desktop app
-- Optional SharePoint upload in runner mode
-
-## Configuration Summary
-
-Primary settings live in:
-=======
-### 3. Run an audit
-
-1. Launch the application.
-2. Verify settings in the **Run Audit** tab (region, inactive toggle, page size).
-3. Click **Start**. Monitor progress in the status bar and progress indicator.
-4. After completion, click **Export Last Report...** to save the `.xlsx` workbook.
-
----
-
-## Documentation
-
-| Document | Description |
-|---|---|
-| [docs/architecture.md](docs/architecture.md) | Solution structure, MVVM pattern, DI, HTTP pipeline |
-| [docs/authentication.md](docs/authentication.md) | OAuth setup, token management, required permissions |
-| [docs/audit-checks.md](docs/audit-checks.md) | All audit types, data model, normalization pipeline |
-| [docs/deployment.md](docs/deployment.md) | Build, packaging, CI/CD, versioning |
-| [docs/qa-test-plan.md](docs/qa-test-plan.md) | QA test matrix and acceptance criteria |
-| [docs/examples/](docs/examples/README.md) | Example export output for each report sheet |
-| [ROADMAP.md](ROADMAP.md) | Planned future audit checks |
-
----
-
-## Troubleshooting
-
-| Symptom | Action |
-|---|---|
-| **401 Unauthorized** | Verify Client ID/Secret; confirm `Genesys:Region` matches your org |
-| **403 Forbidden** | Check that the OAuth client's roles include user-read and telephony-read |
-| **429 Too Many Requests** | Lower `Genesys:MaxRequestsPerSecond`; the app retries automatically with `Retry-After` backoff |
-| **Audit slow on large tenants** | Increase `Genesys:PageSize` (up to API cap, typically 200–500); run during off-hours |
-| **Missing users** | Set `IncludeInactive=true` if inactive users should be included; verify OAuth client is not division-scoped |
-| **TLS/proxy errors** | Verify outbound HTTPS to `api.{Region}` and `login.{Region}` on port 443 |
-
----
-
-## Running Tests
-
-```powershell
-dotnet test tests\GenesysExtensionAudit.Infrastructure.Tests\
-```
-
----
-
-## Scheduling Headless Runs
-
-Use the **Schedule Audits** tab to register Windows Scheduled Tasks that run the audit without the UI. The task invokes `GenesysExtensionAudit.Runner.exe` with a schedule profile JSON. See [docs/deployment.md](docs/deployment.md) for details.
->>>>>>> 512975b0dbf161da32bc57e0e50e9c9eb84e83b7
-
-- `src/GenesysExtensionAudit.App/appsettings.json`
-- `src/GenesysExtensionAudit.Runner/appsettings.json`
-
-Key sections:
-
-- `Genesys` (region, paging, throttling)
-- `GenesysOAuth` (client credentials)
-- `Audit` (enabled audit paths and thresholds)
-- `Export` (output directory and file prefix)
-- `SharePoint` (runner upload target)
-- `Scheduling` (desktop task registration behavior)
-
-Do not commit credentials.
-
-## Outputs
-
-- Interactive app prompts to save a workbook after completion.
-- Runner writes workbook to configured output directory.
-- Workbook contains summary plus per-audit worksheets (only for selected audit paths).
-
-## Troubleshooting Entry Points
-
-- Setup and permissions: [setup guide](docs/setup-and-operations.md)
-- OAuth and retry behavior: [OAuth guide](docs/oauth-and-api-resilience.md)
-- Test coverage and failure triage: [QA.md](QA.md)
-
-## Status Notes
-
-Some historical documents in `docs/` originated from scaffold/planning output and have been normalized. Open verification items are tracked in [NOTES.md](NOTES.md).
-
-<<<<<<< HEAD
-=======
-Add your license here (MIT / Apache-2.0 / etc.), or remove this section if not applicable.
->>>>>>> 512975b0dbf161da32bc57e0e50e9c9eb84e83b7
