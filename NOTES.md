@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Documentation Notes and Verification Queue
 
 This file tracks documentation claims that need human verification or periodic review.
@@ -25,4 +26,16 @@ Use this file before publishing external docs or customer-facing release notes.
 
 - Review this file before each tagged release.
 - Close or refresh stale verification items every 90 days.
+=======
+# Development Notes
 
+This project was originally scaffolded from an AI-generated artifact. See [`/docs`](docs/) for architecture, authentication, deployment, and audit check reference documentation.
+
+## Quick Reference
+>>>>>>> 512975b0dbf161da32bc57e0e50e9c9eb84e83b7
+
+- **Build:** `dotnet build -c Release`
+- **Test:** `dotnet test tests\GenesysExtensionAudit.Infrastructure.Tests\`
+- **Run:** `dotnet run --project src\GenesysExtensionAudit.App\GenesysExtensionAudit.App.csproj`
+- **Publish:** See [Deployment](docs/deployment.md)
+- **Credentials:** Use .NET user secrets or environment variables — never commit to source control

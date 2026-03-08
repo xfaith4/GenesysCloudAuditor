@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # QA Strategy
 
 This document defines how to validate Genesys Cloud Auditor before release.
@@ -76,3 +77,8 @@ Capture at minimum:
 - [docs/setup-and-operations.md](docs/setup-and-operations.md)
 - [docs/detailed-qa-matrix.md](docs/detailed-qa-matrix.md)
 
+=======
+# QA
+
+The full QA test plan — covering pagination correctness, rate-limit handling, cancellation safety, export accuracy, and UI responsiveness — is maintained in [`docs/qa-test-plan.md`](docs/qa-test-plan.md).
+>>>>>>> 512975b0dbf161da32bc57e0e50e9c9eb84e83b7
