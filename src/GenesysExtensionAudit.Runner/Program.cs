@@ -74,6 +74,7 @@ static async Task<int> RunAsync(string[] args)
                 services.Configure<ExportOptions>(ctx.Configuration.GetSection("Export"));
                 services.Configure<SharePointOptions>(ctx.Configuration.GetSection("SharePoint"));
                 services.Configure<GitHubOptions>(ctx.Configuration.GetSection("GitHub"));
+                services.AddSingleton<IUserSettingsService, UserSettingsService>();
 
                 // ── Core domain services ──────────────────────────────────────
                 services.AddSingleton<IExtensionNormalizer, ExtensionNormalizer>();

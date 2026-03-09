@@ -2,7 +2,20 @@
 
 ## OAuth Flow
 
-GenesysCloudAuditor authenticates to the Genesys Cloud API using the **Client Credentials** grant type. No user login is required — the application authenticates as a service using a Client ID and Client Secret.
+GenesysCloudAuditor supports two OAuth flows:
+
+- **PKCE (Authorization Code + S256)** for interactive app sign-in (recommended for desktop UI).
+- **Client Credentials** as a fallback service workflow.
+
+Default behavior is `GenesysOAuth:AuthMode = "auto"`:
+
+- Use PKCE token first (access token or refresh token).
+- Fall back to Client Credentials when PKCE token is unavailable.
+
+Reference standards (Genesys Developer Center):
+
+- https://developer.genesys.cloud/platform/api/
+- https://developer.genesys.cloud/authorization/platform-auth/use-authorization-code-grant-with-pkce
 
 ```
 App                          Genesys Login
@@ -24,10 +37,19 @@ GET /api/v2/users           Genesys Cloud API
 
 ## Setting Up OAuth Credentials
 
-1. In **Genesys Cloud Admin → Integrations → OAuth**, create a new OAuth client.
+### PKCE (recommended for WPF app)
+
+1. In **Genesys Cloud Admin → Integrations → OAuth**, create an OAuth client for user login.
+2. Configure **Authorization Code** and **PKCE (S256)** support.
+3. Add a loopback redirect URI (for example `http://127.0.0.1:45731/callback`).
+4. In the app Settings tab, set `PkceClientId`, `PkceRedirectUri`, and click **Authenticate with PKCE**.
+
+### Client Credentials (fallback)
+
+1. In **Genesys Cloud Admin → Integrations → OAuth**, create an OAuth client.
 2. Set **Grant Type** to **Client Credentials**.
-3. Assign the appropriate roles to the OAuth client (see [Required Permissions](#required-permissions) below).
-4. Record the **Client ID** and **Client Secret**.
+3. Assign the required roles.
+4. Record **Client ID** and **Client Secret**.
 
 ---
 
@@ -98,7 +120,8 @@ Use `__` as the section separator:
 ```powershell
 setx GenesysOAuth__ClientId     "YOUR_CLIENT_ID"
 setx GenesysOAuth__ClientSecret "YOUR_CLIENT_SECRET"
-setx Genesys__Region            "mypurecloud.com"
+setx GenesysOAuth__AuthMode     "auto"
+setx Genesys__Region            "usw2.pure.cloud"
 ```
 
 ### Option 3 — appsettings.json (non-secret settings only)
@@ -108,14 +131,18 @@ setx Genesys__Region            "mypurecloud.com"
 ```json
 {
   "Genesys": {
-    "Region": "mypurecloud.com",
+    "Region": "usw2.pure.cloud",
     "PageSize": 100,
     "IncludeInactive": false,
     "MaxRequestsPerSecond": 3
   },
   "GenesysOAuth": {
+    "AuthMode": "auto",
     "ClientId": "",
-    "ClientSecret": ""
+    "ClientSecret": "",
+    "PkceClientId": "",
+    "PkceRedirectUri": "http://127.0.0.1:45731/callback",
+    "PkceScope": ""
   }
 }
 ```

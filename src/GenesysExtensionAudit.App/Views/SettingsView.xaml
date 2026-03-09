@@ -9,22 +9,126 @@
              d:DesignHeight="600" d:DesignWidth="800">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="24" MaxWidth="720">
+        <StackPanel Margin="24" MaxWidth="760">
 
-            <!-- Title -->
             <TextBlock Text="Settings"
                        FontSize="20"
                        FontWeight="SemiBold"
                        Margin="0,0,0,20" />
 
-            <!-- GitHub Integration -->
+            <GroupBox Header="Genesys Cloud Authentication" Padding="12" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock TextWrapping="Wrap" Foreground="#374151" Margin="0,0,0,12">
+                        Configure OAuth for Genesys Cloud. PKCE is recommended for interactive sign-in. Client Credentials remains available as a fallback workflow.
+                    </TextBlock>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="170" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Region" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="0" Grid.Column="1">
+                            <TextBox Text="{Binding GenesysRegion, UpdateSourceTrigger=PropertyChanged}" Width="240" HorizontalAlignment="Left" />
+                            <TextBlock Text="Genesys Cloud region domain (default: usw2.pure.cloud)."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Auth Mode" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="2" Grid.Column="1">
+                            <ComboBox SelectedValue="{Binding AuthMode, UpdateSourceTrigger=PropertyChanged}"
+                                      SelectedValuePath="Tag"
+                                      Width="220"
+                                      HorizontalAlignment="Left">
+                                <ComboBoxItem Content="Auto (PKCE then fallback)" Tag="auto" />
+                                <ComboBoxItem Content="PKCE only" Tag="pkce" />
+                                <ComboBoxItem Content="Client Credentials only" Tag="client_credentials" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="PKCE Client ID" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="4" Grid.Column="1">
+                            <TextBox Text="{Binding PkceClientId, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="OAuth client ID for a public/native app configured in Genesys Cloud."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="PKCE Redirect URI" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="6" Grid.Column="1">
+                            <TextBox Text="{Binding PkceRedirectUri, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Loopback callback URI registered on the OAuth client (for example http://127.0.0.1:45731/callback)."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="PKCE Scope" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="8" Grid.Column="1">
+                            <TextBox Text="{Binding PkceScope, UpdateSourceTrigger=PropertyChanged}" Width="260" HorizontalAlignment="Left" />
+                            <TextBlock Text="Optional; leave blank unless your org requires explicit scope values."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Client ID (Fallback)" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="10" Grid.Column="1">
+                            <TextBox Text="{Binding ClientId, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Used by Client Credentials fallback workflow."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="12" Grid.Column="0" Text="Client Secret (Fallback)" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="12" Grid.Column="1">
+                            <PasswordBox x:Name="ClientSecretBox"
+                                         PasswordChanged="ClientSecretBox_PasswordChanged"
+                                         MaxLength="300" />
+                            <TextBlock Text="Used by Client Credentials fallback workflow."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="14" Grid.Column="0" Text="PKCE Token Expiry" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding PkceAccessTokenExpiresAtUtc, StringFormat={}{0:u}}" Foreground="#374151" />
+
+                        <StackPanel Grid.Row="16" Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="Check Redirect Port"
+                                    Command="{Binding CheckPkcePortCommand}"
+                                    Padding="12,6"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Authenticate with PKCE"
+                                    Command="{Binding StartPkceAuthCommand}"
+                                    Padding="12,6"
+                                    Background="#0F766E"
+                                    Foreground="White"
+                                    FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
             <GroupBox Header="GitHub Integration" Padding="12" Margin="0,0,0,16">
                 <StackPanel>
 
                     <TextBlock TextWrapping="Wrap" Foreground="#374151" Margin="0,0,0,12">
                         Configure your GitHub repository for audit report export.
                         Settings are stored in %APPDATA%\GenesysCloudAuditor\user-settings.json
-                        and take effect immediately — no restart required.
+                        and take effect immediately.
                     </TextBlock>
 
                     <Grid>
@@ -48,7 +152,6 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <!-- Token -->
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Personal Access Token" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="0" Grid.Column="1">
                             <PasswordBox x:Name="TokenBox"
@@ -58,7 +161,6 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <!-- Owner -->
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Owner" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="2" Grid.Column="1">
                             <TextBox Text="{Binding GitHubOwner, UpdateSourceTrigger=PropertyChanged}" />
@@ -66,7 +168,6 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <!-- Repository -->
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Repository" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="4" Grid.Column="1">
                             <TextBox Text="{Binding GitHubRepository, UpdateSourceTrigger=PropertyChanged}" />
@@ -74,7 +175,6 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <!-- Branch -->
                         <TextBlock Grid.Row="6" Grid.Column="0" Text="Base Branch" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="6" Grid.Column="1">
                             <TextBox Text="{Binding GitHubBranch, UpdateSourceTrigger=PropertyChanged}" Width="180" HorizontalAlignment="Left" />
@@ -82,7 +182,6 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <!-- Folder Path -->
                         <TextBlock Grid.Row="8" Grid.Column="0" Text="Folder Path" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="8" Grid.Column="1">
                             <TextBox Text="{Binding GitHubFolderPath, UpdateSourceTrigger=PropertyChanged}" Width="260" HorizontalAlignment="Left" />
@@ -90,10 +189,8 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <!-- Separator -->
                         <Separator Grid.Row="9" Grid.ColumnSpan="2" Margin="0,4" />
 
-                        <!-- Create Draft PR -->
                         <TextBlock Grid.Row="10" Grid.Column="0" Text="Export Mode" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="10" Grid.Column="1">
                             <CheckBox Content="Create a draft pull request instead of committing directly"
@@ -104,7 +201,6 @@
                             </TextBlock>
                         </StackPanel>
 
-                        <!-- PR Branch Prefix -->
                         <TextBlock Grid.Row="12" Grid.Column="0" Text="PR Branch Prefix" VerticalAlignment="Center">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
@@ -123,51 +219,48 @@
                             <TextBlock Text="Branch name prefix for auto-created PR branches (e.g. audit/)."
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
-
                     </Grid>
-
-                    <!-- Save button + status -->
-                    <StackPanel Margin="0,16,0,0">
-                        <Button Content="Save Settings"
-                                Command="{Binding SaveCommand}"
-                                HorizontalAlignment="Left"
-                                Padding="16,8"
-                                Background="#1D4ED8"
-                                Foreground="White"
-                                FontWeight="SemiBold" />
-
-                        <Border Margin="0,10,0,0" Padding="10" CornerRadius="4"
-                                Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibility}}">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background" Value="#F0FDF4" />
-                                    <Setter Property="BorderBrush" Value="#86EFAC" />
-                                    <Setter Property="BorderThickness" Value="1" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding HasError}" Value="True">
-                                            <Setter Property="Background" Value="#FEF2F2" />
-                                            <Setter Property="BorderBrush" Value="#FCA5A5" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#166534" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding HasError}" Value="True">
-                                                <Setter Property="Foreground" Value="#B91C1C" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Border>
-                    </StackPanel>
-
                 </StackPanel>
             </GroupBox>
+
+            <StackPanel Margin="0,0,0,0">
+                <Button Content="Save Settings"
+                        Command="{Binding SaveCommand}"
+                        HorizontalAlignment="Left"
+                        Padding="16,8"
+                        Background="#1D4ED8"
+                        Foreground="White"
+                        FontWeight="SemiBold" />
+
+                <Border Margin="0,10,0,0" Padding="10" CornerRadius="4"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibility}}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="#F0FDF4" />
+                            <Setter Property="BorderBrush" Value="#86EFAC" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasError}" Value="True">
+                                    <Setter Property="Background" Value="#FEF2F2" />
+                                    <Setter Property="BorderBrush" Value="#FCA5A5" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#166534" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasError}" Value="True">
+                                        <Setter Property="Foreground" Value="#B91C1C" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </StackPanel>
 
         </StackPanel>
     </ScrollViewer>

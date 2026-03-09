@@ -6,7 +6,7 @@ namespace GenesysExtensionAudit.Infrastructure.Http;
 public sealed class GenesysRegionOptions
 {
     /// <summary>Genesys Cloud API domain, e.g. "mypurecloud.com" or "usw2.pure.cloud".</summary>
-    public string Region { get; set; } = "mypurecloud.com";
+    public string Region { get; set; } = "usw2.pure.cloud";
 
     /// <summary>Records per page when calling paginated Genesys endpoints (1–500).</summary>
     public int PageSize { get; set; } = 100;

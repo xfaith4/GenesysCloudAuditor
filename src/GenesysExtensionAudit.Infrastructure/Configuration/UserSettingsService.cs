@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GenesysExtensionAudit.Infrastructure.Http;
 
 namespace GenesysExtensionAudit.Infrastructure.Configuration;
 
@@ -45,22 +46,87 @@ public sealed class UserSettingsService : IUserSettingsService
     public void SaveGitHubSettings(GitHubOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+        var existing = LoadSettingsFile();
+        existing.GitHub = options;
+        SaveSettingsFile(existing);
+    }
+
+    /// <inheritdoc/>
+    public GenesysRegionOptions LoadGenesysSettings()
+    {
+        if (!File.Exists(SettingsFilePath))
+            return new GenesysRegionOptions();
+
+        try
+        {
+            var json = File.ReadAllText(SettingsFilePath);
+            var doc = JsonSerializer.Deserialize<UserSettingsFile>(json, JsonOpts);
+            return doc?.Genesys ?? new GenesysRegionOptions();
+        }
+        catch
+        {
+            return new GenesysRegionOptions();
+        }
+    }
+
+    /// <inheritdoc/>
+    public void SaveGenesysSettings(GenesysRegionOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var existing = LoadSettingsFile();
+        existing.Genesys = options;
+        SaveSettingsFile(existing);
+    }
+
+    /// <inheritdoc/>
+    public GenesysOAuthOptions LoadGenesysOAuthSettings()
+    {
+        if (!File.Exists(SettingsFilePath))
+            return new GenesysOAuthOptions();
+
+        try
+        {
+            var json = File.ReadAllText(SettingsFilePath);
+            var doc = JsonSerializer.Deserialize<UserSettingsFile>(json, JsonOpts);
+            return doc?.GenesysOAuth ?? new GenesysOAuthOptions();
+        }
+        catch
+        {
+            return new GenesysOAuthOptions();
+        }
+    }
+
+    /// <inheritdoc/>
+    public void SaveGenesysOAuthSettings(GenesysOAuthOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var existing = LoadSettingsFile();
+        existing.GenesysOAuth = options;
+        SaveSettingsFile(existing);
+    }
+
+    private UserSettingsFile LoadSettingsFile()
+    {
         Directory.CreateDirectory(AppDataPath);
 
-        // Preserve any other sections already in the file.
-        UserSettingsFile existing = new();
-        if (File.Exists(SettingsFilePath))
-        {
-            try
-            {
-                var raw = File.ReadAllText(SettingsFilePath);
-                existing = JsonSerializer.Deserialize<UserSettingsFile>(raw, JsonOpts) ?? new();
-            }
-            catch { /* ignore corrupt file */ }
-        }
+        if (!File.Exists(SettingsFilePath))
+            return new UserSettingsFile();
 
-        existing.GitHub = options;
-        var json = JsonSerializer.Serialize(existing, JsonOpts);
+        try
+        {
+            var raw = File.ReadAllText(SettingsFilePath);
+            return JsonSerializer.Deserialize<UserSettingsFile>(raw, JsonOpts) ?? new UserSettingsFile();
+        }
+        catch
+        {
+            return new UserSettingsFile();
+        }
+    }
+
+    private void SaveSettingsFile(UserSettingsFile file)
+    {
+        Directory.CreateDirectory(AppDataPath);
+        var json = JsonSerializer.Serialize(file, JsonOpts);
         File.WriteAllText(SettingsFilePath, json);
     }
 
@@ -68,6 +134,12 @@ public sealed class UserSettingsService : IUserSettingsService
 
     private sealed class UserSettingsFile
     {
+        [JsonPropertyName("Genesys")]
+        public GenesysRegionOptions? Genesys { get; set; }
+
+        [JsonPropertyName("GenesysOAuth")]
+        public GenesysOAuthOptions? GenesysOAuth { get; set; }
+
         [JsonPropertyName("GitHub")]
         public GitHubOptions? GitHub { get; set; }
     }

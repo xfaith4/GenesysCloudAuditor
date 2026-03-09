@@ -75,6 +75,7 @@ public static class Bootstrapper
 
                 // Auth token provider (singleton — caches the token)
                 services.AddSingleton<ITokenProvider, TokenProvider>();
+                services.AddSingleton<IGenesysPkceAuthService, GenesysPkceAuthService>();
 
                 // Named HttpClient for the Genesys auth endpoint (used by TokenProvider)
                 services.AddHttpClient("GenesysAuth");

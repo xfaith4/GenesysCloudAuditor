@@ -2,21 +2,30 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using GenesysExtensionAudit.Infrastructure.Configuration;
+using GenesysExtensionAudit.Infrastructure.Http;
 using Microsoft.Extensions.Options;
 
 namespace GenesysExtensionAudit.ViewModels;
 
 /// <summary>
 /// ViewModel for the Settings tab.
-/// Loads current GitHub configuration from IOptionsMonitor and persists
-/// changes via IUserSettingsService (written to %APPDATA%\GenesysCloudAuditor\user-settings.json).
-/// Because that file is loaded with reloadOnChange=true, IOptionsMonitor
-/// automatically picks up the new values and propagates them to GitHubUploadService.
 /// </summary>
 public sealed class SettingsViewModel : INotifyPropertyChanged
 {
     private readonly IUserSettingsService _userSettings;
     private readonly IOptionsMonitor<GitHubOptions> _gitHubMonitor;
+    private readonly IOptionsMonitor<GenesysRegionOptions> _genesysMonitor;
+    private readonly IOptionsMonitor<GenesysOAuthOptions> _oauthMonitor;
+    private readonly IGenesysPkceAuthService _pkceAuthService;
+
+    private string _genesysRegion = "usw2.pure.cloud";
+    private string _authMode = "auto";
+    private string _pkceClientId = string.Empty;
+    private string _pkceRedirectUri = "http://127.0.0.1:45731/callback";
+    private string _pkceScope = string.Empty;
+    private string _clientId = string.Empty;
+    private string _clientSecret = string.Empty;
+    private DateTimeOffset? _pkceAccessTokenExpiresAtUtc;
 
     private string _gitHubToken = string.Empty;
     private string _gitHubOwner = string.Empty;
@@ -25,21 +34,96 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private string _gitHubFolderPath = "audit-reports";
     private bool _createDraftPr;
     private string _prBranchPrefix = "audit/";
+
     private string _statusMessage = string.Empty;
     private bool _hasError;
+    private bool _isAuthenticatingPkce;
 
     public SettingsViewModel(
         IUserSettingsService userSettings,
-        IOptionsMonitor<GitHubOptions> gitHubMonitor)
+        IOptionsMonitor<GitHubOptions> gitHubMonitor,
+        IOptionsMonitor<GenesysRegionOptions> genesysMonitor,
+        IOptionsMonitor<GenesysOAuthOptions> oauthMonitor,
+        IGenesysPkceAuthService pkceAuthService)
     {
         _userSettings = userSettings ?? throw new ArgumentNullException(nameof(userSettings));
         _gitHubMonitor = gitHubMonitor ?? throw new ArgumentNullException(nameof(gitHubMonitor));
+        _genesysMonitor = genesysMonitor ?? throw new ArgumentNullException(nameof(genesysMonitor));
+        _oauthMonitor = oauthMonitor ?? throw new ArgumentNullException(nameof(oauthMonitor));
+        _pkceAuthService = pkceAuthService ?? throw new ArgumentNullException(nameof(pkceAuthService));
 
         SaveCommand = new RelayCommand(Save);
+        StartPkceAuthCommand = new RelayCommand(StartPkceAuthAsync, () => !IsAuthenticatingPkce);
+        CheckPkcePortCommand = new RelayCommand(CheckPkcePortAvailability);
+
         LoadFromOptions();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public string GenesysRegion
+    {
+        get => _genesysRegion;
+        set => SetField(ref _genesysRegion, value);
+    }
+
+    public string AuthMode
+    {
+        get => _authMode;
+        set
+        {
+            if (SetField(ref _authMode, NormalizeAuthMode(value)))
+                OnPropertyChanged(nameof(IsClientCredentialsMode));
+        }
+    }
+
+    public bool IsClientCredentialsMode => AuthMode == "client_credentials";
+
+    public string PkceClientId
+    {
+        get => _pkceClientId;
+        set => SetField(ref _pkceClientId, value);
+    }
+
+    public string PkceRedirectUri
+    {
+        get => _pkceRedirectUri;
+        set => SetField(ref _pkceRedirectUri, value);
+    }
+
+    public string PkceScope
+    {
+        get => _pkceScope;
+        set => SetField(ref _pkceScope, value);
+    }
+
+    public DateTimeOffset? PkceAccessTokenExpiresAtUtc
+    {
+        get => _pkceAccessTokenExpiresAtUtc;
+        private set => SetField(ref _pkceAccessTokenExpiresAtUtc, value);
+    }
+
+    public string ClientId
+    {
+        get => _clientId;
+        set => SetField(ref _clientId, value);
+    }
+
+    public string ClientSecret
+    {
+        get => _clientSecret;
+        set => SetField(ref _clientSecret, value);
+    }
+
+    public bool IsAuthenticatingPkce
+    {
+        get => _isAuthenticatingPkce;
+        private set
+        {
+            if (SetField(ref _isAuthenticatingPkce, value) && StartPkceAuthCommand is RelayCommand cmd)
+                cmd.RaiseCanExecuteChanged();
+        }
+    }
 
     // ── GitHub fields ─────────────────────────────────────────────────────────
 
@@ -61,11 +145,6 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set => SetField(ref _gitHubRepository, value);
     }
 
-    /// <summary>
-    /// The base branch for the repository.
-    /// When CreateDraftPr=false this is the branch commits land on directly.
-    /// When CreateDraftPr=true this is the PR target branch.
-    /// </summary>
     public string GitHubBranch
     {
         get => _gitHubBranch;
@@ -78,14 +157,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set => SetField(ref _gitHubFolderPath, value);
     }
 
-    /// <summary>When true, export creates a draft PR instead of committing directly.</summary>
     public bool CreateDraftPr
     {
         get => _createDraftPr;
         set => SetField(ref _createDraftPr, value);
     }
 
-    /// <summary>Prefix used for the auto-generated PR source branch (e.g. "audit/").</summary>
     public string PrBranchPrefix
     {
         get => _prBranchPrefix;
@@ -112,14 +189,40 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         !string.IsNullOrWhiteSpace(GitHubRepository);
 
     public ICommand SaveCommand { get; }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    public ICommand StartPkceAuthCommand { get; }
+    public ICommand CheckPkcePortCommand { get; }
 
     private void Save()
     {
         try
         {
             HasError = false;
+
+            _userSettings.SaveGenesysSettings(new GenesysRegionOptions
+            {
+                Region = string.IsNullOrWhiteSpace(GenesysRegion) ? "usw2.pure.cloud" : GenesysRegion.Trim(),
+                PageSize = _genesysMonitor.CurrentValue.PageSize,
+                IncludeInactive = _genesysMonitor.CurrentValue.IncludeInactive,
+                MaxRequestsPerSecond = _genesysMonitor.CurrentValue.MaxRequestsPerSecond
+            });
+
+            // Preserve cached PKCE tokens that may already exist in persisted settings.
+            var existingOAuth = _userSettings.LoadGenesysOAuthSettings();
+            _userSettings.SaveGenesysOAuthSettings(new GenesysOAuthOptions
+            {
+                AuthMode = NormalizeAuthMode(AuthMode),
+                ClientId = ClientId.Trim(),
+                ClientSecret = ClientSecret.Trim(),
+                PkceClientId = PkceClientId.Trim(),
+                PkceRedirectUri = string.IsNullOrWhiteSpace(PkceRedirectUri)
+                    ? "http://127.0.0.1:45731/callback"
+                    : PkceRedirectUri.Trim(),
+                PkceScope = PkceScope.Trim(),
+                PkceAccessToken = existingOAuth.PkceAccessToken,
+                PkceRefreshToken = existingOAuth.PkceRefreshToken,
+                PkceAccessTokenExpiresAtUtc = existingOAuth.PkceAccessTokenExpiresAtUtc
+            });
+
             _userSettings.SaveGitHubSettings(new GitHubOptions
             {
                 Token = GitHubToken.Trim(),
@@ -129,7 +232,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
                 FolderPath = string.IsNullOrWhiteSpace(GitHubFolderPath) ? "audit-reports" : GitHubFolderPath.Trim(),
                 CreateDraftPr = CreateDraftPr,
                 PrBranchPrefix = string.IsNullOrWhiteSpace(PrBranchPrefix) ? "audit/" : PrBranchPrefix.Trim(),
-                CommitMessage = _gitHubMonitor.CurrentValue.CommitMessage  // preserve advanced setting
+                CommitMessage = _gitHubMonitor.CurrentValue.CommitMessage
             });
 
             StatusMessage = "Settings saved. Changes take effect immediately.";
@@ -142,19 +245,108 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         }
     }
 
+    private async void StartPkceAuthAsync()
+    {
+        if (IsAuthenticatingPkce)
+            return;
+
+        try
+        {
+            HasError = false;
+            IsAuthenticatingPkce = true;
+
+            // Save first so auth service reads the latest values from IOptionsMonitor.
+            Save();
+            if (HasError)
+                return;
+
+            StatusMessage = "Opening browser for Genesys Cloud sign-in...";
+            var result = await _pkceAuthService.AuthenticateAsync(CancellationToken.None).ConfigureAwait(true);
+            if (!result.Success)
+            {
+                HasError = true;
+                StatusMessage = result.Message;
+                return;
+            }
+
+            var existingOAuth = _userSettings.LoadGenesysOAuthSettings();
+            _userSettings.SaveGenesysOAuthSettings(new GenesysOAuthOptions
+            {
+                AuthMode = NormalizeAuthMode(AuthMode),
+                ClientId = existingOAuth.ClientId,
+                ClientSecret = existingOAuth.ClientSecret,
+                PkceClientId = string.IsNullOrWhiteSpace(PkceClientId) ? existingOAuth.PkceClientId : PkceClientId.Trim(),
+                PkceRedirectUri = string.IsNullOrWhiteSpace(PkceRedirectUri) ? existingOAuth.PkceRedirectUri : PkceRedirectUri.Trim(),
+                PkceScope = PkceScope.Trim(),
+                PkceAccessToken = result.AccessToken,
+                PkceRefreshToken = result.RefreshToken,
+                PkceAccessTokenExpiresAtUtc = result.AccessTokenExpiresAtUtc
+            });
+
+            PkceAccessTokenExpiresAtUtc = result.AccessTokenExpiresAtUtc;
+            StatusMessage = $"PKCE authentication succeeded. Token expires at {result.AccessTokenExpiresAtUtc:u}.";
+        }
+        catch (Exception ex)
+        {
+            HasError = true;
+            StatusMessage = $"PKCE authentication failed: {ex.Message}";
+        }
+        finally
+        {
+            IsAuthenticatingPkce = false;
+        }
+    }
+
+    private void CheckPkcePortAvailability()
+    {
+        HasError = false;
+        var available = _pkceAuthService.IsRedirectPortAvailable(PkceRedirectUri, out var message);
+        HasError = !available;
+        StatusMessage = message;
+    }
+
     private void LoadFromOptions()
     {
-        // Prefer the persisted user-settings file; fall back to appsettings.json values.
-        var saved = _userSettings.LoadGitHubSettings();
-        var fallback = _gitHubMonitor.CurrentValue;
+        var savedRegion = _userSettings.LoadGenesysSettings();
+        var fallbackRegion = _genesysMonitor.CurrentValue;
 
-        GitHubToken = Coalesce(saved.Token, fallback.Token);
-        GitHubOwner = Coalesce(saved.Owner, fallback.Owner);
-        GitHubRepository = Coalesce(saved.Repository, fallback.Repository);
-        GitHubBranch = Coalesce(saved.Branch, fallback.Branch, "main");
-        GitHubFolderPath = Coalesce(saved.FolderPath, fallback.FolderPath, "audit-reports");
-        CreateDraftPr = saved.CreateDraftPr || fallback.CreateDraftPr;
-        PrBranchPrefix = Coalesce(saved.PrBranchPrefix, fallback.PrBranchPrefix, "audit/");
+        GenesysRegion = Coalesce(savedRegion.Region, fallbackRegion.Region, "usw2.pure.cloud");
+
+        var savedOAuth = _userSettings.LoadGenesysOAuthSettings();
+        var fallbackOAuth = _oauthMonitor.CurrentValue;
+
+        AuthMode = NormalizeAuthMode(Coalesce(savedOAuth.AuthMode, fallbackOAuth.AuthMode, "auto"));
+        ClientId = Coalesce(savedOAuth.ClientId, fallbackOAuth.ClientId);
+        ClientSecret = Coalesce(savedOAuth.ClientSecret, fallbackOAuth.ClientSecret);
+        PkceClientId = Coalesce(savedOAuth.PkceClientId, fallbackOAuth.PkceClientId, ClientId);
+        PkceRedirectUri = Coalesce(savedOAuth.PkceRedirectUri, fallbackOAuth.PkceRedirectUri, "http://127.0.0.1:45731/callback");
+        PkceScope = Coalesce(savedOAuth.PkceScope, fallbackOAuth.PkceScope);
+        PkceAccessTokenExpiresAtUtc = savedOAuth.PkceAccessTokenExpiresAtUtc ?? fallbackOAuth.PkceAccessTokenExpiresAtUtc;
+
+        var savedGitHub = _userSettings.LoadGitHubSettings();
+        var fallbackGitHub = _gitHubMonitor.CurrentValue;
+
+        GitHubToken = Coalesce(savedGitHub.Token, fallbackGitHub.Token);
+        GitHubOwner = Coalesce(savedGitHub.Owner, fallbackGitHub.Owner);
+        GitHubRepository = Coalesce(savedGitHub.Repository, fallbackGitHub.Repository);
+        GitHubBranch = Coalesce(savedGitHub.Branch, fallbackGitHub.Branch, "main");
+        GitHubFolderPath = Coalesce(savedGitHub.FolderPath, fallbackGitHub.FolderPath, "audit-reports");
+        CreateDraftPr = savedGitHub.CreateDraftPr || fallbackGitHub.CreateDraftPr;
+        PrBranchPrefix = Coalesce(savedGitHub.PrBranchPrefix, fallbackGitHub.PrBranchPrefix, "audit/");
+    }
+
+    private static string NormalizeAuthMode(string? mode)
+    {
+        if (string.IsNullOrWhiteSpace(mode))
+            return "auto";
+
+        return mode.Trim().ToLowerInvariant() switch
+        {
+            "pkce" => "pkce",
+            "clientcredentials" => "client_credentials",
+            "client_credentials" => "client_credentials",
+            _ => "auto"
+        };
     }
 
     private static string Coalesce(params string?[] values)

@@ -16,12 +16,21 @@ public partial class SettingsView : UserControl
     {
         // Pre-populate the PasswordBox when the ViewModel is first bound.
         if (e.NewValue is SettingsViewModel vm)
+        {
             TokenBox.Password = vm.GitHubToken;
+            ClientSecretBox.Password = vm.ClientSecret;
+        }
     }
 
     private void TokenBox_PasswordChanged(object sender, RoutedEventArgs e)
     {
         if (DataContext is SettingsViewModel vm)
             vm.GitHubToken = TokenBox.Password;
+    }
+
+    private void ClientSecretBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm)
+            vm.ClientSecret = ClientSecretBox.Password;
     }
 }
