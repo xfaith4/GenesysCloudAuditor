@@ -136,6 +136,53 @@ public sealed class ApiClientIntegrationTests
     }
 
     [Fact]
+    public async Task GenesysUsersClient_GetPage_LastTokenIssued_CamelCaseEmptyString_ReturnsNullToken()
+    {
+        // Some tenants return "lastTokenIssued" (camel-case) instead of
+        // "lasttokenissued". We must handle both without throwing.
+        var handler = new RouteMockHttpMessageHandler();
+
+        handler.WhenGet("/api/v2/users?pageSize=1&pageNumber=1&expand=locations,station,lasttokenissued&state=active",
+            json: """
+                  {
+                    "entities": [
+                      { "id": "u1", "name": "No Token User", "state": "active", "lastTokenIssued": "" }
+                    ],
+                    "pageSize": 1, "pageNumber": 1, "pageCount": 1, "total": 1
+                  }
+                  """);
+
+        var client = BuildUsersClient(handler, "mypurecloud.com");
+        var page = await client.GetUsersPageAsync(pageNumber: 1, pageSize: 1, includeInactive: false, ct: default);
+
+        Assert.Single(page.Items);
+        Assert.Null(page.Items[0].TokenLastIssuedDate);
+    }
+
+    [Fact]
+    public async Task GenesysUsersClient_GetPage_LastTokenIssued_UnexpectedObject_ReturnsNullToken()
+    {
+        // Defensive tolerance: unexpected token types should not fail the run.
+        var handler = new RouteMockHttpMessageHandler();
+
+        handler.WhenGet("/api/v2/users?pageSize=1&pageNumber=1&expand=locations,station,lasttokenissued&state=active",
+            json: """
+                  {
+                    "entities": [
+                      { "id": "u1", "name": "No Token User", "state": "active", "lastTokenIssued": { "value": "n/a" } }
+                    ],
+                    "pageSize": 1, "pageNumber": 1, "pageCount": 1, "total": 1
+                  }
+                  """);
+
+        var client = BuildUsersClient(handler, "mypurecloud.com");
+        var page = await client.GetUsersPageAsync(pageNumber: 1, pageSize: 1, includeInactive: false, ct: default);
+
+        Assert.Single(page.Items);
+        Assert.Null(page.Items[0].TokenLastIssuedDate);
+    }
+
+    [Fact]
     public async Task GenesysUsersClient_GetPage_LastTokenIssued_NullValue_ReturnsNullToken()
     {
         var handler = new RouteMockHttpMessageHandler();

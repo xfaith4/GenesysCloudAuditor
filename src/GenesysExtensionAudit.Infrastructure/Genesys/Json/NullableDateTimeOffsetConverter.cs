@@ -35,8 +35,10 @@ internal sealed class NullableDateTimeOffsetConverter : JsonConverter<DateTimeOf
             return null;
         }
 
-        // Fallback: let the built-in converter handle any other token type.
-        return reader.GetDateTimeOffset();
+        // Genesys payloads can occasionally contain unexpected token shapes
+        // (object/array/number/bool). Consume the value and treat as missing.
+        using var _ = JsonDocument.ParseValue(ref reader);
+        return null;
     }
 
     public override void Write(
