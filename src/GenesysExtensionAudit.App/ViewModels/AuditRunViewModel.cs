@@ -25,6 +25,8 @@ namespace GenesysExtensionAudit.ViewModels;
 public sealed class RunAuditViewModel : INotifyPropertyChanged
 {
     private const string AllCatalogEntitiesOption = "(All Catalog Entities)";
+    private const string ConsolidatedExportMode = "Consolidated";
+    private const string SeparateExportMode = "Separate";
 
     private readonly IAuditOrchestrator _orchestrator;
     private readonly IExcelReportService _excelService;
@@ -33,6 +35,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private readonly IOptionsMonitor<GitHubOptions> _gitHubOptions;
     private readonly ObservableCollection<string> _auditLogEntities = [];
     private readonly ObservableCollection<RunSummaryRow> _lastRunSummary = [];
+    private readonly ObservableCollection<string> _workbookExportModes = [ConsolidatedExportMode, SeparateExportMode];
 
     private int _pageSize = 100;
     private bool _includeInactive;
@@ -51,6 +54,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private bool _isLoadingAuditLogEntities;
     private bool _auditLogEntitiesLoaded;
     private string _selectedAuditLogEntity = AllCatalogEntitiesOption;
+    private string _selectedWorkbookExportMode = ConsolidatedExportMode;
     private bool _pushToGitHub;
     private bool _isRunning;
     private int _progressPercent;
@@ -220,11 +224,24 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     }
 
     public ObservableCollection<string> AuditLogEntities => _auditLogEntities;
+    public ObservableCollection<string> WorkbookExportModes => _workbookExportModes;
 
     public string SelectedAuditLogEntity
     {
         get => _selectedAuditLogEntity;
         set => SetField(ref _selectedAuditLogEntity, string.IsNullOrWhiteSpace(value) ? AllCatalogEntitiesOption : value);
+    }
+
+    public string SelectedWorkbookExportMode
+    {
+        get => _selectedWorkbookExportMode;
+        set
+        {
+            var normalized = string.Equals(value, SeparateExportMode, StringComparison.OrdinalIgnoreCase)
+                ? SeparateExportMode
+                : ConsolidatedExportMode;
+            SetField(ref _selectedWorkbookExportMode, normalized);
+        }
     }
 
     /// <summary>
@@ -524,45 +541,196 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
     private async Task SaveReportToFileAsync(AuditReportData report, CancellationToken ct)
     {
-        var xlsx = await _excelService.GenerateAsync(report, ct).ConfigureAwait(true);
-
-        var dlg = new SaveFileDialog
-        {
-            Title = "Save Audit Report",
-            Filter = "Excel Workbook (*.xlsx)|*.xlsx",
-            FileName = $"GenesysAudit_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx",
-            DefaultExt = ".xlsx"
-        };
-
-        if (dlg.ShowDialog() == true)
-        {
-            await File.WriteAllBytesAsync(dlg.FileName, xlsx, ct).ConfigureAwait(true);
-            LastExportPath = dlg.FileName;
-            OnPropertyChanged(nameof(HasExport));
-            StatusMessage = $"Saved: {Path.GetFileName(dlg.FileName)}";
-
-            if (PushToGitHub && _gitHubUploadService.IsConfigured)
-            {
-                StatusMessage = "Pushing report to GitHub...";
-                try
-                {
-                    var url = await _gitHubUploadService
-                        .UploadAsync(Path.GetFileName(dlg.FileName), xlsx, ct)
-                        .ConfigureAwait(true);
-                    StatusMessage = $"Saved: {Path.GetFileName(dlg.FileName)} | Pushed to GitHub: {url}";
-                }
-                catch (Exception ex)
-                {
-                    // Local save succeeded; surface GitHub error as a warning rather than overwriting the success state.
-                    ErrorMessage = $"GitHub push failed: {ex.Message}";
-                    StatusMessage = $"Saved: {Path.GetFileName(dlg.FileName)} (GitHub push failed)";
-                }
-            }
-        }
-        else
+        var outputDirectory = SelectOutputDirectory();
+        if (string.IsNullOrWhiteSpace(outputDirectory))
         {
             StatusMessage = "Audit complete — export skipped.";
+            return;
         }
+
+        Directory.CreateDirectory(outputDirectory);
+
+        var datePrefix = DateTime.Now.ToString("yyyy-MM-dd");
+        if (string.Equals(SelectedWorkbookExportMode, SeparateExportMode, StringComparison.Ordinal))
+        {
+            var generatedFiles = new List<string>();
+            var generatedPayloads = new List<(string FileName, byte[] Content)>();
+            foreach (var audit in BuildSeparateAuditScopes(report))
+            {
+                ct.ThrowIfCancellationRequested();
+
+                var xlsx = await _excelService.GenerateAsync(report, ct, audit.Scope).ConfigureAwait(true);
+                var baseFileName = $"{datePrefix}_GenesysCloudAudit_{audit.AuditName}.xlsx";
+                var fullPath = GetNextAvailableFilePath(outputDirectory, baseFileName);
+
+                await File.WriteAllBytesAsync(fullPath, xlsx, ct).ConfigureAwait(true);
+                generatedFiles.Add(fullPath);
+                generatedPayloads.Add((Path.GetFileName(fullPath), xlsx));
+            }
+
+            LastExportPath = outputDirectory;
+            OnPropertyChanged(nameof(HasExport));
+            StatusMessage = $"Saved {generatedFiles.Count} report(s) to {outputDirectory}";
+
+            await TryPushToGitHubAsync(generatedPayloads, ct).ConfigureAwait(true);
+            return;
+        }
+
+        var consolidatedXlsx = await _excelService.GenerateAsync(report, ct).ConfigureAwait(true);
+        var consolidatedBaseName = $"{datePrefix}_GenesysCloudAudit_Full.xlsx";
+        var consolidatedPath = GetNextAvailableFilePath(outputDirectory, consolidatedBaseName);
+        await File.WriteAllBytesAsync(consolidatedPath, consolidatedXlsx, ct).ConfigureAwait(true);
+
+        LastExportPath = consolidatedPath;
+        OnPropertyChanged(nameof(HasExport));
+        StatusMessage = $"Saved: {Path.GetFileName(consolidatedPath)}";
+
+        await TryPushToGitHubAsync([(Path.GetFileName(consolidatedPath), consolidatedXlsx)], ct).ConfigureAwait(true);
+    }
+
+    private string? SelectOutputDirectory()
+    {
+        var dlg = new OpenFolderDialog
+        {
+            Title = "Select Destination Folder for Audit Reports"
+        };
+
+        return dlg.ShowDialog() == true ? dlg.FolderName : null;
+    }
+
+    private static string GetNextAvailableFilePath(string directory, string fileName)
+    {
+        var ext = Path.GetExtension(fileName);
+        var baseName = Path.GetFileNameWithoutExtension(fileName);
+        var candidate = Path.Combine(directory, fileName);
+        if (!File.Exists(candidate))
+            return candidate;
+
+        var suffix = 2;
+        while (true)
+        {
+            candidate = Path.Combine(directory, $"{baseName}-{suffix}{ext}");
+            if (!File.Exists(candidate))
+                return candidate;
+            suffix++;
+        }
+    }
+
+    private IReadOnlyList<(string AuditName, ExcelWorkbookScopeOptions Scope)> BuildSeparateAuditScopes(AuditReportData report)
+    {
+        var scopes = new List<(string AuditName, ExcelWorkbookScopeOptions Scope)>();
+        if (report.Options.RunExtensionAudit)
+        {
+            scopes.Add(("Extensions", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeExtensions = true
+            }));
+        }
+
+        if (report.Options.RunGroupAudit)
+        {
+            scopes.Add(("Groups", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeGroups = true
+            }));
+        }
+
+        if (report.Options.RunQueueAudit)
+        {
+            scopes.Add(("Queues", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeQueues = true
+            }));
+        }
+
+        if (report.Options.RunFlowAudit)
+        {
+            scopes.Add(("Flows", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeFlows = true
+            }));
+        }
+
+        if (report.Options.RunInactiveUserAudit)
+        {
+            scopes.Add(("InactiveUsers", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeInactiveUsers = true
+            }));
+        }
+
+        if (report.Options.RunDidAudit)
+        {
+            scopes.Add(("DIDs", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeDids = true
+            }));
+        }
+
+        if (report.Options.RunAuditLogs)
+        {
+            scopes.Add(("AuditLogs", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeAuditLogs = true
+            }));
+        }
+
+        if (report.Options.RunOperationalEventLogs)
+        {
+            scopes.Add(("OperationalEvents", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeOperationalEvents = true
+            }));
+        }
+
+        if (report.Options.RunOutboundEvents)
+        {
+            scopes.Add(("OutboundEvents", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeOutboundEvents = true
+            }));
+        }
+
+        return scopes;
+    }
+
+    private async Task TryPushToGitHubAsync(IReadOnlyList<(string FileName, byte[] Content)> files, CancellationToken ct)
+    {
+        if (!PushToGitHub || !_gitHubUploadService.IsConfigured || files.Count == 0)
+            return;
+
+        StatusMessage = "Pushing report(s) to GitHub...";
+        var pushedCount = 0;
+        var lastUrl = string.Empty;
+        foreach (var file in files)
+        {
+            try
+            {
+                lastUrl = await _gitHubUploadService
+                    .UploadAsync(file.FileName, file.Content, ct)
+                    .ConfigureAwait(true);
+                pushedCount++;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"GitHub push failed for {file.FileName}: {ex.Message}";
+                StatusMessage = $"Saved locally ({pushedCount}/{files.Count} pushed to GitHub)";
+                return;
+            }
+        }
+
+        StatusMessage = files.Count == 1
+            ? $"Saved and pushed to GitHub: {lastUrl}"
+            : $"Saved locally and pushed {pushedCount} report(s) to GitHub.";
     }
 
     private void BuildLastRunSummary(AuditReportData report)

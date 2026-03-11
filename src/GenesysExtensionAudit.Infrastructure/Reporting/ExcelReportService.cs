@@ -6,7 +6,21 @@ namespace GenesysExtensionAudit.Infrastructure.Reporting;
 
 public interface IExcelReportService
 {
-    Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct);
+    Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null);
+}
+
+public sealed class ExcelWorkbookScopeOptions
+{
+    public bool IncludeSummary { get; init; } = true;
+    public bool IncludeExtensions { get; init; } = true;
+    public bool IncludeGroups { get; init; } = true;
+    public bool IncludeQueues { get; init; } = true;
+    public bool IncludeFlows { get; init; } = true;
+    public bool IncludeInactiveUsers { get; init; } = true;
+    public bool IncludeDids { get; init; } = true;
+    public bool IncludeAuditLogs { get; init; } = true;
+    public bool IncludeOperationalEvents { get; init; } = true;
+    public bool IncludeOutboundEvents { get; init; } = true;
 }
 
 /// <summary>
@@ -28,29 +42,57 @@ public sealed class ExcelReportService : IExcelReportService
     private static readonly XLColor SeverityWarning = XLColor.FromHtml("#FFF2CC");
     private static readonly XLColor SeverityInfo = XLColor.FromHtml("#E2F0D9");
 
-    public Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct)
+    public Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null)
     {
         ct.ThrowIfCancellationRequested();
+        scopeOptions ??= new ExcelWorkbookScopeOptions();
 
         using var wb = new XLWorkbook();
 
-        WriteSummarySheet(wb, report);
-        WriteExtDuplicatesProfileSheet(wb, report);
-        WriteExtOwnershipMismatchSheet(wb, report);
-        WriteExtAssignVsProfileSheet(wb, report);
-        WriteDidMismatchSheet(wb, report);
-        WriteIvrFlowBindingsSheet(wb, report);
-        WriteUserTelephonyIntegritySheet(wb, report);
-        WriteQueueServiceabilitySheet(wb, report);
-        WriteAuditLogsSheet(wb, report);
-        WriteOperationalEventsSheet(wb, report);
-        WriteOutboundEventsSheet(wb, report);
-        WriteEmptyGroupsSheet(wb, report);
-        WriteEmptyQueuesSheet(wb, report);
-        WriteStaleFlowsSheet(wb, report);
-        WriteStaleTokenUsersSheet(wb, report);
-        WriteUsersMissingLocationSheet(wb, report);
-        WriteInvalidExtensionsSheet(wb, report);
+        if (scopeOptions.IncludeSummary)
+            WriteSummarySheet(wb, report);
+
+        if (scopeOptions.IncludeExtensions)
+        {
+            WriteExtDuplicatesProfileSheet(wb, report);
+            WriteExtOwnershipMismatchSheet(wb, report);
+            WriteExtAssignVsProfileSheet(wb, report);
+            WriteUserTelephonyIntegritySheet(wb, report);
+            WriteInvalidExtensionsSheet(wb, report);
+        }
+
+        if (scopeOptions.IncludeDids)
+            WriteDidMismatchSheet(wb, report);
+
+        if (scopeOptions.IncludeFlows)
+        {
+            WriteStaleFlowsSheet(wb, report);
+            WriteIvrFlowBindingsSheet(wb, report);
+        }
+
+        if (scopeOptions.IncludeQueues)
+        {
+            WriteEmptyQueuesSheet(wb, report);
+            WriteQueueServiceabilitySheet(wb, report);
+        }
+
+        if (scopeOptions.IncludeGroups)
+            WriteEmptyGroupsSheet(wb, report);
+
+        if (scopeOptions.IncludeInactiveUsers)
+        {
+            WriteStaleTokenUsersSheet(wb, report);
+            WriteUsersMissingLocationSheet(wb, report);
+        }
+
+        if (scopeOptions.IncludeAuditLogs)
+            WriteAuditLogsSheet(wb, report);
+
+        if (scopeOptions.IncludeOperationalEvents)
+            WriteOperationalEventsSheet(wb, report);
+
+        if (scopeOptions.IncludeOutboundEvents)
+            WriteOutboundEventsSheet(wb, report);
 
         using var ms = new MemoryStream();
         wb.SaveAs(ms);

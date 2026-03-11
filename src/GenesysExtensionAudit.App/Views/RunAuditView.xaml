@@ -155,6 +155,18 @@
             <!-- ─── Export Options ─── -->
             <GroupBox Header="Export Options" Padding="12" Margin="0,0,0,16">
                 <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="Workbook Mode"
+                                   Width="120"
+                                   VerticalAlignment="Center" />
+                        <ComboBox Width="180"
+                                  ItemsSource="{Binding WorkbookExportModes}"
+                                  SelectedItem="{Binding SelectedWorkbookExportMode}" />
+                    </StackPanel>
+                    <TextBlock Foreground="#6B7280"
+                               FontSize="11"
+                               Margin="0,0,0,8"
+                               Text="Consolidated: one workbook. Separate: one workbook per selected audit path." />
                     <CheckBox Content="Push to GitHub after saving"
                               IsChecked="{Binding PushToGitHub}"
                               IsEnabled="{Binding IsGitHubConfigured}"

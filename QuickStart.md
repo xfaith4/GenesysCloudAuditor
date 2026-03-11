@@ -110,7 +110,7 @@ Typical files:
 ```json
 {
   "Genesys": {
-    "Region": "mypurecloud.com",
+    "Region": "usw2.pure.cloud",
     "PageSize": 100,
     "IncludeInactive": false,
     "MaxRequestsPerSecond": 3
@@ -129,6 +129,7 @@ Typical files:
 ### Key settings to verify
 
 #### `Genesys:Region`
+
 Examples may include:
 
 - `mypurecloud.com`
@@ -138,20 +139,25 @@ Examples may include:
 This must match the org you are auditing.
 
 #### `Genesys:PageSize`
+
 Controls collection page sizes for API retrieval.
 Larger values may reduce calls but can stress memory or amplify retry pain if something goes sideways.
 
 #### `Genesys:IncludeInactive`
+
 Determines whether inactive users are included in certain audit paths.
 
 #### `Genesys:MaxRequestsPerSecond`
+
 Use a conservative starting value.
 It is better to be slightly slower than to get smacked repeatedly with `429` responses like an impatient API goblin.
 
 #### `Audit:*`
+
 Enable or disable event-heavy collectors and optional audit paths.
 
 #### `Export:OutputDirectory`
+
 Set this to a writable folder that exists or can be created by the app.
 
 ---
@@ -277,15 +283,18 @@ Recommended test categories over time:
 ## Authentication Issues
 
 ### Symptom
+
 `401 Unauthorized`
 
 ### Likely causes
+
 - invalid client ID or client secret
 - wrong region
 - token request misconfiguration
 - secret not loaded into the active project scope
 
 ### Actions
+
 - verify the configured OAuth client
 - verify secrets were set for the correct project
 - verify the region value
@@ -296,14 +305,17 @@ Recommended test categories over time:
 ## Authorization Issues
 
 ### Symptom
+
 `403 Forbidden`
 
 ### Likely causes
+
 - OAuth client lacks required permissions
 - admin API visibility restrictions
 - tenant policy or division scoping prevents access
 
 ### Actions
+
 - compare required endpoints with assigned permissions
 - validate the client has read access to the audited domains
 - review org-specific access constraints
@@ -313,12 +325,15 @@ Recommended test categories over time:
 ## Region Mismatch
 
 ### Symptom
+
 Login works poorly, API calls fail unexpectedly, or endpoints appear unavailable.
 
 ### Likely causes
+
 - `Region` value does not match the tenant’s actual environment
 
 ### Actions
+
 - confirm the tenant region
 - align login and API endpoint assumptions
 - retest with corrected region setting
@@ -328,14 +343,17 @@ Login works poorly, API calls fail unexpectedly, or endpoints appear unavailable
 ## Throttling / Rate Limiting
 
 ### Symptom
+
 `429 Too Many Requests`
 
 ### Likely causes
+
 - request rate too high
 - event-heavy collection across large tenants
 - insufficient backoff/retry tuning
 
 ### Actions
+
 - lower `MaxRequestsPerSecond`
 - reduce optional collectors during testing
 - run during lower activity windows
@@ -346,15 +364,18 @@ Login works poorly, API calls fail unexpectedly, or endpoints appear unavailable
 ## Slow Runs
 
 ### Symptom
+
 Audit completes very slowly on large orgs
 
 ### Likely causes
+
 - conservative throttling
 - large tenant size
 - event-heavy collectors enabled
 - expensive endpoint combinations
 
 ### Actions
+
 - confirm current page size and request rate
 - disable optional collectors temporarily
 - test narrower audit scopes if supported
@@ -365,9 +386,11 @@ Audit completes very slowly on large orgs
 ## Empty or Suspiciously Small Results
 
 ### Symptom
+
 Workbook generates but contains little or no useful data
 
 ### Likely causes
+
 - auth succeeded but visibility is limited
 - filters excluded expected data
 - inactive users omitted
@@ -375,6 +398,7 @@ Workbook generates but contains little or no useful data
 - collection failure handled too quietly
 
 ### Actions
+
 - review effective runtime settings
 - check logs
 - validate permissions
@@ -386,15 +410,18 @@ Workbook generates but contains little or no useful data
 ## Export Problems
 
 ### Symptom
+
 Workbook does not write successfully
 
 ### Likely causes
+
 - invalid or unwritable output path
 - file locked by Excel
 - missing export dependency
 - permissions issue on destination folder
 
 ### Actions
+
 - close the workbook if already open
 - use a simple local output directory
 - confirm the folder exists and is writable
@@ -426,9 +453,11 @@ Recommended later documentation split:
 A practical early pattern for real usage:
 
 ### Daily or weekly runner execution
+
 Generate a workbook on a schedule.
 
 ### Save output to a consistent directory
+
 Example:
 
 ```text
@@ -436,9 +465,11 @@ C:\AuditExports\GenesysCloudAuditor\
 ```
 
 ### Preserve historical files
+
 Do not overwrite everything immediately. Historical comparisons become very valuable once the app grows drift intelligence.
 
 ### Review findings in three buckets
+
 - obvious tenant configuration fixes
 - changes that need review by internal teams
 - contradictions that may justify Genesys Care escalation
