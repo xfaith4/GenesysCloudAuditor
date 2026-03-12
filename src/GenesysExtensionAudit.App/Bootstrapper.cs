@@ -136,6 +136,16 @@ public static class Bootstrapper
                     .AddHttpMessageHandler<HttpLoggingHandler>()
                     .AddHttpMessageHandler<RateLimitHandler>();
 
+                services.AddHttpClient<IGenesysLicenseUsersClient, GenesysLicenseUsersClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
+                services.AddHttpClient<IGenesysUserRolesClient, GenesysUserRolesClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
                 services.AddSingleton<IPaginator, Paginator>();
 
                 // Orchestrator + reporting

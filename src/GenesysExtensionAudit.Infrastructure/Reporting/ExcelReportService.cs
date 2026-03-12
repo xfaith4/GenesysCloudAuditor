@@ -21,6 +21,9 @@ public sealed class ExcelWorkbookScopeOptions
     public bool IncludeAuditLogs { get; init; } = true;
     public bool IncludeOperationalEvents { get; init; } = true;
     public bool IncludeOutboundEvents { get; init; } = true;
+    public bool IncludeStaleLicenses { get; init; } = true;
+    public bool IncludeLicenseOverProvisioning { get; init; } = true;
+    public bool IncludeRoleGroupOverlap { get; init; } = true;
 }
 
 /// <summary>
@@ -94,6 +97,15 @@ public sealed class ExcelReportService : IExcelReportService
         if (scopeOptions.IncludeOutboundEvents)
             WriteOutboundEventsSheet(wb, report);
 
+        if (scopeOptions.IncludeStaleLicenses)
+            WriteStaleLicensesSheet(wb, report);
+
+        if (scopeOptions.IncludeLicenseOverProvisioning)
+            WriteLicenseOverProvisioningSheet(wb, report);
+
+        if (scopeOptions.IncludeRoleGroupOverlap)
+            WriteRoleGroupOverlapSheet(wb, report);
+
         using var ms = new MemoryStream();
         wb.SaveAs(ms);
         return Task.FromResult(ms.ToArray());
@@ -125,6 +137,9 @@ public sealed class ExcelReportService : IExcelReportService
             ("Audit_Logs", "Audit Logs Events", report.Options.RunAuditLogs, report.AuditLogFindings.Count, "Info", "Audit transaction events returned from Genesys audit logs query"),
             ("Operational_Events", "Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count, "Info", $"Operational events from last {report.Options.OperationalEventLookbackDays} day(s)"),
             ("Outbound_Events", "Outbound Events", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count, "Info", "Outbound event logs"),
+            ("Stale_Licenses", "Stale License Usage", report.Options.RunStaleLicenseAudit, report.StaleLicenseFindings.Count, "Warning", $"Licensed users who have not logged in for >{report.Options.StaleLicenseThresholdDays} days — potential license waste"),
+            ("License_Over_Provisioning", "License Over-Provisioning", report.Options.RunLicenseOverProvisioningAudit, report.LicenseOverProvisioningFindings.Count, "Warning", "Users on CX3/WEM/Outbound tier with no recent login — consider downgrading tier"),
+            ("Role_Group_Overlap", "Role & Group Overlap", report.Options.RunRoleGroupOverlapAudit, report.RoleGroupOverlapFindings.Count, "Warning", "Direct role assignments that are already covered by a group-inherited role in the same division"),
         };
 
         var totalFindings = rows.Where(r => r.Item3).Sum(r => r.Item4);
@@ -722,6 +737,127 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 11);
+    }
+
+    // ─── Stale Licenses (Phase 1 Audit 1) ───────────────────────────────────
+
+    private static void WriteStaleLicensesSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Stale_Licenses");
+        var findings = report.StaleLicenseFindings;
+
+        string[] headers =
+        [
+            "User Name", "User ID", "Email", "State",
+            "Assigned Licenses", "Token Last Issued (UTC)", "Days Since Login", "Issue"
+        ];
+        WriteSheetHeader(
+            ws,
+            $"Stale License Usage — Licensed Users with No Login in >{report.Options.StaleLicenseThresholdDays} Days",
+            report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.UserName;
+            ws.Cell(row, 2).Value = f.UserId;
+            ws.Cell(row, 3).Value = f.Email;
+            ws.Cell(row, 4).Value = f.State;
+            ws.Cell(row, 5).Value = f.AssignedLicenses.Count > 0 ? string.Join(", ", f.AssignedLicenses) : "";
+            ws.Cell(row, 6).Value = f.TokenLastIssuedDate?.ToString("yyyy-MM-dd HH:mm") ?? "Never";
+            if (f.DaysSinceLogin.HasValue)
+                ws.Cell(row, 7).Value = f.DaysSinceLogin.Value;
+            else
+                ws.Cell(row, 7).Value = "N/A";
+            ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 8).Value = f.Issue;
+            ApplyAltRow(ws, row, 8);
+            ws.Cell(row, 7).Style.Fill.BackgroundColor = SeverityWarning;
+            row++;
+        }
+
+        AdjustColumns(ws, 8);
+    }
+
+    // ─── License Over-Provisioning (Phase 1 Audit 2) ────────────────────────
+
+    private static void WriteLicenseOverProvisioningSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("License_Over_Provisioning");
+        var findings = report.LicenseOverProvisioningFindings;
+
+        string[] headers =
+        [
+            "User Name", "User ID", "Email", "State",
+            "All Licenses", "Premium Licenses (Over-Provisioned)",
+            "Token Last Issued (UTC)", "Days Since Login", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "License Over-Provisioning — CX3/WEM/Outbound Licenses with No Recent Usage",
+            report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.UserName;
+            ws.Cell(row, 2).Value = f.UserId;
+            ws.Cell(row, 3).Value = f.Email;
+            ws.Cell(row, 4).Value = f.State;
+            ws.Cell(row, 5).Value = f.AllAssignedLicenses.Count > 0 ? string.Join(", ", f.AllAssignedLicenses) : "";
+            ws.Cell(row, 6).Value = f.OverProvisionedLicenses.Count > 0 ? string.Join(", ", f.OverProvisionedLicenses) : "";
+            ws.Cell(row, 7).Value = f.TokenLastIssuedDate?.ToString("yyyy-MM-dd HH:mm") ?? "Never";
+            if (f.DaysSinceLogin.HasValue)
+                ws.Cell(row, 8).Value = f.DaysSinceLogin.Value;
+            else
+                ws.Cell(row, 8).Value = "N/A";
+            ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 9).Value = f.Issue;
+            ws.Cell(row, 10).Value = f.RecommendedAction;
+            ApplyAltRow(ws, row, 10);
+            ws.Cell(row, 6).Style.Fill.BackgroundColor = SeverityWarning;
+            row++;
+        }
+
+        AdjustColumns(ws, 10);
+    }
+
+    // ─── Role & Group Overlap (Phase 1 Audit 3) ─────────────────────────────
+
+    private static void WriteRoleGroupOverlapSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Role_Group_Overlap");
+        var findings = report.RoleGroupOverlapFindings;
+
+        string[] headers =
+        [
+            "User Name", "User ID", "Email", "State",
+            "Role Name", "Role ID", "Division Name", "Division ID",
+            "Covering Group Name", "Covering Group ID",
+            "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "Role & Group Overlap — Redundant Direct Role Assignments",
+            report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.UserName;
+            ws.Cell(row, 2).Value = f.UserId;
+            ws.Cell(row, 3).Value = f.Email;
+            ws.Cell(row, 4).Value = f.UserState;
+            ws.Cell(row, 5).Value = f.RoleName;
+            ws.Cell(row, 6).Value = f.RoleId;
+            ws.Cell(row, 7).Value = f.DivisionName;
+            ws.Cell(row, 8).Value = f.DivisionId;
+            ws.Cell(row, 9).Value = f.GroupName;
+            ws.Cell(row, 10).Value = f.GroupId;
+            ws.Cell(row, 11).Value = f.Issue;
+            ws.Cell(row, 12).Value = f.RecommendedAction;
+            ApplyAltRow(ws, row, 12);
+            ws.Cell(row, 5).Style.Fill.BackgroundColor = SeverityWarning;
+            row++;
+        }
+
+        AdjustColumns(ws, 12);
     }
 
     // ─── Shared helpers ──────────────────────────────────────────────────────
