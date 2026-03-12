@@ -132,4 +132,41 @@ public sealed class AuditRunOptions
     /// Default: 500.
     /// </summary>
     public int QueueServiceabilityMaxMembersToCheck { get; init; } = 500;
+
+    // ─── Phase 1 Identity & License Hygiene ──────────────────────────────────
+
+    /// <summary>
+    /// Audit 1: Correlate license assignments with last login date.
+    /// Flags users with a billable license who have not logged in within
+    /// <see cref="StaleLicenseThresholdDays"/> days.
+    /// Requires fetching GET /api/v2/license/users in addition to user data.
+    /// </summary>
+    public bool RunStaleLicenseAudit { get; init; } = true;
+
+    /// <summary>
+    /// Number of days of login inactivity after which a licensed user is considered stale.
+    /// Default: 60 days (as specified in the audit criteria).
+    /// </summary>
+    public int StaleLicenseThresholdDays { get; init; } = 60;
+
+    /// <summary>
+    /// Audit 2: Flag users on a premium (CX3/WEM/Outbound) license tier who show
+    /// no evidence of using the features that justify the higher tier.
+    /// Reuses license data already fetched for <see cref="RunStaleLicenseAudit"/>.
+    /// </summary>
+    public bool RunLicenseOverProvisioningAudit { get; init; } = true;
+
+    /// <summary>
+    /// Audit 3: Fetch per-user roles and flag direct role assignments that are already
+    /// covered by a group-inherited role in the same division.
+    /// Makes one API call per user up to <see cref="RoleGroupOverlapMaxUsersToCheck"/>.
+    /// </summary>
+    public bool RunRoleGroupOverlapAudit { get; init; } = true;
+
+    /// <summary>
+    /// Maximum number of users for which role data is fetched during the Role & Group
+    /// Overlap audit. Set to 0 to check all users (may be slow for very large orgs).
+    /// Default: 200.
+    /// </summary>
+    public int RoleGroupOverlapMaxUsersToCheck { get; init; } = 200;
 }
