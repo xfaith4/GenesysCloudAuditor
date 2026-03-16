@@ -28,4 +28,11 @@ public sealed class AuditOptions
     public bool RunOperationalEventLogs { get; set; } = false;
     public int OperationalEventLookbackDays { get; set; } = 7;
     public bool RunOutboundEvents { get; set; } = false;
+
+    // Phase 1 Identity & License Hygiene
+    public bool RunStaleLicenseAudit { get; set; } = true;
+    public int StaleLicenseThresholdDays { get; set; } = 60;
+    public bool RunLicenseOverProvisioningAudit { get; set; } = true;
+    public bool RunRoleGroupOverlapAudit { get; set; } = true;
+    public int RoleGroupOverlapMaxUsersToCheck { get; set; } = 200;
 }

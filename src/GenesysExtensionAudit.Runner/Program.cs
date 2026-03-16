@@ -145,6 +145,16 @@ static async Task<int> RunAsync(string[] args)
                     .AddHttpMessageHandler<HttpLoggingHandler>()
                     .AddHttpMessageHandler<RateLimitHandler>();
 
+                services.AddHttpClient<IGenesysLicenseUsersClient, GenesysLicenseUsersClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
+                services.AddHttpClient<IGenesysUserRolesClient, GenesysUserRolesClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
                 services.AddSingleton<IPaginator, Paginator>();
 
                 // ── Audit + reporting ─────────────────────────────────────────
@@ -349,7 +359,12 @@ static AuditRunOptions BuildRunOptionsFromSettings(
         AuditLogServiceNames = auditOpts.AuditLogServiceNames ?? [],
         RunOperationalEventLogs = auditOpts.RunOperationalEventLogs,
         OperationalEventLookbackDays = Math.Max(1, auditOpts.OperationalEventLookbackDays),
-        RunOutboundEvents = auditOpts.RunOutboundEvents
+        RunOutboundEvents = auditOpts.RunOutboundEvents,
+        RunStaleLicenseAudit = auditOpts.RunStaleLicenseAudit,
+        StaleLicenseThresholdDays = Math.Max(1, auditOpts.StaleLicenseThresholdDays),
+        RunLicenseOverProvisioningAudit = auditOpts.RunLicenseOverProvisioningAudit,
+        RunRoleGroupOverlapAudit = auditOpts.RunRoleGroupOverlapAudit,
+        RoleGroupOverlapMaxUsersToCheck = auditOpts.RoleGroupOverlapMaxUsersToCheck
     };
 }
 

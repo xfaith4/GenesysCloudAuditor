@@ -1,6 +1,7 @@
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Domain.Paging;
 using GenesysExtensionAudit.Domain.Services;
+using GenesysExtensionAudit.Infrastructure.Domain.Services;
 using GenesysExtensionAudit.Infrastructure.Genesys.Clients;
 using GenesysExtensionAudit.Infrastructure.Genesys.Dtos;
 using GenesysExtensionAudit.Infrastructure.Http;
@@ -28,6 +29,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
     private readonly IGenesysAuditLogsClient _auditLogsClient;
     private readonly IGenesysOperationalEventsClient _operationalEventsClient;
     private readonly IGenesysOutboundEventsClient _outboundEventsClient;
+    private readonly IGenesysLicenseUsersClient _licenseUsersClient;
+    private readonly IGenesysUserRolesClient _userRolesClient;
     private readonly IPaginator _paginator;
     private readonly GenesysRegionOptions _region;
     private readonly ILogger<AuditOrchestrator> _logger;
@@ -44,6 +47,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IGenesysAuditLogsClient auditLogsClient,
         IGenesysOperationalEventsClient operationalEventsClient,
         IGenesysOutboundEventsClient outboundEventsClient,
+        IGenesysLicenseUsersClient licenseUsersClient,
+        IGenesysUserRolesClient userRolesClient,
         IPaginator paginator,
         IOptions<GenesysRegionOptions> regionOptions,
         ILogger<AuditOrchestrator> logger)
@@ -59,6 +64,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         _auditLogsClient = auditLogsClient ?? throw new ArgumentNullException(nameof(auditLogsClient));
         _operationalEventsClient = operationalEventsClient ?? throw new ArgumentNullException(nameof(operationalEventsClient));
         _outboundEventsClient = outboundEventsClient ?? throw new ArgumentNullException(nameof(outboundEventsClient));
+        _licenseUsersClient = licenseUsersClient ?? throw new ArgumentNullException(nameof(licenseUsersClient));
+        _userRolesClient = userRolesClient ?? throw new ArgumentNullException(nameof(userRolesClient));
         _paginator = paginator ?? throw new ArgumentNullException(nameof(paginator));
         _region = regionOptions?.Value ?? throw new ArgumentNullException(nameof(regionOptions));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -83,7 +90,10 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             options.RunUserTelephonyAudit ||
             options.RunAuditLogs ||
             options.RunOperationalEventLogs ||
-            options.RunOutboundEvents;
+            options.RunOutboundEvents ||
+            options.RunStaleLicenseAudit ||
+            options.RunLicenseOverProvisioningAudit ||
+            options.RunRoleGroupOverlapAudit;
 
         if (!runAny)
             throw new InvalidOperationException("At least one audit path must be selected.");
@@ -92,15 +102,21 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             "Audit started. PageSize={PageSize} IncludeInactive={IncludeInactive} StaleFlowDays={StaleFlowDays} InactiveUserDays={InactiveUserDays} " +
             "RunExtension={RunExtension} RunGroups={RunGroups} RunQueues={RunQueues} RunFlows={RunFlows} RunInactiveUsers={RunInactiveUsers} RunDids={RunDids} " +
             "RunUserTelephony={RunUserTelephony} RunQueueServiceability={RunQueueServiceability} RunFlowDependency={RunFlowDependency} " +
-            "RunAuditLogs={RunAuditLogs} RunOperationalEvents={RunOperationalEvents} RunOutboundEvents={RunOutboundEvents}",
+            "RunAuditLogs={RunAuditLogs} RunOperationalEvents={RunOperationalEvents} RunOutboundEvents={RunOutboundEvents} " +
+            "RunStaleLicense={RunStaleLicense} StaleLicenseDays={StaleLicenseDays} RunLicenseOverProvisioning={RunLicenseOverProvisioning} " +
+            "RunRoleGroupOverlap={RunRoleGroupOverlap} RoleGroupOverlapMaxUsers={RoleGroupOverlapMaxUsers}",
             ps, options.IncludeInactiveUsers, options.StaleFlowThresholdDays, options.InactiveUserThresholdDays,
             options.RunExtensionAudit, options.RunGroupAudit, options.RunQueueAudit, options.RunFlowAudit,
             options.RunInactiveUserAudit, options.RunDidAudit,
             options.RunUserTelephonyAudit, options.RunQueueServiceabilityAudit, options.RunFlowDependencyAudit,
-            options.RunAuditLogs, options.RunOperationalEventLogs, options.RunOutboundEvents);
+            options.RunAuditLogs, options.RunOperationalEventLogs, options.RunOutboundEvents,
+            options.RunStaleLicenseAudit, options.StaleLicenseThresholdDays, options.RunLicenseOverProvisioningAudit,
+            options.RunRoleGroupOverlapAudit, options.RoleGroupOverlapMaxUsersToCheck);
 
         var needsUsers = options.RunExtensionAudit || options.RunInactiveUserAudit || options.RunDidAudit
-                         || options.RunUserTelephonyAudit || options.RunQueueServiceabilityAudit;
+                         || options.RunUserTelephonyAudit || options.RunQueueServiceabilityAudit
+                         || options.RunStaleLicenseAudit || options.RunLicenseOverProvisioningAudit
+                         || options.RunRoleGroupOverlapAudit;
         var needsExtensions = options.RunExtensionAudit || options.RunUserTelephonyAudit;
         var needsGroups = options.RunGroupAudit;
         var needsQueues = options.RunQueueAudit || options.RunQueueServiceabilityAudit;
@@ -108,6 +124,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         var needsDids = options.RunDidAudit || options.RunUserTelephonyAudit;
         var needsOperationalEvents = options.RunOperationalEventLogs;
         var needsOutboundEvents = options.RunOutboundEvents;
+        var needsLicenseUsers = options.RunStaleLicenseAudit || options.RunLicenseOverProvisioningAudit;
 
         IReadOnlyList<GenesysUserDto> userDtos = [];
         IReadOnlyList<EdgeExtensionEntityDto> extDtos = [];
@@ -123,6 +140,10 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<QueueServiceabilityFinding> queueServiceabilityFindings = [];
         IReadOnlyList<IvrDto> ivrDtos = [];
         IReadOnlyList<IvrFlowBindingFinding> ivrFlowBindingFindings = [];
+        IReadOnlyList<LicenseUserDto> licenseUserDtos = [];
+        IReadOnlyList<StaleLicenseFinding> staleLicenseFindings = [];
+        IReadOnlyList<LicenseOverProvisioningFinding> licenseOverProvisioningFindings = [];
+        IReadOnlyList<RoleGroupOverlapFinding> roleGroupOverlapFindings = [];
 
         if (needsUsers)
         {
@@ -300,6 +321,15 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             _logger.LogInformation("Fetched {Count} outbound event records", outboundEventFindings.Count);
         }
 
+        if (needsLicenseUsers)
+        {
+            Report(progress, 64, "Fetching user license assignments...");
+            licenseUserDtos = await _paginator.FetchAllAsync(
+                pn => _licenseUsersClient.GetLicenseUsersPageAsync(pn, ps, ct), ct)
+                .ConfigureAwait(false);
+            _logger.LogInformation("Fetched {Count} license user records", licenseUserDtos.Count);
+        }
+
         Report(progress, 70, "Running selected audit paths...");
         var extensionReport = options.RunExtensionAudit
             ? RunExtensionAudit(userDtos, extDtos, options)
@@ -348,6 +378,39 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             _logger.LogInformation("IVR flow dependency check complete. Findings={Count}", ivrFlowBindingFindings.Count);
         }
 
+        // Phase 1 Identity & License Hygiene
+        var analyzer = new LicenseHygieneAnalyzer();
+
+        if (options.RunStaleLicenseAudit || options.RunLicenseOverProvisioningAudit)
+        {
+            var userRecords = BuildUserRecords(userDtos);
+            var licenseAssignments = BuildLicenseAssignments(licenseUserDtos);
+
+            if (options.RunStaleLicenseAudit)
+            {
+                Report(progress, 85, "Analyzing stale license usage...");
+                staleLicenseFindings = analyzer.AnalyzeStaleLicenses(
+                    userRecords, licenseAssignments, options.StaleLicenseThresholdDays);
+                _logger.LogInformation("Stale license check complete. Findings={Count}", staleLicenseFindings.Count);
+            }
+
+            if (options.RunLicenseOverProvisioningAudit)
+            {
+                Report(progress, 87, "Analyzing license over-provisioning...");
+                licenseOverProvisioningFindings = analyzer.AnalyzeLicenseOverProvisioning(
+                    userRecords, licenseAssignments, options.StaleLicenseThresholdDays);
+                _logger.LogInformation("License over-provisioning check complete. Findings={Count}", licenseOverProvisioningFindings.Count);
+            }
+        }
+
+        if (options.RunRoleGroupOverlapAudit && userDtos.Count > 0)
+        {
+            Report(progress, 88, "Analyzing role & group overlap (fetching user roles)...");
+            roleGroupOverlapFindings = await AnalyzeRoleGroupOverlapAsync(
+                userDtos, options, ct).ConfigureAwait(false);
+            _logger.LogInformation("Role & group overlap check complete. Findings={Count}", roleGroupOverlapFindings.Count);
+        }
+
         Report(progress, 90, "Composing report...");
 
         var totalFindings = extensionReport.DuplicateProfileExtensions.Count
@@ -364,16 +427,21 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             + operationalEventFindings.Count + outboundEventFindings.Count
             + userTelephonyIntegrityFindings.Count
             + queueServiceabilityFindings.Count
-            + ivrFlowBindingFindings.Count;
+            + ivrFlowBindingFindings.Count
+            + staleLicenseFindings.Count
+            + licenseOverProvisioningFindings.Count
+            + roleGroupOverlapFindings.Count;
 
         _logger.LogInformation(
             "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} StaleTokenUsers={StaleTokenUsers} NoLocationUsers={NoLocationUsers} DIDs={DIDs} " +
             "UserTelephonyIntegrity={UserTelephonyIntegrity} QueueServiceability={QueueServiceability} IvrFlowBindings={IvrFlowBindings} " +
-            "OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents}",
+            "OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents} " +
+            "StaleLicenses={StaleLicenses} LicenseOverProvisioning={LicenseOverProvisioning} RoleGroupOverlap={RoleGroupOverlap}",
             totalFindings, groupFindings.Count, queueFindings.Count,
             flowFindings.Count, inactiveUserFindings.Count, noLocationUserFindings.Count, didFindings.Count,
             userTelephonyIntegrityFindings.Count, queueServiceabilityFindings.Count, ivrFlowBindingFindings.Count,
-            operationalEventFindings.Count, outboundEventFindings.Count);
+            operationalEventFindings.Count, outboundEventFindings.Count,
+            staleLicenseFindings.Count, licenseOverProvisioningFindings.Count, roleGroupOverlapFindings.Count);
 
         Report(progress, 100,
             $"Complete — {totalFindings} total findings across all checks.",
@@ -398,7 +466,10 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             OutboundEventFindings = outboundEventFindings,
             UserTelephonyIntegrityFindings = userTelephonyIntegrityFindings,
             QueueServiceabilityFindings = queueServiceabilityFindings,
-            IvrFlowBindingFindings = ivrFlowBindingFindings
+            IvrFlowBindingFindings = ivrFlowBindingFindings,
+            StaleLicenseFindings = staleLicenseFindings,
+            LicenseOverProvisioningFindings = licenseOverProvisioningFindings,
+            RoleGroupOverlapFindings = roleGroupOverlapFindings
         };
     }
 
@@ -1356,5 +1427,144 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             Message = message,
             Status = status
         });
+    }
+
+    // ─── Phase 1 Identity & License Hygiene — helpers ────────────────────────
+
+    /// <summary>
+    /// Maps fetched GenesysUserDto list to the minimal UserRecord input required by
+    /// <see cref="LicenseHygieneAnalyzer"/>.
+    /// </summary>
+    private static IReadOnlyList<LicenseHygieneAnalyzer.UserRecord> BuildUserRecords(
+        IReadOnlyList<GenesysUserDto> users)
+    {
+        return users
+            .Where(u => u.Id is not null)
+            .Select(u => new LicenseHygieneAnalyzer.UserRecord(
+                UserId: u.Id!,
+                UserName: u.Name,
+                Email: u.Email,
+                State: u.State,
+                TokenLastIssuedDate: GetTokenLastIssuedDate(u)))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Maps fetched LicenseUserDto list to the minimal LicenseAssignment input required by
+    /// <see cref="LicenseHygieneAnalyzer"/>.
+    /// </summary>
+    private static IReadOnlyList<LicenseHygieneAnalyzer.LicenseAssignment> BuildLicenseAssignments(
+        IReadOnlyList<LicenseUserDto> licenseUsers)
+    {
+        return licenseUsers
+            .Where(lu => lu.Id is not null)
+            .Select(lu => new LicenseHygieneAnalyzer.LicenseAssignment(
+                UserId: lu.Id!,
+                Licenses: (IReadOnlyList<string>)(lu.Licenses ?? [])))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Fetches role subjects for a sample of users (bounded by
+    /// <see cref="AuditRunOptions.RoleGroupOverlapMaxUsersToCheck"/>) and identifies cases
+    /// where a direct role assignment is already covered by a group-inherited role
+    /// in the same division.
+    /// </summary>
+    private async Task<IReadOnlyList<RoleGroupOverlapFinding>> AnalyzeRoleGroupOverlapAsync(
+        IReadOnlyList<GenesysUserDto> users,
+        AuditRunOptions options,
+        CancellationToken ct)
+    {
+        var maxUsers = options.RoleGroupOverlapMaxUsersToCheck;
+        var candidates = maxUsers > 0
+            ? users.Where(u => u.Id is not null).Take(maxUsers).ToList()
+            : users.Where(u => u.Id is not null).ToList();
+
+        _logger.LogInformation(
+            "Role & group overlap: checking {Count} users (of {Total} total)",
+            candidates.Count, users.Count);
+
+        // Build a user metadata lookup for enriching findings
+        var userMeta = users
+            .Where(u => u.Id is not null)
+            .ToDictionary(
+                u => u.Id!,
+                u => (Name: u.Name, Email: u.Email, State: u.State),
+                StringComparer.OrdinalIgnoreCase);
+
+        var semaphore = new SemaphoreSlim(5, 5);
+        var subjectTasks = candidates.Select(async user =>
+        {
+            await semaphore.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+
+                var rolesResponse = await _userRolesClient
+                    .GetUserRolesAsync(user.Id!, ct)
+                    .ConfigureAwait(false);
+
+                return BuildUserRoleSubjects(user.Id!, rolesResponse);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to fetch roles for user {UserId}. Skipping.", user.Id);
+                return null;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        var results = await Task.WhenAll(subjectTasks).ConfigureAwait(false);
+        var validSubjects = results.Where(s => s is not null).Select(s => s!).ToList();
+
+        var analyzer = new LicenseHygieneAnalyzer();
+        return analyzer.AnalyzeRoleGroupOverlap(validSubjects, userMeta);
+    }
+
+    /// <summary>
+    /// Converts the raw API response for a single user's roles into the
+    /// <see cref="LicenseHygieneAnalyzer.UserRoleSubjects"/> domain model.
+    /// </summary>
+    private static LicenseHygieneAnalyzer.UserRoleSubjects BuildUserRoleSubjects(
+        string userId,
+        UserRolesResponseDto response)
+    {
+        var directGrants = new List<LicenseHygieneAnalyzer.RoleGrant>();
+        var groupSubjects = new List<LicenseHygieneAnalyzer.GroupRoleSubject>();
+
+        foreach (var subject in response.Entities ?? [])
+        {
+            if (subject.Id is null) continue;
+
+            var grants = (subject.Grants ?? [])
+                .Where(g => g.Role?.Id is not null)
+                .Select(g => new LicenseHygieneAnalyzer.RoleGrant(
+                    RoleId: g.Role!.Id!,
+                    RoleName: g.Role.Name,
+                    DivisionId: g.Division?.Id,
+                    DivisionName: g.Division?.Name))
+                .ToList();
+
+            if (string.Equals(subject.Type, "USER", StringComparison.OrdinalIgnoreCase))
+            {
+                directGrants.AddRange(grants);
+            }
+            else if (string.Equals(subject.Type, "GROUP", StringComparison.OrdinalIgnoreCase))
+            {
+                groupSubjects.Add(new LicenseHygieneAnalyzer.GroupRoleSubject(
+                    GroupId: subject.Id,
+                    GroupName: subject.Name,
+                    Grants: grants));
+            }
+        }
+
+        return new LicenseHygieneAnalyzer.UserRoleSubjects(
+            UserId: userId,
+            DirectGrants: directGrants,
+            GroupSubjects: groupSubjects);
     }
 }

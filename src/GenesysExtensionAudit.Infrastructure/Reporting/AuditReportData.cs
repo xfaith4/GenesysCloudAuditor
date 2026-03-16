@@ -210,6 +210,57 @@ public sealed record IvrFlowBindingFinding(
     FindingCategory Category,
     string RecommendedAction);
 
+// ─── Phase 1 Identity & License Hygiene ──────────────────────────────────────
+
+/// <summary>
+/// Audit 1 — Stale License Usage:
+/// A user who holds a billable license but has not logged in within the threshold period.
+/// </summary>
+public sealed record StaleLicenseFinding(
+    string UserId,
+    string? UserName,
+    string? Email,
+    string? State,
+    IReadOnlyList<string> AssignedLicenses,
+    DateTimeOffset? TokenLastIssuedDate,
+    int? DaysSinceLogin,
+    string Issue);
+
+/// <summary>
+/// Audit 2 — License Over-Provisioning:
+/// A user assigned a premium (CX3/WEM/Outbound) license with no evidence of recent usage.
+/// </summary>
+public sealed record LicenseOverProvisioningFinding(
+    string UserId,
+    string? UserName,
+    string? Email,
+    string? State,
+    IReadOnlyList<string> AllAssignedLicenses,
+    IReadOnlyList<string> OverProvisionedLicenses,
+    DateTimeOffset? TokenLastIssuedDate,
+    int? DaysSinceLogin,
+    string Issue,
+    string RecommendedAction);
+
+/// <summary>
+/// Audit 3 — Role & Group Overlap:
+/// A role is directly assigned to a user but is already inherited through a group membership.
+/// The direct assignment is redundant and increases access-management complexity.
+/// </summary>
+public sealed record RoleGroupOverlapFinding(
+    string UserId,
+    string? UserName,
+    string? Email,
+    string? UserState,
+    string RoleId,
+    string? RoleName,
+    string? DivisionId,
+    string? DivisionName,
+    string GroupId,
+    string? GroupName,
+    string Issue,
+    string RecommendedAction);
+
 // ─── Phase 1.3 — Queue serviceability ────────────────────────────────────────
 
 /// <summary>
@@ -268,4 +319,9 @@ public sealed class AuditReportData
 
     // Phase 1.3 — Queue serviceability (member active-state cross-reference)
     public IReadOnlyList<QueueServiceabilityFinding> QueueServiceabilityFindings { get; init; } = [];
+
+    // Phase 1 Identity & License Hygiene
+    public IReadOnlyList<StaleLicenseFinding> StaleLicenseFindings { get; init; } = [];
+    public IReadOnlyList<LicenseOverProvisioningFinding> LicenseOverProvisioningFindings { get; init; } = [];
+    public IReadOnlyList<RoleGroupOverlapFinding> RoleGroupOverlapFindings { get; init; } = [];
 }
