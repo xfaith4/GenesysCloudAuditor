@@ -753,7 +753,26 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
 
             bool hasAnyBinding = slots.Any(s => s.Item2?.Id is not null);
 
-            // Check 1: IVR has DNIS but no open-hours flow at all
+            // Check 1a: IVR has DNIS but no schedule group — time-based routing cannot function
+            if (dnis.Count > 0 && ivr.ScheduleGroup?.Id is null && hasAnyBinding)
+            {
+                findings.Add(new IvrFlowBindingFinding(
+                    IvrId: ivr.Id,
+                    IvrName: ivr.Name,
+                    Dnis: dnis,
+                    BindingSlot: "ScheduleGroup",
+                    BoundFlowId: null,
+                    BoundFlowName: null,
+                    FlowDaysSincePublished: null,
+                    FindingCode: IvrBindingCode.NoScheduleGroup,
+                    Issue: $"IVR '{ivr.Name ?? ivr.Id}' has {dnis.Count} DNIS number(s) and flow bindings but no schedule group. " +
+                           "Without a schedule group the IVR cannot determine which hours flow to invoke at any given time.",
+                    Severity: FindingSeverity.High,
+                    Category: FindingCategory.LocalConfigFix,
+                    RecommendedAction: "Assign a schedule group to this IVR to control which flow applies during open, closed, and holiday hours."));
+            }
+
+            // Check 1b: IVR has DNIS but no open-hours flow at all
             if (dnis.Count > 0 && ivr.OpenHoursFlow?.Id is null)
             {
                 findings.Add(new IvrFlowBindingFinding(
@@ -1003,15 +1022,42 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         var memberPageSize = Math.Clamp(options.QueueServiceabilityMemberPageSize, 1, 100);
         var maxMembersToCheck = options.QueueServiceabilityMaxMembersToCheck;
 
-        // Only check queues that have members; skip if above the configured size cap
-        var candidateQueues = queues
+        // Separate queues that exceed the configured size cap — emit a warning finding for each
+        // rather than silently skipping, so operators know large queues were not examined.
+        var nonEmptyQueues = queues
             .Where(q => q.Id is not null && (q.MemberCount ?? 0) > 0)
-            .Where(q => maxMembersToCheck <= 0 || (q.MemberCount ?? 0) <= maxMembersToCheck)
             .ToList();
 
+        var oversizedQueues = maxMembersToCheck > 0
+            ? nonEmptyQueues.Where(q => (q.MemberCount ?? 0) > maxMembersToCheck).ToList()
+            : [];
+
+        foreach (var q in oversizedQueues)
+        {
+            findings.Add(new QueueServiceabilityFinding(
+                QueueId: q.Id!,
+                QueueName: q.Name,
+                TotalMembersOnRecord: q.MemberCount ?? 0,
+                MembersChecked: 0,
+                ActiveMemberCount: 0,
+                InactiveMemberCount: 0,
+                UnresolvableMemberCount: 0,
+                FindingCode: QueueServiceabilityCode.TooLargeToCheck,
+                Issue: $"Queue '{q.Name ?? q.Id}' has {q.MemberCount ?? 0} members which exceeds the configured " +
+                       $"check cap of {maxMembersToCheck}. Serviceability was not verified — investigate manually " +
+                       "or raise QueueServiceabilityMaxMembersToCheck.",
+                Severity: FindingSeverity.Info,
+                Category: FindingCategory.MonitorRerun,
+                RecommendedAction: "Review queue membership manually, or increase QueueServiceabilityMaxMembersToCheck to include this queue in future audits."));
+        }
+
+        var candidateQueues = maxMembersToCheck > 0
+            ? nonEmptyQueues.Where(q => (q.MemberCount ?? 0) <= maxMembersToCheck).ToList()
+            : nonEmptyQueues;
+
         _logger.LogInformation(
-            "Queue serviceability: checking {Count} queues (of {Total} total, skipping empty and >cap)",
-            candidateQueues.Count, queues.Count);
+            "Queue serviceability: checking {Count} queues (of {Total} total); {Oversized} oversized queues flagged as informational",
+            candidateQueues.Count, queues.Count, oversizedQueues.Count);
 
         // Fetch members for candidate queues with bounded concurrency to respect rate limits
         var semaphore = new SemaphoreSlim(5, 5);
@@ -1062,11 +1108,25 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
 
                 if (!allNonServiceable) return null;
 
-                var issue = inactive > 0 && unresolvable == 0
-                    ? $"All {membersChecked} checked member(s) are inactive. Queue cannot service work."
-                    : unresolvable > 0 && inactive == 0
-                        ? $"None of the {membersChecked} checked member(s) could be resolved to an active user. Queue serviceability is unknown."
-                        : $"Checked {membersChecked} member(s): {inactive} inactive, {unresolvable} unresolvable, 0 active. Queue cannot service work.";
+                string findingCode;
+                string issue;
+
+                if (inactive > 0 && unresolvable == 0)
+                {
+                    findingCode = QueueServiceabilityCode.AllInactive;
+                    issue = $"All {membersChecked} checked member(s) are inactive. Queue cannot service work.";
+                }
+                else if (unresolvable > 0 && inactive == 0)
+                {
+                    findingCode = QueueServiceabilityCode.AllUnresolvable;
+                    issue = $"None of the {membersChecked} checked member(s) could be resolved to an active user. " +
+                            "Queue serviceability is unknown. Members may be excluded because IncludeInactiveUsers=false.";
+                }
+                else
+                {
+                    findingCode = QueueServiceabilityCode.MixedDegraded;
+                    issue = $"Checked {membersChecked} member(s): {inactive} inactive, {unresolvable} unresolvable, 0 active. Queue cannot service work.";
+                }
 
                 var severity = inactive + unresolvable == membersChecked
                     ? FindingSeverity.High
@@ -1080,6 +1140,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                     ActiveMemberCount: active,
                     InactiveMemberCount: inactive,
                     UnresolvableMemberCount: unresolvable,
+                    FindingCode: findingCode,
                     Issue: issue,
                     Severity: severity,
                     Category: FindingCategory.LocalConfigFix,

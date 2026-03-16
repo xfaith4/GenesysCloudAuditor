@@ -150,6 +150,7 @@ static async Task<int> RunAsync(string[] args)
                 // ── Audit + reporting ─────────────────────────────────────────
                 services.AddSingleton<IAuditOrchestrator, AuditOrchestrator>();
                 services.AddSingleton<IExcelReportService, ExcelReportService>();
+                services.AddSingleton<ICareEvidenceExportService, CareEvidenceExportService>();
                 services.AddSingleton<IFileUploadService, SharePointUploadService>();
                 services.AddHttpClient<IGitHubUploadService, GitHubUploadService>();
             })
@@ -158,6 +159,7 @@ static async Task<int> RunAsync(string[] args)
         var logger = host.Services.GetRequiredService<ILogger<Program>>();
         var orchestrator = host.Services.GetRequiredService<IAuditOrchestrator>();
         var excelService = host.Services.GetRequiredService<IExcelReportService>();
+        var careService = host.Services.GetRequiredService<ICareEvidenceExportService>();
         var genesysOpts = host.Services.GetRequiredService<IOptions<GenesysRegionOptions>>().Value;
         var auditOpts = host.Services.GetRequiredService<IOptions<AuditOptions>>().Value;
         var exportOpts = host.Services.GetRequiredService<IOptions<ExportOptions>>().Value;
@@ -192,9 +194,18 @@ static async Task<int> RunAsync(string[] args)
 
         var report = await orchestrator.RunAsync(runOptions, progress, cts.Token);
 
+        // ── Build care evidence packet ────────────────────────────────────────
+        logger.LogInformation("Building Genesys Care evidence packet...");
+        var carePacket = careService.BuildPacket(report);
+        logger.LogInformation(
+            "Care packet ready. EscalationCandidates={Count} (Critical={Critical} High={High})",
+            carePacket.Summary.EscalationCandidateCount,
+            carePacket.Summary.CriticalCount,
+            carePacket.Summary.HighCount);
+
         // ── Generate Excel ────────────────────────────────────────────────────
         logger.LogInformation("Generating Excel workbook...");
-        var xlsx = await excelService.GenerateAsync(report, cts.Token);
+        var xlsx = await excelService.GenerateAsync(report, cts.Token, carePacket: carePacket);
 
         // ── Save locally ──────────────────────────────────────────────────────
         var outputDir = Path.GetFullPath(exportOpts.OutputDirectory);
@@ -205,6 +216,19 @@ static async Task<int> RunAsync(string[] args)
 
         await File.WriteAllBytesAsync(filePath, xlsx, cts.Token);
         logger.LogInformation("Report saved: {FilePath} ({Bytes:N0} bytes)", filePath, xlsx.Length);
+
+        // ── Write care evidence JSON ──────────────────────────────────────────
+        var careJsonFileName = Path.ChangeExtension(fileName, ".care-evidence.json");
+        var careJsonPath = Path.Combine(outputDir, careJsonFileName);
+        var careJson = JsonSerializer.Serialize(carePacket, new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        await File.WriteAllTextAsync(careJsonPath, careJson, cts.Token);
+        logger.LogInformation(
+            "Care evidence JSON saved: {FilePath} ({Candidates} escalation candidates)",
+            careJsonPath, carePacket.Summary.EscalationCandidateCount);
 
         // ── Upload to SharePoint ──────────────────────────────────────────────
         if (dryRun)

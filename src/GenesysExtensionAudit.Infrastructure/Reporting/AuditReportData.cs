@@ -3,13 +3,7 @@ using GenesysExtensionAudit.Domain.Services;
 
 namespace GenesysExtensionAudit.Infrastructure.Reporting;
 
-// ─── Finding codes for UserTelephonyIntegrityFinding ───────────────────────────
-
-/// <summary>
-/// Identifies which specific telephony integrity rule was violated.
-/// Used to distinguish sub-types within <see cref="UserTelephonyIntegrityFinding"/>.
-/// </summary>
-// ─── Finding codes for IvrFlowBindingFinding ─────────────────────────────────
+// ─── Finding codes for IvrFlowBindingFinding (Phase 1.4) ─────────────────────
 
 /// <summary>
 /// Identifies which specific IVR–flow dependency rule was violated.
@@ -28,8 +22,20 @@ public static class IvrBindingCode
 
     /// <summary>IVR entry point has DNIS numbers but no open-hours flow binding — calls have no route.</summary>
     public const string NoOpenHoursFlow = "IVR_NO_OPEN_HOURS_FLOW";
+
+    /// <summary>
+    /// IVR entry point has DNIS numbers but no schedule group binding.
+    /// Without a schedule group the IVR cannot determine which hours flow to invoke.
+    /// </summary>
+    public const string NoScheduleGroup = "IVR_NO_SCHEDULE_GROUP";
 }
 
+// ─── Finding codes for UserTelephonyIntegrityFinding (Phase 1.2) ──────────────
+
+/// <summary>
+/// Identifies which specific telephony integrity rule was violated.
+/// Used to distinguish sub-types within <see cref="UserTelephonyIntegrityFinding"/>.
+/// </summary>
 public static class TelephonyIntegrityCode
 {
     /// <summary>User profile claims a work-phone extension but has no station assigned.</summary>
@@ -43,6 +49,30 @@ public static class TelephonyIntegrityCode
     /// contact info — the DID and profile are out of sync.
     /// </summary>
     public const string DidOwnerExtensionMismatch = "DID_OWNER_EXTENSION_MISMATCH";
+}
+
+// ─── Finding codes for QueueServiceabilityFinding (Phase 1.3) ────────────────
+
+/// <summary>
+/// Identifies which specific queue serviceability rule was violated.
+/// Used to distinguish sub-types within <see cref="QueueServiceabilityFinding"/>.
+/// </summary>
+public static class QueueServiceabilityCode
+{
+    /// <summary>All checked members are inactive — queue cannot service work.</summary>
+    public const string AllInactive = "QUEUE_ALL_INACTIVE";
+
+    /// <summary>None of the checked members could be resolved to a known user — serviceability unknown.</summary>
+    public const string AllUnresolvable = "QUEUE_ALL_UNRESOLVABLE";
+
+    /// <summary>A mix of inactive and unresolvable members; no active member found in the checked sample.</summary>
+    public const string MixedDegraded = "QUEUE_MIXED_DEGRADED";
+
+    /// <summary>
+    /// Queue member count exceeds the configured <c>QueueServiceabilityMaxMembersToCheck</c> cap.
+    /// The queue was not checked — raise the cap or investigate manually for large queues.
+    /// </summary>
+    public const string TooLargeToCheck = "QUEUE_TOO_LARGE_TO_CHECK";
 }
 
 // ─── Findings ───────────────────────────────────────────────────────────────
@@ -196,6 +226,8 @@ public sealed record QueueServiceabilityFinding(
     int InactiveMemberCount,
     /// <summary>Members whose user ID could not be found in the fetched user list.</summary>
     int UnresolvableMemberCount,
+    /// <summary>One of the <see cref="QueueServiceabilityCode"/> constants.</summary>
+    string FindingCode,
     string Issue,
     FindingSeverity Severity,
     FindingCategory Category,

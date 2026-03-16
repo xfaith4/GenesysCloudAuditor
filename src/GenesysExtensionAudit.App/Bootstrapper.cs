@@ -141,6 +141,7 @@ public static class Bootstrapper
                 // Orchestrator + reporting
                 services.AddSingleton<IAuditOrchestrator, AuditOrchestrator>(); // IAuditOrchestrator is in Infrastructure.Application
                 services.AddSingleton<IExcelReportService, ExcelReportService>();
+                services.AddSingleton<ICareEvidenceExportService, CareEvidenceExportService>();
                 services.AddHttpClient<IGitHubUploadService, GitHubUploadService>();
                 services.AddSingleton<IScheduledAuditService, ScheduledAuditService>();
                 services.AddSingleton<IAuditLogCatalogCache, AuditLogCatalogCache>();

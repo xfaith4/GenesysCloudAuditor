@@ -6,7 +6,7 @@ namespace GenesysExtensionAudit.Infrastructure.Reporting;
 
 public interface IExcelReportService
 {
-    Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null);
+    Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null, CareEvidencePacket? carePacket = null);
 }
 
 public sealed class ExcelWorkbookScopeOptions
@@ -42,7 +42,7 @@ public sealed class ExcelReportService : IExcelReportService
     private static readonly XLColor SeverityWarning = XLColor.FromHtml("#FFF2CC");
     private static readonly XLColor SeverityInfo = XLColor.FromHtml("#E2F0D9");
 
-    public Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null)
+    public Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null, CareEvidencePacket? carePacket = null)
     {
         ct.ThrowIfCancellationRequested();
         scopeOptions ??= new ExcelWorkbookScopeOptions();
@@ -51,6 +51,11 @@ public sealed class ExcelReportService : IExcelReportService
 
         if (scopeOptions.IncludeSummary)
             WriteSummarySheet(wb, report);
+
+        // Care Case Summary is always written first (after overview summary) when a packet is provided.
+        // Intentionally not gated by scope options — escalation candidates should always be visible.
+        if (carePacket is not null)
+            WriteCareCaseSummarySheet(wb, report, carePacket);
 
         if (scopeOptions.IncludeExtensions)
         {
@@ -579,6 +584,124 @@ public sealed class ExcelReportService : IExcelReportService
         AdjustColumns(ws, 6);
     }
 
+    // ─── Care Case Summary (Phase 3.3) ──────────────────────────────────────
+
+    private static readonly XLColor CareTitleBg = XLColor.FromHtml("#833C00");    // dark amber-red
+    private static readonly XLColor CareHeaderBg = XLColor.FromHtml("#C55A11");   // orange-red
+    private static readonly XLColor CareAltRowBg = XLColor.FromHtml("#FCE4D6");   // light salmon tint
+
+    private static void WriteCareCaseSummarySheet(IXLWorkbook wb, AuditReportData report, CareEvidencePacket packet)
+    {
+        var ws = wb.Worksheets.Add("Care_Case_Summary");
+        var candidates = packet.EscalationCandidates;
+
+        // ── Title ──────────────────────────────────────────────────────────────
+        ws.Row(1).Height = 22;
+        var titleCell = ws.Cell(1, 1);
+        titleCell.Value = "Genesys Care Escalation Candidates";
+        titleCell.Style.Font.Bold = true;
+        titleCell.Style.Font.FontSize = 14;
+        titleCell.Style.Font.FontColor = XLColor.White;
+        titleCell.Style.Fill.BackgroundColor = CareTitleBg;
+        ws.Range(1, 1, 1, 12).Merge();
+
+        // ── Subtitle (summary stats + timestamp) ──────────────────────────────
+        ws.Row(2).Height = 15;
+        ws.Cell(2, 1).Value =
+            $"Generated: {report.GeneratedAt:yyyy-MM-dd HH:mm} UTC  |  " +
+            $"Region: {report.OrgRegion}  |  " +
+            $"Escalation Candidates: {packet.Summary.EscalationCandidateCount}  |  " +
+            $"Total Findings This Run: {packet.Summary.TotalFindingsInRun}  |  " +
+            $"Critical: {packet.Summary.CriticalCount}  High: {packet.Summary.HighCount}  Medium: {packet.Summary.MediumCount}";
+        ws.Cell(2, 1).Style.Font.Italic = true;
+        ws.Cell(2, 1).Style.Font.FontSize = 10;
+        ws.Range(2, 1, 2, 12).Merge();
+
+        // ── Column headers ────────────────────────────────────────────────────
+        ws.Row(3).Height = 18;
+        string[] headers =
+        [
+            "Domain", "Finding Code", "Severity", "Affected Object",
+            "Affected Object ID", "Related Objects", "API Surfaces",
+            "Evidence Summary", "Suggested Case Text", "Recommended Action",
+            "Workbook Sheet", "Category"
+        ];
+
+        for (int c = 1; c <= headers.Length; c++)
+        {
+            var cell = ws.Cell(3, c);
+            cell.Value = headers[c - 1];
+            cell.Style.Font.Bold = true;
+            cell.Style.Font.FontColor = XLColor.White;
+            cell.Style.Fill.BackgroundColor = CareHeaderBg;
+            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        }
+
+        ws.SheetView.FreezeRows(3);
+        ws.RangeUsed()?.SetAutoFilter();
+
+        // ── Data rows ─────────────────────────────────────────────────────────
+        int row = 4;
+        foreach (var c in candidates)
+        {
+            ws.Cell(row, 1).Value = c.Domain;
+            ws.Cell(row, 2).Value = c.FindingCode;
+            ws.Cell(row, 3).Value = c.Severity;
+
+            // Severity cell colour
+            ws.Cell(row, 3).Style.Fill.BackgroundColor = c.Severity switch
+            {
+                "Critical" => SeverityCritical,
+                "High" => SeverityWarning,
+                _ => XLColor.NoColor
+            };
+
+            ws.Cell(row, 4).Value = c.AffectedObjectName ?? c.AffectedObjectId;
+            ws.Cell(row, 5).Value = c.AffectedObjectId;
+            ws.Cell(row, 6).Value = c.RelatedObjectNames.Count > 0
+                ? string.Join(", ", c.RelatedObjectNames)
+                : string.Join(", ", c.RelatedObjectIds);
+            ws.Cell(row, 7).Value = string.Join("; ", c.ApiSurfaces);
+            ws.Cell(row, 8).Value = c.EvidenceSummary;
+            ws.Cell(row, 9).Value = c.SuggestedCaseText;
+            ws.Cell(row, 10).Value = c.RecommendedAction;
+            ws.Cell(row, 11).Value = c.WorkbookSheet;
+            ws.Cell(row, 12).Value = c.Category;
+
+            // Alternate row background using Care palette
+            if (row % 2 == 0)
+            {
+                ws.Range(row, 1, row, 12)
+                  .Cells()
+                  .Where(cell => cell.Style.Fill.BackgroundColor == XLColor.NoColor)
+                  .ToList()
+                  .ForEach(cell => cell.Style.Fill.BackgroundColor = CareAltRowBg);
+            }
+
+            row++;
+        }
+
+        // ── Column widths ─────────────────────────────────────────────────────
+        ws.Column(1).Width = 28;        // Domain
+        ws.Column(2).Width = 26;        // Finding Code
+        ws.Column(3).Width = 12;        // Severity
+        ws.Column(4).Width = 32;        // Affected Object
+        ws.Column(5).Width = 38;        // Affected Object ID (GUIDs)
+        ws.Column(6).Width = 32;        // Related Objects
+        ws.Column(7).Width = 60;        // API Surfaces
+        ws.Column(8).Width = 65;        // Evidence Summary
+        ws.Column(9).Width = 80;        // Suggested Case Text
+        ws.Column(10).Width = 65;       // Recommended Action
+        ws.Column(11).Width = 28;       // Workbook Sheet
+        ws.Column(12).Width = 28;       // Category
+
+        // Wrap long text columns
+        foreach (int col in new[] { 8, 9, 10 })
+            ws.Column(col).Style.Alignment.WrapText = true;
+
+        ws.Row(3).Style.Alignment.WrapText = false;
+    }
+
     // ─── IVR Flow Bindings (Phase 1.4) ──────────────────────────────────────
 
     private static void WriteIvrFlowBindingsSheet(IXLWorkbook wb, AuditReportData report)
@@ -683,7 +806,7 @@ public sealed class ExcelReportService : IExcelReportService
 
         string[] headers =
         [
-            "Queue Name", "Queue ID", "Members (Record)", "Members Checked",
+            "Finding Code", "Queue Name", "Queue ID", "Members (Record)", "Members Checked",
             "Active", "Inactive", "Unresolvable", "Severity", "Category", "Issue", "Recommended Action"
         ];
         WriteSheetHeader(ws, "Queue Serviceability — Non-Serviceable Queue Membership", report, findings.Count, headers);
@@ -691,37 +814,38 @@ public sealed class ExcelReportService : IExcelReportService
         int row = 4;
         foreach (var f in findings)
         {
-            ws.Cell(row, 1).Value = f.QueueName;
-            ws.Cell(row, 2).Value = f.QueueId;
-            ws.Cell(row, 3).Value = f.TotalMembersOnRecord;
-            ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, 4).Value = f.MembersChecked;
+            ws.Cell(row, 1).Value = f.FindingCode;
+            ws.Cell(row, 2).Value = f.QueueName;
+            ws.Cell(row, 3).Value = f.QueueId;
+            ws.Cell(row, 4).Value = f.TotalMembersOnRecord;
             ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, 5).Value = f.ActiveMemberCount;
+            ws.Cell(row, 5).Value = f.MembersChecked;
             ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, 6).Value = f.InactiveMemberCount;
+            ws.Cell(row, 6).Value = f.ActiveMemberCount;
             ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, 7).Value = f.UnresolvableMemberCount;
+            ws.Cell(row, 7).Value = f.InactiveMemberCount;
             ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, 8).Value = f.Severity.ToString();
-            ws.Cell(row, 9).Value = f.Category.ToString();
-            ws.Cell(row, 10).Value = f.Issue;
-            ws.Cell(row, 11).Value = f.RecommendedAction;
+            ws.Cell(row, 8).Value = f.UnresolvableMemberCount;
+            ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 9).Value = f.Severity.ToString();
+            ws.Cell(row, 10).Value = f.Category.ToString();
+            ws.Cell(row, 11).Value = f.Issue;
+            ws.Cell(row, 12).Value = f.RecommendedAction;
 
-            var severityCell = ws.Cell(row, 8);
+            var severityCell = ws.Cell(row, 9);
             if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
                 severityCell.Style.Fill.BackgroundColor = SeverityCritical;
             else if (f.Severity == FindingSeverity.Medium)
                 severityCell.Style.Fill.BackgroundColor = SeverityWarning;
 
-            if (f.ActiveMemberCount == 0)
-                ws.Cell(row, 5).Style.Fill.BackgroundColor = SeverityCritical;
+            if (f.ActiveMemberCount == 0 && f.MembersChecked > 0)
+                ws.Cell(row, 6).Style.Fill.BackgroundColor = SeverityCritical;
 
-            ApplyAltRow(ws, row, 11);
+            ApplyAltRow(ws, row, 12);
             row++;
         }
 
-        AdjustColumns(ws, 11);
+        AdjustColumns(ws, 12);
     }
 
     // ─── Shared helpers ──────────────────────────────────────────────────────

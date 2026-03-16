@@ -97,6 +97,7 @@ Build a reusable engine that allows audit modules to define:
 - exportable evidence fragments
 
 ### Outcome
+
 A common framework for checks that compare multiple APIs instead of one API at a time.
 
 ---
@@ -126,6 +127,7 @@ Correlate:
 | Multiple ownership contradiction  | High     | Same telephony asset appears attributable to more than one active identity                |
 
 ### Why this matters
+
 This is one of the clearest areas where tenant misconfiguration and platform sync issues blur together. Cross-endpoint comparison is essential.
 
 ---
@@ -154,6 +156,7 @@ Correlate:
 | Queue with incomplete routing dependencies | High     | Queue is missing downstream config required to actually process interactions                  |
 
 ### Why this matters
+
 Many tenants look healthy in isolated admin screens while being operationally hollow.
 
 ---
@@ -179,6 +182,7 @@ Correlate:
 | Critical entry-point fragility | Medium   | Important numbers depend on brittle or stale routing chains                         |
 
 ### Why this matters
+
 This catches silent customer-facing failures before they produce obvious outage reports.
 
 ---
@@ -228,6 +232,7 @@ Correlate current findings with:
 | Suspect release window   | Medium   | Group findings by likely onset window after correlated changes                |
 
 ### Example output
+
 “Queue membership changed at 14:03; routing anomalies began at 14:07; serviceability fell to zero by 14:11.”
 
 ---
@@ -243,6 +248,7 @@ Correlate current findings with:
 | Resource oscillation | Medium   | Site/edge/station/trunk relationships repeatedly move between valid and invalid interpretations |
 
 ### Why this matters
+
 Flapping is often a signal of automation conflict, admin collision, sync lag, or deeper platform instability.
 
 ---
@@ -407,6 +413,7 @@ This phase turns the results into something people will actually use.
 | Recent change context        | Medium   | Inline summary of nearby relevant changes/events        |
 
 ### Example relationship chain
+
 `User -> Extension -> DID -> Station -> Site -> Queue -> Flow`
 
 or
