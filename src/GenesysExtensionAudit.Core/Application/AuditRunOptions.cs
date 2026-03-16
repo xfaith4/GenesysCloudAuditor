@@ -90,6 +90,15 @@ public sealed class AuditRunOptions
     /// </summary>
     public bool RunOutboundEvents { get; init; } = false;
 
+    // ─── Phase 1.5 — Site–edge–trunk topology audit ──────────────────────────
+
+    /// <summary>
+    /// Fetch telephony sites, edges, and trunks and cross-reference their state to detect:
+    /// sites with no active edges, offline edges, orphaned edge-to-site bindings,
+    /// and trunks that are down or out of service (ROADMAP Phase 1.5).
+    /// </summary>
+    public bool RunSiteTopologyAudit { get; init; } = true;
+
     // ─── Phase 1.4 — Flow dependency audit ───────────────────────────────────
 
     /// <summary>
@@ -169,4 +178,14 @@ public sealed class AuditRunOptions
     /// Default: 200.
     /// </summary>
     public int RoleGroupOverlapMaxUsersToCheck { get; init; } = 200;
+
+    // ─── Phase 2 — Architect Prompt Hygiene ──────────────────────────────────
+
+    /// <summary>
+    /// Fetch all architect prompts and flag those with no usable audio resources:
+    /// no language resources configured at all, or all configured languages missing
+    /// both a media file and a TTS fallback string. Calls to these prompts play silence
+    /// or fail, depending on the flow's error-handling configuration.
+    /// </summary>
+    public bool RunPromptHygieneAudit { get; init; } = true;
 }

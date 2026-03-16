@@ -24,6 +24,8 @@ public sealed class ExcelWorkbookScopeOptions
     public bool IncludeStaleLicenses { get; init; } = true;
     public bool IncludeLicenseOverProvisioning { get; init; } = true;
     public bool IncludeRoleGroupOverlap { get; init; } = true;
+    public bool IncludeSiteTopology { get; init; } = true;
+    public bool IncludePromptHygiene { get; init; } = true;
 }
 
 /// <summary>
@@ -111,6 +113,12 @@ public sealed class ExcelReportService : IExcelReportService
         if (scopeOptions.IncludeRoleGroupOverlap)
             WriteRoleGroupOverlapSheet(wb, report);
 
+        if (scopeOptions.IncludeSiteTopology)
+            WriteSiteTopologySheet(wb, report);
+
+        if (scopeOptions.IncludePromptHygiene)
+            WritePromptHygieneSheet(wb, report);
+
         using var ms = new MemoryStream();
         wb.SaveAs(ms);
         return Task.FromResult(ms.ToArray());
@@ -145,6 +153,8 @@ public sealed class ExcelReportService : IExcelReportService
             ("Stale_Licenses", "Stale License Usage", report.Options.RunStaleLicenseAudit, report.StaleLicenseFindings.Count, "Warning", $"Licensed users who have not logged in for >{report.Options.StaleLicenseThresholdDays} days — potential license waste"),
             ("License_Over_Provisioning", "License Over-Provisioning", report.Options.RunLicenseOverProvisioningAudit, report.LicenseOverProvisioningFindings.Count, "Warning", "Users on CX3/WEM/Outbound tier with no recent login — consider downgrading tier"),
             ("Role_Group_Overlap", "Role & Group Overlap", report.Options.RunRoleGroupOverlapAudit, report.RoleGroupOverlapFindings.Count, "Warning", "Direct role assignments that are already covered by a group-inherited role in the same division"),
+            ("Site_Topology", "Site–Edge–Trunk Topology", report.Options.RunSiteTopologyAudit, report.SiteTopologyFindings.Count, "Critical", "Sites with no active edges, offline edges, orphaned edge–site bindings, or trunks that are down/out-of-service"),
+            ("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
         };
 
         var totalFindings = rows.Where(r => r.Item3).Sum(r => r.Item4);
@@ -982,6 +992,96 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 12);
+    }
+
+    // ─── Architect Prompt Hygiene (Phase 2) ─────────────────────────────────
+
+    private static void WritePromptHygieneSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Prompt_Hygiene");
+        var findings = report.PromptHygieneFindings;
+
+        string[] headers =
+        [
+            "Finding Code", "Prompt Name", "Prompt ID", "Description",
+            "System Prompt", "Resource Count", "Affected Languages",
+            "Severity", "Category", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "Architect Prompt Hygiene — Prompts with No Usable Audio", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.FindingCode;
+            ws.Cell(row, 2).Value = f.PromptName;
+            ws.Cell(row, 3).Value = f.PromptId;
+            ws.Cell(row, 4).Value = f.Description;
+            ws.Cell(row, 5).Value = f.IsSystemPrompt ? "Yes" : "No";
+            ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 6).Value = f.ResourceCount;
+            ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 7).Value = f.AffectedLanguages;
+            ws.Cell(row, 8).Value = f.Severity.ToString();
+            ws.Cell(row, 9).Value = f.Category.ToString();
+            ws.Cell(row, 10).Value = f.Issue;
+            ws.Cell(row, 11).Value = f.RecommendedAction;
+
+            var severityCell = ws.Cell(row, 8);
+            if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
+                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
+            else if (f.Severity == FindingSeverity.Medium)
+                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
+
+            ApplyAltRow(ws, row, 11);
+            row++;
+        }
+
+        AdjustColumns(ws, 11);
+    }
+
+    // ─── Site–Edge–Trunk Topology (Phase 1.5) ───────────────────────────────
+
+    private static void WriteSiteTopologySheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Site_Topology");
+        var findings = report.SiteTopologyFindings;
+
+        string[] headers =
+        [
+            "Finding Code", "Object Type", "Object Name", "Object ID",
+            "Site Name", "Site ID", "Edge Name", "Edge ID",
+            "Trunk State", "Severity", "Category", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "Site–Edge–Trunk Topology — Infrastructure Integrity", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.FindingCode;
+            ws.Cell(row, 2).Value = f.ObjectType;
+            ws.Cell(row, 3).Value = f.ObjectName;
+            ws.Cell(row, 4).Value = f.ObjectId;
+            ws.Cell(row, 5).Value = f.SiteName;
+            ws.Cell(row, 6).Value = f.SiteId;
+            ws.Cell(row, 7).Value = f.EdgeName;
+            ws.Cell(row, 8).Value = f.EdgeId;
+            ws.Cell(row, 9).Value = f.TrunkState;
+            ws.Cell(row, 10).Value = f.Severity.ToString();
+            ws.Cell(row, 11).Value = f.Category.ToString();
+            ws.Cell(row, 12).Value = f.Issue;
+            ws.Cell(row, 13).Value = f.RecommendedAction;
+
+            var severityCell = ws.Cell(row, 10);
+            if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
+                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
+            else if (f.Severity == FindingSeverity.Medium)
+                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
+
+            ApplyAltRow(ws, row, 13);
+            row++;
+        }
+
+        AdjustColumns(ws, 13);
     }
 
     // ─── Shared helpers ──────────────────────────────────────────────────────

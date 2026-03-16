@@ -125,6 +125,26 @@ static async Task<int> RunAsync(string[] args)
                     .AddHttpMessageHandler<HttpLoggingHandler>()
                     .AddHttpMessageHandler<RateLimitHandler>();
 
+                services.AddHttpClient<IGenesysPromptsClient, GenesysPromptsClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
+                services.AddHttpClient<IGenesysSitesClient, GenesysSitesClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
+                services.AddHttpClient<IGenesysEdgesClient, GenesysEdgesClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
+                services.AddHttpClient<IGenesysTrunksClient, GenesysTrunksClient>()
+                    .AddHttpMessageHandler<OAuthBearerHandler>()
+                    .AddHttpMessageHandler<HttpLoggingHandler>()
+                    .AddHttpMessageHandler<RateLimitHandler>();
+
                 services.AddHttpClient<IGenesysDidsClient, GenesysDidsClient>()
                     .AddHttpMessageHandler<OAuthBearerHandler>()
                     .AddHttpMessageHandler<HttpLoggingHandler>()

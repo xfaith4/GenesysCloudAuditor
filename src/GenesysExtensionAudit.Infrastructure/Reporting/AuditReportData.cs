@@ -75,6 +75,55 @@ public static class QueueServiceabilityCode
     public const string TooLargeToCheck = "QUEUE_TOO_LARGE_TO_CHECK";
 }
 
+// ─── Finding codes for PromptHygieneFinding (Phase 2) ────────────────────────
+
+/// <summary>
+/// Identifies which specific prompt hygiene rule was violated.
+/// Used to distinguish sub-types within <see cref="PromptHygieneFinding"/>.
+/// </summary>
+public static class PromptHygieneCode
+{
+    /// <summary>
+    /// Prompt has no language resources configured at all.
+    /// Any flow node that plays this prompt will receive no audio — callers hear silence.
+    /// </summary>
+    public const string NoResources = "PROMPT_NO_RESOURCES";
+
+    /// <summary>
+    /// Prompt has one or more language resource slots configured but every slot is missing
+    /// both a media file (audio upload) and a TTS fallback string.
+    /// Callers matching those languages will hear silence.
+    /// </summary>
+    public const string NoPlayableMedia = "PROMPT_NO_PLAYABLE_MEDIA";
+}
+
+// ─── Finding codes for SiteTopologyFinding (Phase 1.5) ───────────────────────
+
+/// <summary>
+/// Identifies which specific site–edge–trunk topology rule was violated.
+/// Used to distinguish sub-types within <see cref="SiteTopologyFinding"/>.
+/// </summary>
+public static class SiteTopologyCode
+{
+    /// <summary>Site has no edges assigned, or all its edges are offline/inactive — cannot carry traffic.</summary>
+    public const string SiteNoActiveEdges = "SITE_NO_ACTIVE_EDGES";
+
+    /// <summary>Edge references a site that does not appear in the site list — the site may have been deleted.</summary>
+    public const string EdgeOrphanedSite = "EDGE_ORPHANED_SITE";
+
+    /// <summary>Edge is registered but currently reporting as offline — it cannot carry calls.</summary>
+    public const string EdgeOffline = "EDGE_OFFLINE";
+
+    /// <summary>Trunk is hosted on an edge that is currently offline — the trunk cannot carry traffic even if its own state is UP.</summary>
+    public const string TrunkEdgeOffline = "TRUNK_EDGE_OFFLINE";
+
+    /// <summary>Trunk is administratively disabled or not in service — calls cannot be routed through it.</summary>
+    public const string TrunkOutOfService = "TRUNK_OUT_OF_SERVICE";
+
+    /// <summary>Trunk is reporting a DOWN or UNKNOWN operational state — call routing will fail or is unreliable.</summary>
+    public const string TrunkDown = "TRUNK_DOWN";
+}
+
 // ─── Findings ───────────────────────────────────────────────────────────────
 
 public sealed record GroupFinding(
@@ -159,6 +208,29 @@ public sealed record OutboundEventFinding(
     string? Code,
     string? Message,
     string? CorrelationId);
+
+// ─── Phase 2 — Architect Prompt Hygiene ──────────────────────────────────────
+
+/// <summary>
+/// An architect prompt that cannot produce audio for one or more language variants:
+/// either no language resources are configured, or all configured resources lack
+/// both a media file and a TTS fallback string.
+/// </summary>
+public sealed record PromptHygieneFinding(
+    string PromptId,
+    string? PromptName,
+    string? Description,
+    bool IsSystemPrompt,
+    /// <summary>Number of language resource slots configured on this prompt.</summary>
+    int ResourceCount,
+    /// <summary>Comma-separated list of affected language codes (e.g. "en-us, fr-fr").</summary>
+    string AffectedLanguages,
+    /// <summary>One of the <see cref="PromptHygieneCode"/> constants.</summary>
+    string FindingCode,
+    string Issue,
+    FindingSeverity Severity,
+    FindingCategory Category,
+    string RecommendedAction);
 
 // ─── Phase 1.2 — User telephony integrity ────────────────────────────────────
 
@@ -261,6 +333,33 @@ public sealed record RoleGroupOverlapFinding(
     string Issue,
     string RecommendedAction);
 
+// ─── Phase 1.5 — Site–edge–trunk topology ────────────────────────────────────
+
+/// <summary>
+/// A finding representing an anomaly in the site–edge–trunk topology:
+/// an offline edge, an edge orphaned from its site, a trunk that is down or
+/// out of service, or a site with no active edges to carry traffic.
+/// Each finding covers one object (site, edge, or trunk) and one anomaly.
+/// </summary>
+public sealed record SiteTopologyFinding(
+    /// <summary>One of the <see cref="SiteTopologyCode"/> constants.</summary>
+    string FindingCode,
+    /// <summary>The primary object type for this finding: Site, Edge, or Trunk.</summary>
+    string ObjectType,
+    string? ObjectId,
+    string? ObjectName,
+    /// <summary>The site that this edge or trunk ultimately belongs to (null if site cannot be determined).</summary>
+    string? SiteId,
+    string? SiteName,
+    /// <summary>For trunk findings: the edge that hosts the trunk.</summary>
+    string? EdgeId,
+    string? EdgeName,
+    string? TrunkState,
+    string Issue,
+    FindingSeverity Severity,
+    FindingCategory Category,
+    string RecommendedAction);
+
 // ─── Phase 1.3 — Queue serviceability ────────────────────────────────────────
 
 /// <summary>
@@ -311,11 +410,17 @@ public sealed class AuditReportData
     public IReadOnlyList<OperationalEventFinding> OperationalEventFindings { get; init; } = [];
     public IReadOnlyList<OutboundEventFinding> OutboundEventFindings { get; init; } = [];
 
+    // Phase 2 — Architect Prompt Hygiene
+    public IReadOnlyList<PromptHygieneFinding> PromptHygieneFindings { get; init; } = [];
+
     // Phase 1.2 — User telephony integrity (cross-endpoint)
     public IReadOnlyList<UserTelephonyIntegrityFinding> UserTelephonyIntegrityFindings { get; init; } = [];
 
     // Phase 1.4 — IVR flow dependency (entry point → flow binding integrity)
     public IReadOnlyList<IvrFlowBindingFinding> IvrFlowBindingFindings { get; init; } = [];
+
+    // Phase 1.5 — Site–edge–trunk topology integrity
+    public IReadOnlyList<SiteTopologyFinding> SiteTopologyFindings { get; init; } = [];
 
     // Phase 1.3 — Queue serviceability (member active-state cross-reference)
     public IReadOnlyList<QueueServiceabilityFinding> QueueServiceabilityFindings { get; init; } = [];
