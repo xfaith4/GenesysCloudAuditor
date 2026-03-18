@@ -186,7 +186,17 @@ public sealed record AuditLogFinding(
     string? UserName,
     string? UserEmail,
     string? EntityType,
-    string? EntityName);
+    string? EntityName,
+    /// <summary>ID of the user who performed the action. Populated when expand=user is applied.</summary>
+    string? UserId,
+    /// <summary>OAuth client ID used to perform the action.</summary>
+    string? ClientId,
+    /// <summary>GUID of the specific entity that was acted upon.</summary>
+    string? EntityId,
+    /// <summary>Correlation ID linking related audit events in a single operation.</summary>
+    string? CorrelationId,
+    /// <summary>Severity/level of the audit event (e.g. INFO, WARNING).</summary>
+    string? Level);
 
 public sealed record OperationalEventFinding(
     DateTimeOffset? TimestampUtc,

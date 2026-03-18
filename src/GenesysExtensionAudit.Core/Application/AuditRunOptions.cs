@@ -75,6 +75,25 @@ public sealed class AuditRunOptions
     public IReadOnlyList<string> AuditLogServiceNames { get; init; } = [];
 
     /// <summary>
+    /// Optional server-side filters applied to the audit-log query.
+    /// Each entry is a property/value pair. Supported properties:
+    /// <c>action</c>, <c>entityType</c>, <c>entityId</c>, <c>userId</c>, <c>clientId</c>.
+    /// Multiple filters are ANDed together.
+    /// </summary>
+    public IReadOnlyList<AuditLogFilter> AuditLogFilters { get; init; } = [];
+
+    /// <summary>
+    /// Field to sort results by. Default: <c>dateIssued</c> (event timestamp).
+    /// Other options: <c>action</c>, <c>serviceName</c>, <c>entityType</c>.
+    /// </summary>
+    public string AuditLogSortField { get; init; } = "dateIssued";
+
+    /// <summary>
+    /// Sort direction for audit-log results. <c>DESC</c> (default) returns newest events first.
+    /// </summary>
+    public string AuditLogSortOrder { get; init; } = "DESC";
+
+    /// <summary>
     /// Run operational events query path.
     /// </summary>
     public bool RunOperationalEventLogs { get; init; } = false;

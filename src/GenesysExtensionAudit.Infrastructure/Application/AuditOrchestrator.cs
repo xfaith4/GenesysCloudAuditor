@@ -247,13 +247,36 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             var lookbackHours = Math.Max(1, options.AuditLogLookbackHours);
             var interval = $"{now.AddHours(-lookbackHours):o}/{now:o}";
 
+            // Build server-side filters from options (ANDed together).
+            List<AuditLogFilterDto>? filterDtos = null;
+            if (options.AuditLogFilters.Count > 0)
+            {
+                filterDtos = options.AuditLogFilters
+                    .Where(f => !string.IsNullOrWhiteSpace(f.Property) && !string.IsNullOrWhiteSpace(f.Value))
+                    .Select(f => new AuditLogFilterDto { Property = f.Property.Trim(), Value = f.Value.Trim() })
+                    .ToList();
+                if (filterDtos.Count == 0) filterDtos = null;
+            }
+
+            // Build sort (omit when using API defaults to keep the body clean).
+            List<AuditLogSortDto>? sortDtos = null;
+            if (!string.IsNullOrWhiteSpace(options.AuditLogSortField))
+            {
+                var sortOrder = string.IsNullOrWhiteSpace(options.AuditLogSortOrder)
+                    ? "DESC"
+                    : options.AuditLogSortOrder.Trim().ToUpperInvariant();
+                sortDtos = [new AuditLogSortDto { Name = options.AuditLogSortField.Trim(), SortOrder = sortOrder }];
+            }
+
             var submit = new AuditLogsSubmitRequestDto
             {
                 Interval = interval,
                 ServiceName = options.AuditLogServiceNames.Count > 0
                     ? options.AuditLogServiceNames.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList()
                     : serviceMappings.ToList(),
-                Action = []
+                Action = [],
+                Filters = filterDtos,
+                Sort = sortDtos
             };
 
             Report(progress, 58, "Submitting audit logs transaction...");
@@ -1599,15 +1622,33 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
 
             map.TryGetValue("id", out var idValue);
 
+            // When expand=user was requested the user details appear in a nested "user" object.
+            string? userId = GetString(map, "userId");
+            string? userName = GetString(map, "userName");
+            string? userEmail = GetString(map, "userEmail");
+            if (map.TryGetValue("user", out var userEl) && userEl.ValueKind == JsonValueKind.Object)
+            {
+                var userMap = userEl.EnumerateObject()
+                    .ToDictionary(p => p.Name, p => p.Value, StringComparer.OrdinalIgnoreCase);
+                userId ??= GetString(userMap, "id");
+                userName ??= GetString(userMap, "name", "displayName");
+                userEmail ??= GetString(userMap, "email");
+            }
+
             findings.Add(new AuditLogFinding(
                 AuditId: AsString(idValue),
                 TimestampUtc: ParseTimestamp(map),
                 ServiceName: GetString(map, "serviceName"),
                 Action: GetString(map, "action"),
-                UserName: GetString(map, "userName", "name"),
-                UserEmail: GetString(map, "userEmail", "email"),
+                UserName: userName,
+                UserEmail: userEmail,
                 EntityType: GetString(map, "entityType", "targetType"),
-                EntityName: GetString(map, "entityName", "targetName")));
+                EntityName: GetString(map, "entityName", "targetName"),
+                UserId: userId,
+                ClientId: GetString(map, "clientId", "oauthClientId"),
+                EntityId: GetString(map, "entityId", "targetId"),
+                CorrelationId: GetString(map, "correlationId"),
+                Level: GetString(map, "level")));
         }
 
         return findings

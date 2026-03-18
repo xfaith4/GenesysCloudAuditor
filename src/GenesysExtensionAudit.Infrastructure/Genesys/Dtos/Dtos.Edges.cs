@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace GenesysExtensionAudit.Infrastructure.Genesys.Dtos;
@@ -47,11 +48,13 @@ public sealed class EdgeDto
     public string? OnlineStatus { get; init; }
 
     /// <summary>
-    /// Software status: CURRENT, UPDATE_REQUIRED, UPDATING, etc.
-    /// UPDATE_REQUIRED may degrade call quality or block new features.
+    /// Software status object returned by the API.
+    /// The API returns this as a complex object (version, stage, etc.), not a primitive string,
+    /// so we capture it as JsonElement to avoid deserialization failures.
+    /// Not used in topology analysis — captured for potential future use.
     /// </summary>
     [JsonPropertyName("softwareStatus")]
-    public string? SoftwareStatus { get; init; }
+    public JsonElement? SoftwareStatus { get; init; }
 
     /// <summary>
     /// Platform-facing status code: ACTIVE, INACTIVE, HYBRID.

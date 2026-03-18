@@ -106,24 +106,103 @@
                                Foreground="#6B7280"
                                FontSize="11" />
 
-                    <Border Margin="0,10,0,0" Padding="10" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="4"
+                    <!-- ─── Audit Logs configuration (visible when RunAuditLogs checked) ─── -->
+                    <Border Margin="0,10,0,0" Padding="12" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="4"
                             Visibility="{Binding RunAuditLogs, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel>
-                            <TextBlock Text="Audit Logs Catalog Entity" FontWeight="SemiBold" Margin="0,0,0,6" />
-                            <StackPanel Orientation="Horizontal">
-                                <ComboBox Width="320"
-                                          ItemsSource="{Binding AuditLogEntities}"
-                                          SelectedItem="{Binding SelectedAuditLogEntity}"
-                                          IsEnabled="{Binding IsAuditLogSelectionEnabled}" />
-                                <Button Content="Refresh"
-                                        Command="{Binding RefreshAuditCatalogCommand}"
-                                        Margin="8,0,0,0"
-                                        Padding="10,4" />
-                            </StackPanel>
-                            <TextBlock Text="Choose one catalog entity or keep All Catalog Entities."
-                                       Foreground="#6B7280"
-                                       FontSize="11"
-                                       Margin="0,6,0,0" />
+                            <TextBlock Text="Audit Logs Options" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,10" />
+
+                            <!-- Row 1: Lookback + Service -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Lookback (hours)" FontSize="11" Foreground="#374151" Margin="0,0,0,4" />
+                                    <TextBox Width="80" Text="{Binding AuditLogLookbackHours, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Service" FontSize="11" Foreground="#374151" Margin="0,0,0,4" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <ComboBox Width="220"
+                                                  ItemsSource="{Binding AuditLogEntities}"
+                                                  SelectedItem="{Binding SelectedAuditLogEntity}"
+                                                  IsEnabled="{Binding IsAuditLogSelectionEnabled}" />
+                                        <Button Content="↻"
+                                                Command="{Binding RefreshAuditCatalogCommand}"
+                                                ToolTip="Reload service catalog"
+                                                Margin="6,0,0,0"
+                                                Padding="8,2" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="Sort Order" FontSize="11" Foreground="#374151" Margin="0,0,0,4" />
+                                    <ComboBox Width="130"
+                                              ItemsSource="{Binding AuditLogSortOrders}"
+                                              SelectedItem="{Binding SelectedAuditLogSortOrder}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Row 2: Action + Entity Type filters -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Action filter" FontSize="11" Foreground="#374151" Margin="0,0,0,4" />
+                                    <ComboBox Width="180"
+                                              ItemsSource="{Binding AuditLogActions}"
+                                              SelectedItem="{Binding SelectedAuditLogAction}"
+                                              IsEnabled="{Binding IsAuditLogSelectionEnabled}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Entity Type filter" FontSize="11" Foreground="#374151" Margin="0,0,0,4" />
+                                    <ComboBox Width="200"
+                                              ItemsSource="{Binding AuditLogEntityTypes}"
+                                              SelectedItem="{Binding SelectedAuditLogEntityType}"
+                                              IsEnabled="{Binding IsAuditLogSelectionEnabled}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Row 3: ID filters -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="16" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="User ID (optional)" FontSize="11" Foreground="#374151" Margin="0,0,0,4" />
+                                    <TextBox Width="260"
+                                             Text="{Binding AuditLogUserIdFilter, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsAuditLogSelectionEnabled}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Entity ID (optional)" FontSize="11" Foreground="#374151" Margin="0,0,0,4" />
+                                    <TextBox Width="260"
+                                             Text="{Binding AuditLogEntityIdFilter, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsAuditLogSelectionEnabled}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Foreground="#6B7280" FontSize="11" TextWrapping="Wrap"
+                                       Text="Action and Entity Type dropdowns populate after selecting a Service. User ID and Entity ID accept GUIDs. All filters are ANDed together." />
                         </StackPanel>
                     </Border>
                 </StackPanel>

@@ -340,7 +340,13 @@ public sealed class ExcelReportService : IExcelReportService
         var ws = wb.Worksheets.Add("Audit_Logs");
         var findings = report.AuditLogFindings;
 
-        string[] headers = ["Timestamp (UTC)", "Service", "Action", "User Name", "User Email", "Entity Type", "Entity Name", "Audit ID"];
+        string[] headers =
+        [
+            "Timestamp (UTC)", "Service", "Action", "Level",
+            "User Name", "User Email", "User ID", "Client ID",
+            "Entity Type", "Entity Name", "Entity ID",
+            "Correlation ID", "Audit ID"
+        ];
         WriteSheetHeader(ws, "Audit Logs Events", report, findings.Count, headers);
 
         int row = 4;
@@ -352,16 +358,21 @@ public sealed class ExcelReportService : IExcelReportService
                 f.TimestampUtc?.ToString("yyyy-MM-dd HH:mm:ss"),
                 f.ServiceName,
                 f.Action,
+                f.Level,
                 f.UserName,
                 f.UserEmail,
+                f.UserId,
+                f.ClientId,
                 f.EntityType,
                 f.EntityName,
+                f.EntityId,
+                f.CorrelationId,
                 f.AuditId);
-            ApplyAltRow(ws, row, 8);
+            ApplyAltRow(ws, row, 13);
             row++;
         }
 
-        AdjustColumns(ws, 8);
+        AdjustColumns(ws, 13);
     }
 
     private static void WriteOperationalEventsSheet(IXLWorkbook wb, AuditReportData report)

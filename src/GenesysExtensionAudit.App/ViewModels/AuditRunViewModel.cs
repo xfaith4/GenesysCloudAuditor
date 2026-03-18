@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Infrastructure.Application;
+using GenesysExtensionAudit.Infrastructure.Genesys.Dtos;
 using GenesysExtensionAudit.Infrastructure.Configuration;
 using GenesysExtensionAudit.Infrastructure.Reporting;
 using GenesysExtensionAudit.Services;
@@ -25,6 +26,8 @@ namespace GenesysExtensionAudit.ViewModels;
 public sealed class RunAuditViewModel : INotifyPropertyChanged
 {
     private const string AllCatalogEntitiesOption = "(All Catalog Entities)";
+    private const string AllActionsOption = "(All Actions)";
+    private const string AllEntityTypesOption = "(All Entity Types)";
     private const string ConsolidatedExportMode = "Consolidated";
     private const string SeparateExportMode = "Separate";
 
@@ -34,6 +37,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private readonly IGitHubUploadService _gitHubUploadService;
     private readonly IOptionsMonitor<GitHubOptions> _gitHubOptions;
     private readonly ObservableCollection<string> _auditLogEntities = [];
+    private readonly ObservableCollection<string> _auditLogActions = [];
+    private readonly ObservableCollection<string> _auditLogEntityTypes = [];
+    private readonly ObservableCollection<string> _auditLogSortOrders = ["Descending", "Ascending"];
     private readonly ObservableCollection<RunSummaryRow> _lastRunSummary = [];
     private readonly ObservableCollection<string> _workbookExportModes = [ConsolidatedExportMode, SeparateExportMode];
 
@@ -54,6 +60,12 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private bool _isLoadingAuditLogEntities;
     private bool _auditLogEntitiesLoaded;
     private string _selectedAuditLogEntity = AllCatalogEntitiesOption;
+    private int _auditLogLookbackHours = 24;
+    private string _selectedAuditLogAction = AllActionsOption;
+    private string _selectedAuditLogEntityType = AllEntityTypesOption;
+    private string _auditLogUserIdFilter = string.Empty;
+    private string _auditLogEntityIdFilter = string.Empty;
+    private string _selectedAuditLogSortOrder = "Descending";
     private string _selectedWorkbookExportMode = ConsolidatedExportMode;
     private bool _pushToGitHub;
     private bool _isRunning;
@@ -229,7 +241,56 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     public string SelectedAuditLogEntity
     {
         get => _selectedAuditLogEntity;
-        set => SetField(ref _selectedAuditLogEntity, string.IsNullOrWhiteSpace(value) ? AllCatalogEntitiesOption : value);
+        set
+        {
+            var normalized = string.IsNullOrWhiteSpace(value) ? AllCatalogEntitiesOption : value;
+            if (SetField(ref _selectedAuditLogEntity, normalized))
+                PopulateServiceFilterDropdowns(normalized);
+        }
+    }
+
+    /// <summary>Lookback window for audit-log queries. Range: 1–720 hours (30 days).</summary>
+    public int AuditLogLookbackHours
+    {
+        get => _auditLogLookbackHours;
+        set => SetField(ref _auditLogLookbackHours, Math.Clamp(value, 1, 720));
+    }
+
+    public ObservableCollection<string> AuditLogActions => _auditLogActions;
+    public ObservableCollection<string> AuditLogEntityTypes => _auditLogEntityTypes;
+    public ObservableCollection<string> AuditLogSortOrders => _auditLogSortOrders;
+
+    public string SelectedAuditLogAction
+    {
+        get => _selectedAuditLogAction;
+        set => SetField(ref _selectedAuditLogAction, string.IsNullOrWhiteSpace(value) ? AllActionsOption : value);
+    }
+
+    public string SelectedAuditLogEntityType
+    {
+        get => _selectedAuditLogEntityType;
+        set => SetField(ref _selectedAuditLogEntityType, string.IsNullOrWhiteSpace(value) ? AllEntityTypesOption : value);
+    }
+
+    /// <summary>Optional user-ID filter (GUID). Leave blank to match all users.</summary>
+    public string AuditLogUserIdFilter
+    {
+        get => _auditLogUserIdFilter;
+        set => SetField(ref _auditLogUserIdFilter, value ?? string.Empty);
+    }
+
+    /// <summary>Optional entity-ID filter (GUID). Leave blank to match all entities.</summary>
+    public string AuditLogEntityIdFilter
+    {
+        get => _auditLogEntityIdFilter;
+        set => SetField(ref _auditLogEntityIdFilter, value ?? string.Empty);
+    }
+
+    /// <summary>"Descending" (newest first) or "Ascending" (oldest first).</summary>
+    public string SelectedAuditLogSortOrder
+    {
+        get => _selectedAuditLogSortOrder;
+        set => SetField(ref _selectedAuditLogSortOrder, value ?? "Descending");
     }
 
     public string SelectedWorkbookExportMode
@@ -408,8 +469,11 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
                 RunInactiveUserAudit = RunInactiveUserAudit,
                 RunDidAudit = RunDidAudit,
                 RunAuditLogs = RunAuditLogs,
-                AuditLogLookbackHours = 1,
+                AuditLogLookbackHours = AuditLogLookbackHours,
                 AuditLogServiceNames = GetSelectedAuditLogServiceNames(),
+                AuditLogFilters = BuildAuditLogFilters(),
+                AuditLogSortField = "dateIssued",
+                AuditLogSortOrder = string.Equals(SelectedAuditLogSortOrder, "Ascending", StringComparison.Ordinal) ? "ASC" : "DESC",
                 RunOperationalEventLogs = RunOperationalEventLogs,
                 OperationalEventLookbackDays = OperationalEventLookbackDays,
                 RunOutboundEvents = RunOutboundEvents
@@ -487,6 +551,100 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         return [SelectedAuditLogEntity];
     }
 
+    /// <summary>
+    /// Builds the server-side filter list from the current UI selections.
+    /// Only non-empty / non-"All" selections are included.
+    /// </summary>
+    private IReadOnlyList<AuditLogFilter> BuildAuditLogFilters()
+    {
+        if (!RunAuditLogs)
+            return [];
+
+        var filters = new List<AuditLogFilter>();
+
+        if (!string.IsNullOrWhiteSpace(SelectedAuditLogAction) &&
+            !string.Equals(SelectedAuditLogAction, AllActionsOption, StringComparison.Ordinal))
+        {
+            filters.Add(new AuditLogFilter("action", SelectedAuditLogAction));
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedAuditLogEntityType) &&
+            !string.Equals(SelectedAuditLogEntityType, AllEntityTypesOption, StringComparison.Ordinal))
+        {
+            filters.Add(new AuditLogFilter("entityType", SelectedAuditLogEntityType));
+        }
+
+        if (!string.IsNullOrWhiteSpace(AuditLogUserIdFilter))
+            filters.Add(new AuditLogFilter("userId", AuditLogUserIdFilter.Trim()));
+
+        if (!string.IsNullOrWhiteSpace(AuditLogEntityIdFilter))
+            filters.Add(new AuditLogFilter("entityId", AuditLogEntityIdFilter.Trim()));
+
+        return filters;
+    }
+
+    /// <summary>
+    /// Repopulates the Action and Entity Type filter dropdowns based on the selected service.
+    /// When "All Catalog Entities" is selected, the dropdowns are cleared.
+    /// </summary>
+    private void PopulateServiceFilterDropdowns(string selectedService)
+    {
+        _auditLogActions.Clear();
+        _auditLogEntityTypes.Clear();
+        SelectedAuditLogAction = AllActionsOption;
+        SelectedAuditLogEntityType = AllEntityTypesOption;
+
+        if (string.Equals(selectedService, AllCatalogEntitiesOption, StringComparison.Ordinal))
+            return;
+
+        // Find the service in the loaded catalog (if available).
+        // We access the cache synchronously here — the catalog is already loaded at this point.
+        // If not yet loaded, the dropdowns remain empty (acceptable UX: user can refresh).
+        _auditLogActions.Add(AllActionsOption);
+        _auditLogEntityTypes.Add(AllEntityTypesOption);
+
+        // The catalog is populated asynchronously; find the matching service.
+        // We need access to the cached data synchronously. Since the catalog is already loaded
+        // by the time the user changes the selection, we call GetOrRefreshAsync with no-refresh.
+        PopulateDropdownsFromCacheAsync(selectedService);
+    }
+
+    private async void PopulateDropdownsFromCacheAsync(string selectedService)
+    {
+        try
+        {
+            var catalog = await _auditLogCatalogCache
+                .GetOrRefreshCatalogAsync(forceRefresh: false, CancellationToken.None)
+                .ConfigureAwait(true);
+
+            var info = catalog.FirstOrDefault(
+                s => string.Equals(s.ServiceName, selectedService, StringComparison.OrdinalIgnoreCase));
+
+            _auditLogActions.Clear();
+            _auditLogActions.Add(AllActionsOption);
+            if (info is not null)
+            {
+                foreach (var a in info.Actions)
+                    _auditLogActions.Add(a);
+            }
+
+            _auditLogEntityTypes.Clear();
+            _auditLogEntityTypes.Add(AllEntityTypesOption);
+            if (info is not null)
+            {
+                foreach (var et in info.EntityTypes)
+                    _auditLogEntityTypes.Add(et);
+            }
+
+            SelectedAuditLogAction = AllActionsOption;
+            SelectedAuditLogEntityType = AllEntityTypesOption;
+        }
+        catch
+        {
+            // Best-effort — leave dropdowns with just the "All" option.
+        }
+    }
+
     private void RefreshAuditCatalog()
         => LoadAuditCatalog(forceRefresh: true);
 
@@ -499,23 +657,23 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
         try
         {
-            var ordered = await _auditLogCatalogCache
-                .GetOrRefreshAsync(forceRefresh, CancellationToken.None)
+            var catalog = await _auditLogCatalogCache
+                .GetOrRefreshCatalogAsync(forceRefresh, CancellationToken.None)
                 .ConfigureAwait(true);
 
             _auditLogEntities.Clear();
             _auditLogEntities.Add(AllCatalogEntitiesOption);
-            foreach (var entity in ordered)
-                _auditLogEntities.Add(entity);
+            foreach (var svc in catalog)
+                _auditLogEntities.Add(svc.ServiceName);
 
             SelectedAuditLogEntity = AllCatalogEntitiesOption;
             _auditLogEntitiesLoaded = true;
-            StatusMessage = $"Loaded {_auditLogEntities.Count - 1} audit-log catalog entities.";
+            StatusMessage = $"Loaded {_auditLogEntities.Count - 1} audit-log catalog services.";
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Failed to load audit-log catalog entities: {ex.Message}";
-            StatusMessage = "Failed to load audit-log catalog entities.";
+            ErrorMessage = $"Failed to load audit-log catalog: {ex.Message}";
+            StatusMessage = "Failed to load audit-log catalog.";
         }
         finally
         {
