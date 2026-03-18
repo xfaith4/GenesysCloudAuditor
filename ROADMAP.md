@@ -241,11 +241,16 @@ Correlate current findings with:
 
 ### Planned checks
 
-| Check                | Priority | Description                                                                                     |
-| -------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| Assignment flapping  | High     | Ownership or assignment repeatedly changes between states                                       |
-| Publish churn        | Medium   | Flows repeatedly republished or altered without stabilizing behavior                            |
-| Resource oscillation | Medium   | Site/edge/station/trunk relationships repeatedly move between valid and invalid interpretations |
+| Check                | Priority | Description                                                                                     | Status |
+| -------------------- | -------- | ----------------------------------------------------------------------------------------------- | ------ |
+| Assignment flapping  | High     | Ownership or assignment repeatedly changes between states                                       | **Implemented** |
+| Publish churn        | Medium   | Flows repeatedly republished or altered without stabilizing behavior                            | **Implemented** |
+| Resource oscillation | Medium   | Site/edge/station/trunk relationships repeatedly move between valid and invalid interpretations | **Implemented** |
+
+All three patterns are implemented as `FlappingDetectionAnalyzer` in `Domain/Services`.
+Detection is purely audit-log driven (no additional API calls). Configurable window and
+minimum-change threshold are exposed through `AuditRunOptions` (`FlappingDetectionWindowMinutes`,
+`FlappingDetectionMinChanges`).
 
 ### Why this matters
 
@@ -257,11 +262,17 @@ Flapping is often a signal of automation conflict, admin collision, sync lag, or
 
 ### Planned checks
 
-| Check                      | Priority | Description                                                                        |
-| -------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| Chronic object ranking     | Medium   | Rank queues, users, sites, and telephony resources by repeated anomaly association |
-| Domain instability index   | Medium   | Score routing, telephony, identity, or outbound domains for recurring problems     |
-| Blast-radius concentration | Medium   | Identify small sets of objects involved in a disproportionate share of findings    |
+| Check                      | Priority | Description                                                                        | Status |
+| -------------------------- | -------- | ---------------------------------------------------------------------------------- | ------ |
+| Chronic object ranking     | Medium   | Rank queues, users, sites, and telephony resources by repeated anomaly association | **Implemented** |
+| Domain instability index   | Medium   | Score routing, telephony, identity, or outbound domains for recurring problems     | Partial (object-level; domain scoring planned) |
+| Blast-radius concentration | Medium   | Identify small sets of objects involved in a disproportionate share of findings    | **Implemented** |
+
+Object-level hot spot ranking is implemented as `HotSpotAnalyzer` in `Domain/Services`.
+It aggregates all collected findings (including Phase 2.1 and 2.2 results), identifies objects
+that appear across two or more distinct audit domains, and ranks them by total finding count.
+Results are exported to a dedicated `Hot_Spots` worksheet. Configurable via
+`HotSpotMinDistinctDomains` in `AuditRunOptions`.
 
 ---
 

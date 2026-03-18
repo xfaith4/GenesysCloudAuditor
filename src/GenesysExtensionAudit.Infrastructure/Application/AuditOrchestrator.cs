@@ -118,7 +118,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             "RunUserTelephony={RunUserTelephony} RunQueueServiceability={RunQueueServiceability} RunFlowDependency={RunFlowDependency} " +
             "RunAuditLogs={RunAuditLogs} RunOperationalEvents={RunOperationalEvents} RunOutboundEvents={RunOutboundEvents} " +
             "RunStaleLicense={RunStaleLicense} StaleLicenseDays={StaleLicenseDays} RunLicenseOverProvisioning={RunLicenseOverProvisioning} " +
-            "RunRoleGroupOverlap={RunRoleGroupOverlap} RoleGroupOverlapMaxUsers={RoleGroupOverlapMaxUsers} RunSiteTopology={RunSiteTopology} RunPromptHygiene={RunPromptHygiene}",
+            "RunRoleGroupOverlap={RunRoleGroupOverlap} RoleGroupOverlapMaxUsers={RoleGroupOverlapMaxUsers} RunSiteTopology={RunSiteTopology} RunPromptHygiene={RunPromptHygiene} " +
+            "RunChangeAdjacency={RunChangeAdjacency} RunFlappingDetection={RunFlappingDetection} RunHotSpot={RunHotSpot}",
             ps, options.IncludeInactiveUsers, options.StaleFlowThresholdDays, options.InactiveUserThresholdDays,
             options.RunExtensionAudit, options.RunGroupAudit, options.RunQueueAudit, options.RunFlowAudit,
             options.RunInactiveUserAudit, options.RunDidAudit,
@@ -126,7 +127,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             options.RunAuditLogs, options.RunOperationalEventLogs, options.RunOutboundEvents,
             options.RunStaleLicenseAudit, options.StaleLicenseThresholdDays, options.RunLicenseOverProvisioningAudit,
             options.RunRoleGroupOverlapAudit, options.RoleGroupOverlapMaxUsersToCheck, options.RunSiteTopologyAudit,
-            options.RunPromptHygieneAudit);
+            options.RunPromptHygieneAudit,
+            options.RunChangeAdjacencyAudit, options.RunFlappingDetectionAudit, options.RunHotSpotAudit);
 
         var needsUsers = options.RunExtensionAudit || options.RunInactiveUserAudit || options.RunDidAudit
                          || options.RunUserTelephonyAudit || options.RunQueueServiceabilityAudit
@@ -166,6 +168,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<PromptDto> promptDtos = [];
         IReadOnlyList<PromptHygieneFinding> promptHygieneFindings = [];
         IReadOnlyList<ChangeAdjacencyFinding> changeAdjacencyFindings = [];
+        IReadOnlyList<FlappingFinding> flappingDetectionFindings = [];
+        IReadOnlyList<HotSpotFinding> hotSpotFindings = [];
 
         if (needsUsers)
         {
@@ -518,6 +522,54 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             _logger.LogInformation("Change adjacency check complete. Findings={Count}", changeAdjacencyFindings.Count);
         }
 
+        // Phase 2.2 — Flapping and instability detection (requires audit logs)
+        if (options.RunFlappingDetectionAudit && auditLogFindings.Count > 0)
+        {
+            Report(progress, 96, "Analyzing flapping and instability...");
+            flappingDetectionFindings = new FlappingDetectionAnalyzer().Analyze(
+                auditLogFindings,
+                options.FlappingDetectionWindowMinutes,
+                options.FlappingDetectionMinChanges);
+            _logger.LogInformation("Flapping detection complete. Findings={Count}", flappingDetectionFindings.Count);
+        }
+
+        // Phase 2.3 — Hot spot ranking (aggregates all findings — runs last)
+        if (options.RunHotSpotAudit)
+        {
+            // Build the report snapshot including Phase 2.1 and 2.2 results so they feed into hot-spot ranking
+            var reportWithPhase2 = new AuditReportData
+            {
+                GeneratedAt = partialReport.GeneratedAt,
+                RunStartedAtUtc = partialReport.RunStartedAtUtc,
+                RunCompletedAtUtc = partialReport.RunCompletedAtUtc,
+                OrgRegion = partialReport.OrgRegion,
+                Options = partialReport.Options,
+                ExtensionReport = partialReport.ExtensionReport,
+                GroupFindings = partialReport.GroupFindings,
+                QueueFindings = partialReport.QueueFindings,
+                FlowFindings = partialReport.FlowFindings,
+                InactiveUserFindings = partialReport.InactiveUserFindings,
+                NoLocationUserFindings = partialReport.NoLocationUserFindings,
+                DidFindings = partialReport.DidFindings,
+                AuditLogFindings = partialReport.AuditLogFindings,
+                OperationalEventFindings = partialReport.OperationalEventFindings,
+                OutboundEventFindings = partialReport.OutboundEventFindings,
+                UserTelephonyIntegrityFindings = partialReport.UserTelephonyIntegrityFindings,
+                QueueServiceabilityFindings = partialReport.QueueServiceabilityFindings,
+                IvrFlowBindingFindings = partialReport.IvrFlowBindingFindings,
+                StaleLicenseFindings = partialReport.StaleLicenseFindings,
+                LicenseOverProvisioningFindings = partialReport.LicenseOverProvisioningFindings,
+                RoleGroupOverlapFindings = partialReport.RoleGroupOverlapFindings,
+                SiteTopologyFindings = partialReport.SiteTopologyFindings,
+                PromptHygieneFindings = partialReport.PromptHygieneFindings,
+                ChangeAdjacencyFindings = changeAdjacencyFindings,
+                FlappingDetectionFindings = flappingDetectionFindings
+            };
+            Report(progress, 98, "Ranking hot spots...");
+            hotSpotFindings = new HotSpotAnalyzer().Analyze(reportWithPhase2, options.HotSpotMinDistinctDomains);
+            _logger.LogInformation("Hot spot ranking complete. Findings={Count}", hotSpotFindings.Count);
+        }
+
         var totalFindings = extensionReport.DuplicateProfileExtensions.Count
             + extensionReport.DuplicateAssignedExtensions.Count
             + extensionReport.ProfileExtensionsNotAssigned.Count
@@ -538,19 +590,23 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             + roleGroupOverlapFindings.Count
             + siteTopologyFindings.Count
             + promptHygieneFindings.Count
-            + changeAdjacencyFindings.Count;
+            + changeAdjacencyFindings.Count
+            + flappingDetectionFindings.Count
+            + hotSpotFindings.Count;
 
         _logger.LogInformation(
             "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} StaleTokenUsers={StaleTokenUsers} NoLocationUsers={NoLocationUsers} DIDs={DIDs} " +
             "UserTelephonyIntegrity={UserTelephonyIntegrity} QueueServiceability={QueueServiceability} IvrFlowBindings={IvrFlowBindings} " +
             "OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents} " +
-            "StaleLicenses={StaleLicenses} LicenseOverProvisioning={LicenseOverProvisioning} RoleGroupOverlap={RoleGroupOverlap} SiteTopology={SiteTopology} PromptHygiene={PromptHygiene} ChangeAdjacency={ChangeAdjacency}",
+            "StaleLicenses={StaleLicenses} LicenseOverProvisioning={LicenseOverProvisioning} RoleGroupOverlap={RoleGroupOverlap} SiteTopology={SiteTopology} PromptHygiene={PromptHygiene} ChangeAdjacency={ChangeAdjacency} " +
+            "FlappingDetection={FlappingDetection} HotSpot={HotSpot}",
             totalFindings, groupFindings.Count, queueFindings.Count,
             flowFindings.Count, inactiveUserFindings.Count, noLocationUserFindings.Count, didFindings.Count,
             userTelephonyIntegrityFindings.Count, queueServiceabilityFindings.Count, ivrFlowBindingFindings.Count,
             operationalEventFindings.Count, outboundEventFindings.Count,
             staleLicenseFindings.Count, licenseOverProvisioningFindings.Count, roleGroupOverlapFindings.Count, siteTopologyFindings.Count,
-            promptHygieneFindings.Count, changeAdjacencyFindings.Count);
+            promptHygieneFindings.Count, changeAdjacencyFindings.Count,
+            flappingDetectionFindings.Count, hotSpotFindings.Count);
 
         Report(progress, 100,
             $"Complete — {totalFindings} total findings across all checks.",
@@ -581,7 +637,9 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             RoleGroupOverlapFindings = roleGroupOverlapFindings,
             SiteTopologyFindings = siteTopologyFindings,
             PromptHygieneFindings = promptHygieneFindings,
-            ChangeAdjacencyFindings = changeAdjacencyFindings
+            ChangeAdjacencyFindings = changeAdjacencyFindings,
+            FlappingDetectionFindings = flappingDetectionFindings,
+            HotSpotFindings = hotSpotFindings
         };
     }
 
