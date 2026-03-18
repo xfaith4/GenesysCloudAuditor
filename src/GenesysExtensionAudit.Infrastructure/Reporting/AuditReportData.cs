@@ -124,6 +124,53 @@ public static class SiteTopologyCode
     public const string TrunkDown = "TRUNK_DOWN";
 }
 
+// ─── Finding codes for FlappingFinding (Phase 2.2) ───────────────────────────
+
+/// <summary>
+/// Identifies which instability pattern was detected within a <see cref="FlappingFinding"/>.
+/// </summary>
+public static class FlappingCode
+{
+    /// <summary>
+    /// An object's ownership or assignment toggled repeatedly between states within the audit window,
+    /// suggesting automation conflict, admin collision, or a competing sync process.
+    /// </summary>
+    public const string AssignmentFlapping = "ASSIGNMENT_FLAPPING";
+
+    /// <summary>
+    /// A flow was repeatedly published or altered within a short window without stabilizing,
+    /// suggesting uncontrolled automation or concurrent admin activity.
+    /// </summary>
+    public const string PublishChurn = "PUBLISH_CHURN";
+
+    /// <summary>
+    /// A site, edge, trunk, or station relationship repeatedly transitioned between states
+    /// within the audit window, indicating hardware instability or platform sync issues.
+    /// </summary>
+    public const string ResourceOscillation = "RESOURCE_OSCILLATION";
+}
+
+// ─── Finding codes for ChangeAdjacencyFinding (Phase 2.1) ────────────────────
+
+/// <summary>
+/// Identifies the relationship between a configuration change and a correlated finding.
+/// Used to distinguish sub-types within <see cref="ChangeAdjacencyFinding"/>.
+/// </summary>
+public static class ChangeAdjacencyCode
+{
+    /// <summary>
+    /// A configuration change event in the audit log touched the same object that has an active finding.
+    /// The change preceded or co-occurred with the finding window, suggesting it may be the root cause.
+    /// </summary>
+    public const string ChangeBeforeFinding = "CHANGE_BEFORE_FINDING";
+
+    /// <summary>
+    /// Multiple configuration change events touched the same object within a short window,
+    /// suggesting potential churn or conflicting automation that may be contributing to instability.
+    /// </summary>
+    public const string RepeatedChanges = "REPEATED_CHANGES";
+}
+
 // ─── Findings ───────────────────────────────────────────────────────────────
 
 public sealed record GroupFinding(
@@ -191,7 +238,7 @@ public sealed record AuditLogFinding(
     string? UserId,
     /// <summary>OAuth client ID used to perform the action.</summary>
     string? ClientId,
-    /// <summary>GUID of the specific entity that was acted upon.</summary>
+    /// <summary>Entity ID extracted from the audit log event (e.g. queue ID, user ID). Used for change-adjacency correlation.</summary>
     string? EntityId,
     /// <summary>Correlation ID linking related audit events in a single operation.</summary>
     string? CorrelationId,
@@ -218,6 +265,92 @@ public sealed record OutboundEventFinding(
     string? Code,
     string? Message,
     string? CorrelationId);
+
+// ─── Phase 2.1 — Change adjacency marker ─────────────────────────────────────
+
+/// <summary>
+/// A correlation finding that links a recent audit log configuration change
+/// to an existing audit finding on the same object.
+/// Surfaces the "what changed before the problem appeared?" signal.
+/// </summary>
+public sealed record ChangeAdjacencyFinding(
+    /// <summary>One of the <see cref="ChangeAdjacencyCode"/> constants.</summary>
+    string FindingCode,
+    /// <summary>The type of the affected object (e.g. Queue, User, Flow, Site).</summary>
+    string? AffectedObjectType,
+    /// <summary>The ID of the object that was changed and also has an active finding.</summary>
+    string? AffectedObjectId,
+    /// <summary>The name of the affected object.</summary>
+    string? AffectedObjectName,
+    /// <summary>Timestamp of the most recent change event for this object.</summary>
+    DateTimeOffset? ChangeTimestamp,
+    /// <summary>The action performed (e.g. UPDATE, DELETE) from the audit log entry.</summary>
+    string? ChangeAction,
+    /// <summary>The user who made the change.</summary>
+    string? ChangedBy,
+    /// <summary>Number of change events found for this object within the lookback window.</summary>
+    int ChangeCount,
+    /// <summary>Brief description of the correlated finding category (e.g. "Queue serviceability degraded").</summary>
+    string? RelatedFindingType,
+    string Issue,
+    FindingSeverity Severity,
+    string RecommendedAction);
+
+// ─── Phase 2.2 — Flapping and instability detection ──────────────────────────
+
+/// <summary>
+/// A finding that identifies an object repeatedly changing state or assignment
+/// within a short audit window — a signal of automation conflict, admin collision,
+/// platform sync instability, or uncontrolled churn.
+/// </summary>
+public sealed record FlappingFinding(
+    /// <summary>One of the <see cref="FlappingCode"/> constants.</summary>
+    string FindingCode,
+    /// <summary>The primary type of the affected object (e.g. Queue, User, Flow, Edge).</summary>
+    string? AffectedObjectType,
+    /// <summary>The ID of the object whose change log shows a flapping pattern.</summary>
+    string? AffectedObjectId,
+    /// <summary>The name of the affected object.</summary>
+    string? AffectedObjectName,
+    /// <summary>Timestamp of the earliest change event observed in the flapping window.</summary>
+    DateTimeOffset? FirstChangeUtc,
+    /// <summary>Timestamp of the most recent change event observed in the flapping window.</summary>
+    DateTimeOffset? LastChangeUtc,
+    /// <summary>Total number of change events found for this object within the lookback window.</summary>
+    int ChangeCount,
+    /// <summary>Number of distinct action types (e.g. CREATE, DELETE, UPDATE) observed.</summary>
+    int DistinctActionCount,
+    /// <summary>Sorted list of the unique action verbs seen for this object in the window.</summary>
+    IReadOnlyList<string> ObservedActions,
+    string Issue,
+    FindingSeverity Severity,
+    string RecommendedAction);
+
+// ─── Phase 2.3 — Hot spot ranking ────────────────────────────────────────────
+
+/// <summary>
+/// A cross-domain anomaly concentration finding: an object that appears in findings
+/// from two or more distinct audit domains, indicating a higher-priority investigation target.
+/// Objects surfaced here may represent the root of cascading failures.
+/// </summary>
+public sealed record HotSpotFinding(
+    /// <summary>Rank among hot-spot findings (1 = highest impact).</summary>
+    int Rank,
+    /// <summary>The object ID, if available.</summary>
+    string? ObjectId,
+    /// <summary>The object name, if available.</summary>
+    string? ObjectName,
+    /// <summary>The object type (e.g. Queue, User, Flow, Edge).</summary>
+    string? ObjectType,
+    /// <summary>Total number of finding entries across all domains that reference this object.</summary>
+    int TotalFindingCount,
+    /// <summary>Number of distinct audit domains (e.g. Queue Serviceability, Stale Flow) this object appears in.</summary>
+    int DistinctDomainCount,
+    /// <summary>The audit domains this object appears in, sorted alphabetically.</summary>
+    IReadOnlyList<string> AffectedDomains,
+    string Issue,
+    FindingSeverity Severity,
+    string RecommendedAction);
 
 // ─── Phase 2 — Architect Prompt Hygiene ──────────────────────────────────────
 
@@ -439,4 +572,13 @@ public sealed class AuditReportData
     public IReadOnlyList<StaleLicenseFinding> StaleLicenseFindings { get; init; } = [];
     public IReadOnlyList<LicenseOverProvisioningFinding> LicenseOverProvisioningFindings { get; init; } = [];
     public IReadOnlyList<RoleGroupOverlapFinding> RoleGroupOverlapFindings { get; init; } = [];
+
+    // Phase 2.1 — Change adjacency marker (config changes correlated with active findings)
+    public IReadOnlyList<ChangeAdjacencyFinding> ChangeAdjacencyFindings { get; init; } = [];
+
+    // Phase 2.2 — Flapping and instability detection (audit-log driven change oscillation)
+    public IReadOnlyList<FlappingFinding> FlappingDetectionFindings { get; init; } = [];
+
+    // Phase 2.3 — Hot spot ranking (objects appearing in multiple audit domains)
+    public IReadOnlyList<HotSpotFinding> HotSpotFindings { get; init; } = [];
 }

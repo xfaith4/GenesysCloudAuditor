@@ -207,4 +207,56 @@ public sealed class AuditRunOptions
     /// or fail, depending on the flow's error-handling configuration.
     /// </summary>
     public bool RunPromptHygieneAudit { get; init; } = true;
+
+    // ─── Phase 2.1 — Change adjacency marker ─────────────────────────────────
+
+    /// <summary>
+    /// Cross-reference audit log events with active findings to identify config changes
+    /// that preceded or co-occurred with anomalies on the same objects (ROADMAP Phase 2.1).
+    /// Only produces results when <see cref="RunAuditLogs"/> is also enabled.
+    /// </summary>
+    public bool RunChangeAdjacencyAudit { get; init; } = true;
+
+    /// <summary>
+    /// How many minutes before the current run to consider an audit log event "adjacent"
+    /// to a finding. Events older than this window are excluded from correlation.
+    /// Default: 1440 (24 hours).
+    /// </summary>
+    public int ChangeAdjacencyWindowMinutes { get; init; } = 1440;
+
+    // ─── Phase 2.2 — Flapping and instability detection ──────────────────────
+
+    /// <summary>
+    /// Scan audit log events for objects that changed state repeatedly within a short window,
+    /// indicating automation conflict, publish churn, or infrastructure oscillation
+    /// (ROADMAP Phase 2.2). Only produces results when <see cref="RunAuditLogs"/> is enabled.
+    /// </summary>
+    public bool RunFlappingDetectionAudit { get; init; } = true;
+
+    /// <summary>
+    /// Minimum number of change events an object must have within the flapping window
+    /// before it is flagged. Default: 4.
+    /// </summary>
+    public int FlappingDetectionMinChanges { get; init; } = 4;
+
+    /// <summary>
+    /// How many minutes before the current run to consider an audit log event within the
+    /// flapping detection window. Default: 1440 (24 hours).
+    /// </summary>
+    public int FlappingDetectionWindowMinutes { get; init; } = 1440;
+
+    // ─── Phase 2.3 — Hot spot ranking ────────────────────────────────────────
+
+    /// <summary>
+    /// Aggregate all findings from the current run and rank objects that appear in
+    /// two or more distinct audit domains, surfacing the highest-priority investigation
+    /// targets (ROADMAP Phase 2.3).
+    /// </summary>
+    public bool RunHotSpotAudit { get; init; } = true;
+
+    /// <summary>
+    /// Minimum number of distinct audit domains an object must appear in before it is
+    /// classified as a hot spot. Default: 2.
+    /// </summary>
+    public int HotSpotMinDistinctDomains { get; init; } = 2;
 }
