@@ -244,7 +244,6 @@ public sealed class TokenProvider : ITokenProvider
                 ClientSecret = oauth.ClientSecret,
                 PkceClientId = oauth.PkceClientId,
                 PkceRedirectUri = oauth.PkceRedirectUri,
-                PkceScope = oauth.PkceScope,
                 PkceAccessToken = accessToken,
                 PkceRefreshToken = refreshToken,
                 PkceAccessTokenExpiresAtUtc = DateTimeOffset.UtcNow.AddSeconds(expiresIn)
@@ -301,7 +300,6 @@ public sealed class GenesysOAuthOptions
 
     public string PkceClientId { get; set; } = string.Empty;
     public string PkceRedirectUri { get; set; } = "http://127.0.0.1:45731/callback";
-    public string PkceScope { get; set; } = string.Empty;
     public string PkceAccessToken { get; set; } = string.Empty;
     public string PkceRefreshToken { get; set; } = string.Empty;
     public DateTimeOffset? PkceAccessTokenExpiresAtUtc { get; set; }

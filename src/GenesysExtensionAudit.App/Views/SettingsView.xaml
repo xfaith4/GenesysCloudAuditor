@@ -45,6 +45,10 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="8" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Region" VerticalAlignment="Center" />
@@ -80,22 +84,15 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <TextBlock Grid.Row="8" Grid.Column="0" Text="PKCE Scope" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Client ID (Fallback)" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="8" Grid.Column="1">
-                            <TextBox Text="{Binding PkceScope, UpdateSourceTrigger=PropertyChanged}" Width="260" HorizontalAlignment="Left" />
-                            <TextBlock Text="Optional; leave blank unless your org requires explicit scope values."
-                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
-                        </StackPanel>
-
-                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Client ID (Fallback)" VerticalAlignment="Center" />
-                        <StackPanel Grid.Row="10" Grid.Column="1">
                             <TextBox Text="{Binding ClientId, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock Text="Used by Client Credentials fallback workflow."
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <TextBlock Grid.Row="12" Grid.Column="0" Text="Client Secret (Fallback)" VerticalAlignment="Center" />
-                        <StackPanel Grid.Row="12" Grid.Column="1">
+                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Client Secret (Fallback)" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="10" Grid.Column="1">
                             <PasswordBox x:Name="ClientSecretBox"
                                          PasswordChanged="ClientSecretBox_PasswordChanged"
                                          MaxLength="300" />
@@ -103,10 +100,10 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <TextBlock Grid.Row="14" Grid.Column="0" Text="PKCE Token Expiry" VerticalAlignment="Center" />
-                        <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding PkceAccessTokenExpiresAtUtc, StringFormat={}{0:u}}" Foreground="#374151" />
+                        <TextBlock Grid.Row="12" Grid.Column="0" Text="PKCE Token Expiry" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding PkceAccessTokenExpiresAtUtc, StringFormat={}{0:u}}" Foreground="#374151" />
 
-                        <StackPanel Grid.Row="16" Grid.Column="1" Orientation="Horizontal">
+                        <StackPanel Grid.Row="14" Grid.Column="1" Orientation="Horizontal">
                             <Button Content="Check Redirect Port"
                                     Command="{Binding CheckPkcePortCommand}"
                                     Padding="12,6"

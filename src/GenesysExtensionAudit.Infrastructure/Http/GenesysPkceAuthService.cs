@@ -106,7 +106,7 @@ public sealed class GenesysPkceAuthService : IGenesysPkceAuthService
         var codeVerifier = CreateBase64UrlRandom(64);
         var codeChallenge = CreateCodeChallenge(codeVerifier);
 
-        var authorizeUrl = BuildAuthorizeUrl(region.AuthBaseUrl, clientId, redirectUri, codeChallenge, state, oauth.PkceScope);
+        var authorizeUrl = BuildAuthorizeUrl(region.AuthBaseUrl, clientId, redirectUri, codeChallenge, state);
         _logger.LogInformation("Starting Genesys PKCE auth flow against {AuthBaseUrl}", region.AuthBaseUrl);
 
         OpenSystemBrowser(authorizeUrl);
@@ -307,8 +307,7 @@ public sealed class GenesysPkceAuthService : IGenesysPkceAuthService
         string clientId,
         Uri redirectUri,
         string codeChallenge,
-        string state,
-        string scope)
+        string state)
     {
         var query = new List<KeyValuePair<string, string>>
         {
@@ -319,9 +318,6 @@ public sealed class GenesysPkceAuthService : IGenesysPkceAuthService
             new("code_challenge_method", "S256"),
             new("state", state)
         };
-
-        if (!string.IsNullOrWhiteSpace(scope))
-            query.Add(new KeyValuePair<string, string>("scope", scope));
 
         var q = string.Join("&", query.Select(kv =>
             $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"));
