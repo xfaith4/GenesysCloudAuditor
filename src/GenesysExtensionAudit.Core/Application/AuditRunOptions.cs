@@ -204,4 +204,40 @@ public sealed class AuditRunOptions
     /// Default: 1440 (24 hours).
     /// </summary>
     public int ChangeAdjacencyWindowMinutes { get; init; } = 1440;
+
+    // ─── Phase 2.2 — Flapping and instability detection ──────────────────────
+
+    /// <summary>
+    /// Scan audit log events for objects that changed state repeatedly within a short window,
+    /// indicating automation conflict, publish churn, or infrastructure oscillation
+    /// (ROADMAP Phase 2.2). Only produces results when <see cref="RunAuditLogs"/> is enabled.
+    /// </summary>
+    public bool RunFlappingDetectionAudit { get; init; } = true;
+
+    /// <summary>
+    /// Minimum number of change events an object must have within the flapping window
+    /// before it is flagged. Default: 4.
+    /// </summary>
+    public int FlappingDetectionMinChanges { get; init; } = 4;
+
+    /// <summary>
+    /// How many minutes before the current run to consider an audit log event within the
+    /// flapping detection window. Default: 1440 (24 hours).
+    /// </summary>
+    public int FlappingDetectionWindowMinutes { get; init; } = 1440;
+
+    // ─── Phase 2.3 — Hot spot ranking ────────────────────────────────────────
+
+    /// <summary>
+    /// Aggregate all findings from the current run and rank objects that appear in
+    /// two or more distinct audit domains, surfacing the highest-priority investigation
+    /// targets (ROADMAP Phase 2.3).
+    /// </summary>
+    public bool RunHotSpotAudit { get; init; } = true;
+
+    /// <summary>
+    /// Minimum number of distinct audit domains an object must appear in before it is
+    /// classified as a hot spot. Default: 2.
+    /// </summary>
+    public int HotSpotMinDistinctDomains { get; init; } = 2;
 }
