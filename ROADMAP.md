@@ -507,7 +507,69 @@ The following catalog groups future checks by domain rather than implementation 
 | Legacy orphan cluster         | Medium   | Objects appear to be remnants of prior migrations or decommissioned designs |
 
 ---
+## 5.4 ElasticSearch export and operational indexing
 
+Provide an optional post-processing export path that sends finalized audit findings, summaries, and evidence records to a configurable ElasticSearch index via API.
+
+This capability is strictly an **output/integration feature** and must not replace or bypass the application’s primary data acquisition and correlation model.
+
+### Planned features
+
+| Feature                              | Priority | Description                                                                 |
+| ------------------------------------ | -------- | --------------------------------------------------------------------------- |
+| Elastic export toggle                | High     | Allow operators to enable or disable Elastic export per run                 |
+| Configurable endpoint URI            | High     | Let the user define the ElasticSearch API endpoint within the UI            |
+| Configurable target index            | High     | Let the user define the destination index name within the UI                |
+| Environment-variable token loading   | High     | Read Elastic API token from environment variable, never store secret in UI  |
+| Export payload shaping               | High     | Send normalized finding/evidence documents in a stable schema               |
+| Bulk indexing mode                   | Medium   | Support efficient batch submission for large result sets                    |
+| Export status and failure reporting  | High     | Surface success/failure counts, HTTP status, and response details in-app    |
+| Retry-safe delivery behavior         | Medium   | Prevent duplicate or corrupted indexing during transient failures           |
+| Rule/version metadata in documents   | Medium   | Include rule ID/version and run metadata for downstream filtering           |
+| Optional run-summary document        | Medium   | Write one summary document per run in addition to per-finding documents     |
+
+### UI requirements
+
+- Add UI fields for:
+  - Elastic endpoint URI
+  - target index name
+  - environment variable name for token (default suggested value may be provided)
+  - enable/disable export checkbox
+- Do not expose the token value in the UI
+- Validate endpoint and index values before submission
+- Provide a test-connection / test-export action if feasible
+
+### Security requirements
+
+- The Elastic API token must be obtained from an environment variable
+- The token must not be written to logs, exports, config files, or workbook outputs
+- Error messages must redact authorization details
+- The application should tolerate missing token state gracefully and emit a clear operator-facing validation message
+
+### Data model expectations
+
+At minimum, indexed documents should support:
+
+- run ID
+- generated timestamp
+- org / tenant identifier
+- region
+- finding ID
+- finding type
+- severity
+- confidence
+- probable cause category
+- recommended owner
+- recommended next action
+- impacted object IDs / names
+- evidence summary
+- support-escalation eligibility
+- rule ID / rule version
+
+### Why this matters
+
+This enables centralized search, long-term retention, dashboarding, triage workflows, and correlation with external operational telemetry in Elastic-based environments.
+-----
 # Rule Authoring and Extensibility
 
 To make the platform durable, future audit checks should be definable through a common rule contract.
