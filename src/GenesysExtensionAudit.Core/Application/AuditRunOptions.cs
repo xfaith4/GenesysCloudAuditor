@@ -188,4 +188,20 @@ public sealed class AuditRunOptions
     /// or fail, depending on the flow's error-handling configuration.
     /// </summary>
     public bool RunPromptHygieneAudit { get; init; } = true;
+
+    // ─── Phase 2.1 — Change adjacency marker ─────────────────────────────────
+
+    /// <summary>
+    /// Cross-reference audit log events with active findings to identify config changes
+    /// that preceded or co-occurred with anomalies on the same objects (ROADMAP Phase 2.1).
+    /// Only produces results when <see cref="RunAuditLogs"/> is also enabled.
+    /// </summary>
+    public bool RunChangeAdjacencyAudit { get; init; } = true;
+
+    /// <summary>
+    /// How many minutes before the current run to consider an audit log event "adjacent"
+    /// to a finding. Events older than this window are excluded from correlation.
+    /// Default: 1440 (24 hours).
+    /// </summary>
+    public int ChangeAdjacencyWindowMinutes { get; init; } = 1440;
 }

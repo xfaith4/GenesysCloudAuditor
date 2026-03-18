@@ -165,6 +165,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<SiteTopologyFinding> siteTopologyFindings = [];
         IReadOnlyList<PromptDto> promptDtos = [];
         IReadOnlyList<PromptHygieneFinding> promptHygieneFindings = [];
+        IReadOnlyList<ChangeAdjacencyFinding> changeAdjacencyFindings = [];
 
         if (needsUsers)
         {
@@ -480,6 +481,43 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
 
         Report(progress, 92, "Composing report...");
 
+        var partialReport = new AuditReportData
+        {
+            GeneratedAt = DateTimeOffset.Now,
+            RunStartedAtUtc = runStartedUtc,
+            RunCompletedAtUtc = DateTimeOffset.UtcNow,
+            OrgRegion = _region.Region,
+            Options = options,
+            ExtensionReport = extensionReport,
+            GroupFindings = groupFindings,
+            QueueFindings = queueFindings,
+            FlowFindings = flowFindings,
+            InactiveUserFindings = inactiveUserFindings,
+            NoLocationUserFindings = noLocationUserFindings,
+            DidFindings = didFindings,
+            AuditLogFindings = auditLogFindings,
+            OperationalEventFindings = operationalEventFindings,
+            OutboundEventFindings = outboundEventFindings,
+            UserTelephonyIntegrityFindings = userTelephonyIntegrityFindings,
+            QueueServiceabilityFindings = queueServiceabilityFindings,
+            IvrFlowBindingFindings = ivrFlowBindingFindings,
+            StaleLicenseFindings = staleLicenseFindings,
+            LicenseOverProvisioningFindings = licenseOverProvisioningFindings,
+            RoleGroupOverlapFindings = roleGroupOverlapFindings,
+            SiteTopologyFindings = siteTopologyFindings,
+            PromptHygieneFindings = promptHygieneFindings
+        };
+
+        // Phase 2.1 — Change adjacency marker (requires audit logs + at least one other finding)
+        if (options.RunChangeAdjacencyAudit && auditLogFindings.Count > 0)
+        {
+            Report(progress, 94, "Analyzing change adjacency...");
+            var findingIndex = ActiveFindingIndex.Build(partialReport);
+            changeAdjacencyFindings = new ChangeAdjacencyAnalyzer().Analyze(
+                auditLogFindings, findingIndex, options.ChangeAdjacencyWindowMinutes);
+            _logger.LogInformation("Change adjacency check complete. Findings={Count}", changeAdjacencyFindings.Count);
+        }
+
         var totalFindings = extensionReport.DuplicateProfileExtensions.Count
             + extensionReport.DuplicateAssignedExtensions.Count
             + extensionReport.ProfileExtensionsNotAssigned.Count
@@ -499,19 +537,20 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             + licenseOverProvisioningFindings.Count
             + roleGroupOverlapFindings.Count
             + siteTopologyFindings.Count
-            + promptHygieneFindings.Count;
+            + promptHygieneFindings.Count
+            + changeAdjacencyFindings.Count;
 
         _logger.LogInformation(
             "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} StaleTokenUsers={StaleTokenUsers} NoLocationUsers={NoLocationUsers} DIDs={DIDs} " +
             "UserTelephonyIntegrity={UserTelephonyIntegrity} QueueServiceability={QueueServiceability} IvrFlowBindings={IvrFlowBindings} " +
             "OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents} " +
-            "StaleLicenses={StaleLicenses} LicenseOverProvisioning={LicenseOverProvisioning} RoleGroupOverlap={RoleGroupOverlap} SiteTopology={SiteTopology} PromptHygiene={PromptHygiene}",
+            "StaleLicenses={StaleLicenses} LicenseOverProvisioning={LicenseOverProvisioning} RoleGroupOverlap={RoleGroupOverlap} SiteTopology={SiteTopology} PromptHygiene={PromptHygiene} ChangeAdjacency={ChangeAdjacency}",
             totalFindings, groupFindings.Count, queueFindings.Count,
             flowFindings.Count, inactiveUserFindings.Count, noLocationUserFindings.Count, didFindings.Count,
             userTelephonyIntegrityFindings.Count, queueServiceabilityFindings.Count, ivrFlowBindingFindings.Count,
             operationalEventFindings.Count, outboundEventFindings.Count,
             staleLicenseFindings.Count, licenseOverProvisioningFindings.Count, roleGroupOverlapFindings.Count, siteTopologyFindings.Count,
-            promptHygieneFindings.Count);
+            promptHygieneFindings.Count, changeAdjacencyFindings.Count);
 
         Report(progress, 100,
             $"Complete — {totalFindings} total findings across all checks.",
@@ -541,7 +580,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             LicenseOverProvisioningFindings = licenseOverProvisioningFindings,
             RoleGroupOverlapFindings = roleGroupOverlapFindings,
             SiteTopologyFindings = siteTopologyFindings,
-            PromptHygieneFindings = promptHygieneFindings
+            PromptHygieneFindings = promptHygieneFindings,
+            ChangeAdjacencyFindings = changeAdjacencyFindings
         };
     }
 
@@ -1391,7 +1431,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 UserName: GetString(map, "userName", "name"),
                 UserEmail: GetString(map, "userEmail", "email"),
                 EntityType: GetString(map, "entityType", "targetType"),
-                EntityName: GetString(map, "entityName", "targetName")));
+                EntityName: GetString(map, "entityName", "targetName"),
+                EntityId: GetNestedId(map, "entity") ?? GetString(map, "entityId", "targetId")));
         }
 
         return findings
@@ -1430,6 +1471,23 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 JsonValueKind.False => "false",
                 _ => null
             };
+
+        // Extract the "id" field from a named nested object (e.g. "entity": {"id": "..."}).
+        // The Genesys Cloud audit log API places entity identity inside a nested object.
+        static string? GetNestedId(Dictionary<string, JsonElement> map, string objectKey)
+        {
+            if (!map.TryGetValue(objectKey, out var nested) ||
+                nested.ValueKind != JsonValueKind.Object)
+                return null;
+
+            foreach (var prop in nested.EnumerateObject())
+            {
+                if (string.Equals(prop.Name, "id", StringComparison.OrdinalIgnoreCase))
+                    return AsString(prop.Value);
+            }
+
+            return null;
+        }
     }
 
     private static IReadOnlyList<OperationalEventFinding> AnalyzeOperationalEvents(
