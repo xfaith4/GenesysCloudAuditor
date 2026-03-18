@@ -124,6 +124,27 @@ public static class SiteTopologyCode
     public const string TrunkDown = "TRUNK_DOWN";
 }
 
+// ─── Finding codes for ChangeAdjacencyFinding (Phase 2.1) ────────────────────
+
+/// <summary>
+/// Identifies the relationship between a configuration change and a correlated finding.
+/// Used to distinguish sub-types within <see cref="ChangeAdjacencyFinding"/>.
+/// </summary>
+public static class ChangeAdjacencyCode
+{
+    /// <summary>
+    /// A configuration change event in the audit log touched the same object that has an active finding.
+    /// The change preceded or co-occurred with the finding window, suggesting it may be the root cause.
+    /// </summary>
+    public const string ChangeBeforeFinding = "CHANGE_BEFORE_FINDING";
+
+    /// <summary>
+    /// Multiple configuration change events touched the same object within a short window,
+    /// suggesting potential churn or conflicting automation that may be contributing to instability.
+    /// </summary>
+    public const string RepeatedChanges = "REPEATED_CHANGES";
+}
+
 // ─── Findings ───────────────────────────────────────────────────────────────
 
 public sealed record GroupFinding(
@@ -186,7 +207,9 @@ public sealed record AuditLogFinding(
     string? UserName,
     string? UserEmail,
     string? EntityType,
-    string? EntityName);
+    string? EntityName,
+    /// <summary>Entity ID extracted from the audit log event (e.g. queue ID, user ID). Used for change-adjacency correlation.</summary>
+    string? EntityId);
 
 public sealed record OperationalEventFinding(
     DateTimeOffset? TimestampUtc,
@@ -208,6 +231,36 @@ public sealed record OutboundEventFinding(
     string? Code,
     string? Message,
     string? CorrelationId);
+
+// ─── Phase 2.1 — Change adjacency marker ─────────────────────────────────────
+
+/// <summary>
+/// A correlation finding that links a recent audit log configuration change
+/// to an existing audit finding on the same object.
+/// Surfaces the "what changed before the problem appeared?" signal.
+/// </summary>
+public sealed record ChangeAdjacencyFinding(
+    /// <summary>One of the <see cref="ChangeAdjacencyCode"/> constants.</summary>
+    string FindingCode,
+    /// <summary>The type of the affected object (e.g. Queue, User, Flow, Site).</summary>
+    string? AffectedObjectType,
+    /// <summary>The ID of the object that was changed and also has an active finding.</summary>
+    string? AffectedObjectId,
+    /// <summary>The name of the affected object.</summary>
+    string? AffectedObjectName,
+    /// <summary>Timestamp of the most recent change event for this object.</summary>
+    DateTimeOffset? ChangeTimestamp,
+    /// <summary>The action performed (e.g. UPDATE, DELETE) from the audit log entry.</summary>
+    string? ChangeAction,
+    /// <summary>The user who made the change.</summary>
+    string? ChangedBy,
+    /// <summary>Number of change events found for this object within the lookback window.</summary>
+    int ChangeCount,
+    /// <summary>Brief description of the correlated finding category (e.g. "Queue serviceability degraded").</summary>
+    string? RelatedFindingType,
+    string Issue,
+    FindingSeverity Severity,
+    string RecommendedAction);
 
 // ─── Phase 2 — Architect Prompt Hygiene ──────────────────────────────────────
 
@@ -429,4 +482,7 @@ public sealed class AuditReportData
     public IReadOnlyList<StaleLicenseFinding> StaleLicenseFindings { get; init; } = [];
     public IReadOnlyList<LicenseOverProvisioningFinding> LicenseOverProvisioningFindings { get; init; } = [];
     public IReadOnlyList<RoleGroupOverlapFinding> RoleGroupOverlapFindings { get; init; } = [];
+
+    // Phase 2.1 — Change adjacency marker (config changes correlated with active findings)
+    public IReadOnlyList<ChangeAdjacencyFinding> ChangeAdjacencyFindings { get; init; } = [];
 }

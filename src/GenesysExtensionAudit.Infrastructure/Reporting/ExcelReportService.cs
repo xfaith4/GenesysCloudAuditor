@@ -26,6 +26,7 @@ public sealed class ExcelWorkbookScopeOptions
     public bool IncludeRoleGroupOverlap { get; init; } = true;
     public bool IncludeSiteTopology { get; init; } = true;
     public bool IncludePromptHygiene { get; init; } = true;
+    public bool IncludeChangeAdjacency { get; init; } = true;
 }
 
 /// <summary>
@@ -118,6 +119,9 @@ public sealed class ExcelReportService : IExcelReportService
 
         if (scopeOptions.IncludePromptHygiene)
             WritePromptHygieneSheet(wb, report);
+
+        if (scopeOptions.IncludeChangeAdjacency)
+            WriteChangeAdjacencySheet(wb, report);
 
         using var ms = new MemoryStream();
         wb.SaveAs(ms);
@@ -1082,6 +1086,52 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 13);
+    }
+
+    // ─── Change Adjacency (Phase 2.1) ───────────────────────────────────────
+
+    private static void WriteChangeAdjacencySheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Change_Adjacency");
+        var findings = report.ChangeAdjacencyFindings;
+
+        string[] headers =
+        [
+            "Finding Code", "Object Type", "Object Name", "Object ID",
+            "Change Timestamp (UTC)", "Change Action", "Changed By", "Change Count",
+            "Related Finding Type", "Severity", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "Change Adjacency — Config Changes Correlated with Active Findings", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.FindingCode;
+            ws.Cell(row, 2).Value = f.AffectedObjectType;
+            ws.Cell(row, 3).Value = f.AffectedObjectName;
+            ws.Cell(row, 4).Value = f.AffectedObjectId;
+            ws.Cell(row, 5).Value = f.ChangeTimestamp?.UtcDateTime.ToString("u");
+            ws.Cell(row, 6).Value = f.ChangeAction;
+            ws.Cell(row, 7).Value = f.ChangedBy;
+            ws.Cell(row, 8).Value = f.ChangeCount;
+            ws.Cell(row, 9).Value = f.RelatedFindingType;
+            ws.Cell(row, 10).Value = f.Severity.ToString();
+            ws.Cell(row, 11).Value = f.Issue;
+            ws.Cell(row, 12).Value = f.RecommendedAction;
+
+            var severityCell = ws.Cell(row, 10);
+            if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
+                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
+            else if (f.Severity == FindingSeverity.Medium)
+                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
+            else
+                severityCell.Style.Fill.BackgroundColor = SeverityInfo;
+
+            ApplyAltRow(ws, row, 12);
+            row++;
+        }
+
+        AdjustColumns(ws, 12);
     }
 
     // ─── Shared helpers ──────────────────────────────────────────────────────
