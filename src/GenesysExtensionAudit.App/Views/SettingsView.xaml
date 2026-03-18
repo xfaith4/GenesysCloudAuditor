@@ -84,15 +84,22 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Client ID (Fallback)" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="PKCE Scope" VerticalAlignment="Center" />
                         <StackPanel Grid.Row="8" Grid.Column="1">
+                            <TextBox Text="{Binding PkceScope, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Space-delimited Genesys OAuth scopes requested during PKCE sign-in. Default covers the main read-only audit paths."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Client ID (Fallback)" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="10" Grid.Column="1">
                             <TextBox Text="{Binding ClientId, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock Text="Used by Client Credentials fallback workflow."
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Client Secret (Fallback)" VerticalAlignment="Center" />
-                        <StackPanel Grid.Row="10" Grid.Column="1">
+                        <TextBlock Grid.Row="12" Grid.Column="0" Text="Client Secret (Fallback)" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="12" Grid.Column="1">
                             <PasswordBox x:Name="ClientSecretBox"
                                          PasswordChanged="ClientSecretBox_PasswordChanged"
                                          MaxLength="300" />
@@ -100,10 +107,10 @@
                                        Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
                         </StackPanel>
 
-                        <TextBlock Grid.Row="12" Grid.Column="0" Text="PKCE Token Expiry" VerticalAlignment="Center" />
-                        <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding PkceAccessTokenExpiresAtUtc, StringFormat={}{0:u}}" Foreground="#374151" />
+                        <TextBlock Grid.Row="14" Grid.Column="0" Text="PKCE Token Expiry" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding PkceAccessTokenExpiresAtUtc, StringFormat={}{0:u}}" Foreground="#374151" />
 
-                        <StackPanel Grid.Row="14" Grid.Column="1" Orientation="Horizontal">
+                        <StackPanel Grid.Row="16" Grid.Column="1" Orientation="Horizontal">
                             <Button Content="Check Redirect Port"
                                     Command="{Binding CheckPkcePortCommand}"
                                     Padding="12,6"

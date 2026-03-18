@@ -244,6 +244,7 @@ public sealed class TokenProvider : ITokenProvider
                 ClientSecret = oauth.ClientSecret,
                 PkceClientId = oauth.PkceClientId,
                 PkceRedirectUri = oauth.PkceRedirectUri,
+                PkceScope = oauth.PkceScope,
                 PkceAccessToken = accessToken,
                 PkceRefreshToken = refreshToken,
                 PkceAccessTokenExpiresAtUtc = DateTimeOffset.UtcNow.AddSeconds(expiresIn)
@@ -289,6 +290,9 @@ public sealed class TokenProvider : ITokenProvider
 /// </summary>
 public sealed class GenesysOAuthOptions
 {
+    public const string DefaultPkceScope =
+        "users:readonly telephony:readonly groups:readonly routing:readonly architect:readonly outbound:readonly";
+
     /// <summary>
     /// Supported values: auto, pkce, client_credentials.
     /// "auto" prefers PKCE when available, then falls back to client credentials.
@@ -300,6 +304,7 @@ public sealed class GenesysOAuthOptions
 
     public string PkceClientId { get; set; } = string.Empty;
     public string PkceRedirectUri { get; set; } = "http://127.0.0.1:45731/callback";
+    public string PkceScope { get; set; } = DefaultPkceScope;
     public string PkceAccessToken { get; set; } = string.Empty;
     public string PkceRefreshToken { get; set; } = string.Empty;
     public DateTimeOffset? PkceAccessTokenExpiresAtUtc { get; set; }

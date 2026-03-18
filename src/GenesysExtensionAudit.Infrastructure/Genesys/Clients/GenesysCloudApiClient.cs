@@ -332,9 +332,62 @@ public sealed class GenesysApiException : Exception
         if (!string.IsNullOrWhiteSpace(correlationId))
             sb.Append(" CorrelationId=").Append(correlationId);
 
-        if (!string.IsNullOrWhiteSpace(responseBody))
+        if (TryBuildScopeAuthorizationHint(responseBody, out var scopeHint))
+        {
+            sb.Append(' ').Append(scopeHint);
+        }
+        else if (!string.IsNullOrWhiteSpace(responseBody))
+        {
             sb.Append(" Body=").Append(responseBody);
+        }
 
         return sb.ToString();
+    }
+
+    private static bool TryBuildScopeAuthorizationHint(string? responseBody, out string hint)
+    {
+        hint = string.Empty;
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return false;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(responseBody);
+            var root = doc.RootElement;
+
+            if (!root.TryGetProperty("code", out var codeProp) ||
+                !string.Equals(codeProp.GetString(), "app.not.authorized.for.scope", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var message = root.TryGetProperty("message", out var messageProp)
+                ? messageProp.GetString()
+                : null;
+
+            var scopes = ExtractScopeList(message);
+            hint = string.IsNullOrWhiteSpace(scopes)
+                ? "Missing Genesys OAuth scope. Re-authenticate with PKCE after saving the required scopes in Settings, or assign the equivalent permissions to the OAuth client."
+                : $"Missing Genesys OAuth scope(s): {scopes}. Re-authenticate with PKCE after saving the required scopes in Settings, or assign the equivalent permissions to the OAuth client.";
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string ExtractScopeList(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return string.Empty;
+
+        var start = message.IndexOf('[', StringComparison.Ordinal);
+        var end = message.IndexOf(']', start + 1);
+        if (start < 0 || end <= start)
+            return string.Empty;
+
+        return message[(start + 1)..end].Trim();
     }
 }

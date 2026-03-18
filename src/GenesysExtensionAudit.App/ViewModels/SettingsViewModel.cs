@@ -22,6 +22,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private string _authMode = "auto";
     private string _pkceClientId = string.Empty;
     private string _pkceRedirectUri = "http://127.0.0.1:45731/callback";
+    private string _pkceScope = GenesysOAuthOptions.DefaultPkceScope;
     private string _clientId = string.Empty;
     private string _clientSecret = string.Empty;
     private DateTimeOffset? _pkceAccessTokenExpiresAtUtc;
@@ -88,6 +89,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     {
         get => _pkceRedirectUri;
         set => SetField(ref _pkceRedirectUri, value);
+    }
+
+    public string PkceScope
+    {
+        get => _pkceScope;
+        set => SetField(ref _pkceScope, value);
     }
 
     public DateTimeOffset? PkceAccessTokenExpiresAtUtc
@@ -210,6 +217,9 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
                 PkceRedirectUri = string.IsNullOrWhiteSpace(PkceRedirectUri)
                     ? "http://127.0.0.1:45731/callback"
                     : PkceRedirectUri.Trim(),
+                PkceScope = string.IsNullOrWhiteSpace(PkceScope)
+                    ? GenesysOAuthOptions.DefaultPkceScope
+                    : PkceScope.Trim(),
                 PkceAccessToken = existingOAuth.PkceAccessToken,
                 PkceRefreshToken = existingOAuth.PkceRefreshToken,
                 PkceAccessTokenExpiresAtUtc = existingOAuth.PkceAccessTokenExpiresAtUtc
@@ -269,6 +279,9 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
                 ClientSecret = existingOAuth.ClientSecret,
                 PkceClientId = string.IsNullOrWhiteSpace(PkceClientId) ? existingOAuth.PkceClientId : PkceClientId.Trim(),
                 PkceRedirectUri = string.IsNullOrWhiteSpace(PkceRedirectUri) ? existingOAuth.PkceRedirectUri : PkceRedirectUri.Trim(),
+                PkceScope = string.IsNullOrWhiteSpace(PkceScope)
+                    ? (string.IsNullOrWhiteSpace(existingOAuth.PkceScope) ? GenesysOAuthOptions.DefaultPkceScope : existingOAuth.PkceScope)
+                    : PkceScope.Trim(),
                 PkceAccessToken = result.AccessToken,
                 PkceRefreshToken = result.RefreshToken,
                 PkceAccessTokenExpiresAtUtc = result.AccessTokenExpiresAtUtc
@@ -311,6 +324,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         ClientSecret = Coalesce(savedOAuth.ClientSecret, fallbackOAuth.ClientSecret);
         PkceClientId = Coalesce(savedOAuth.PkceClientId, fallbackOAuth.PkceClientId, ClientId);
         PkceRedirectUri = Coalesce(savedOAuth.PkceRedirectUri, fallbackOAuth.PkceRedirectUri, "http://127.0.0.1:45731/callback");
+        PkceScope = Coalesce(savedOAuth.PkceScope, fallbackOAuth.PkceScope, GenesysOAuthOptions.DefaultPkceScope);
         PkceAccessTokenExpiresAtUtc = savedOAuth.PkceAccessTokenExpiresAtUtc ?? fallbackOAuth.PkceAccessTokenExpiresAtUtc;
 
         var savedGitHub = _userSettings.LoadGitHubSettings();

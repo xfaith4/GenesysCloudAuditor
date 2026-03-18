@@ -106,7 +106,13 @@ public sealed class GenesysPkceAuthService : IGenesysPkceAuthService
         var codeVerifier = CreateBase64UrlRandom(64);
         var codeChallenge = CreateCodeChallenge(codeVerifier);
 
-        var authorizeUrl = BuildAuthorizeUrl(region.AuthBaseUrl, clientId, redirectUri, codeChallenge, state);
+        var authorizeUrl = BuildAuthorizeUrl(
+            region.AuthBaseUrl,
+            clientId,
+            redirectUri,
+            codeChallenge,
+            state,
+            oauth.PkceScope);
         _logger.LogInformation("Starting Genesys PKCE auth flow against {AuthBaseUrl}", region.AuthBaseUrl);
 
         OpenSystemBrowser(authorizeUrl);
@@ -307,7 +313,8 @@ public sealed class GenesysPkceAuthService : IGenesysPkceAuthService
         string clientId,
         Uri redirectUri,
         string codeChallenge,
-        string state)
+        string state,
+        string? scope)
     {
         var query = new List<KeyValuePair<string, string>>
         {
@@ -319,10 +326,24 @@ public sealed class GenesysPkceAuthService : IGenesysPkceAuthService
             new("state", state)
         };
 
+        var normalizedScope = NormalizeScope(scope);
+        if (!string.IsNullOrWhiteSpace(normalizedScope))
+            query.Add(new KeyValuePair<string, string>("scope", normalizedScope));
+
         var q = string.Join("&", query.Select(kv =>
             $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"));
 
         return $"{authBaseUrl}/oauth/authorize?{q}";
+    }
+
+    private static string NormalizeScope(string? scope)
+    {
+        if (string.IsNullOrWhiteSpace(scope))
+            return string.Empty;
+
+        return string.Join(' ', scope
+            .Split([' ', ',', '\r', '\n', '\t'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.Ordinal));
     }
 
     private static string ExtractRequestTarget(string requestLine)
