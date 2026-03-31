@@ -1,6 +1,7 @@
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Domain.Paging;
 using GenesysExtensionAudit.Domain.Services;
+using GenesysExtensionAudit.Infrastructure.BestPractices;
 using GenesysExtensionAudit.Infrastructure.Domain.Services;
 using GenesysExtensionAudit.Infrastructure.Genesys.Clients;
 using GenesysExtensionAudit.Infrastructure.Genesys.Dtos;
@@ -36,6 +37,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
     private readonly IGenesysTrunksClient _trunksClient;
     private readonly IGenesysPromptsClient _promptsClient;
     private readonly IPaginator _paginator;
+    private readonly IFindingBestPracticeEnricher _findingBestPracticeEnricher;
     private readonly GenesysRegionOptions _region;
     private readonly ILogger<AuditOrchestrator> _logger;
 
@@ -58,6 +60,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IGenesysTrunksClient trunksClient,
         IGenesysPromptsClient promptsClient,
         IPaginator paginator,
+        IFindingBestPracticeEnricher findingBestPracticeEnricher,
         IOptions<GenesysRegionOptions> regionOptions,
         ILogger<AuditOrchestrator> logger)
     {
@@ -79,6 +82,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         _trunksClient = trunksClient ?? throw new ArgumentNullException(nameof(trunksClient));
         _promptsClient = promptsClient ?? throw new ArgumentNullException(nameof(promptsClient));
         _paginator = paginator ?? throw new ArgumentNullException(nameof(paginator));
+        _findingBestPracticeEnricher = findingBestPracticeEnricher ?? throw new ArgumentNullException(nameof(findingBestPracticeEnricher));
         _region = regionOptions?.Value ?? throw new ArgumentNullException(nameof(regionOptions));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -663,7 +667,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             $"Complete — {totalFindings} total findings across all checks.",
             status: "Audit completed successfully.");
 
-        return new AuditReportData
+        var finalReport = new AuditReportData
         {
             GeneratedAt = DateTimeOffset.Now,
             RunStartedAtUtc = runStartedUtc,
@@ -694,6 +698,18 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             HotSpotFindings = hotSpotFindings,
             RelationshipSnapshots = relationshipSnapshots
         };
+
+        var enrichment = _findingBestPracticeEnricher.Enrich(finalReport);
+        finalReport.BestPracticeGuidanceWasComputed = true;
+        finalReport.BestPracticeGuidanceFindings = enrichment.Matches;
+        finalReport.UnmappedBestPracticeFindingTypes = enrichment.UnmatchedFindingTypes;
+
+        _logger.LogInformation(
+            "Best-practice enrichment complete. Matches={MatchCount} UnmappedFindingTypes={UnmappedCount}",
+            enrichment.Matches.Count,
+            enrichment.UnmatchedFindingTypes.Count);
+
+        return finalReport;
     }
 
     // ─── Extension audit (delegates to AuditEngine) ───────────────────────

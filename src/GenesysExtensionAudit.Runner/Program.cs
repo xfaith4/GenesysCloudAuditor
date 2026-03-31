@@ -1,6 +1,7 @@
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Domain.Paging;
 using GenesysExtensionAudit.Domain.Services;
+using GenesysExtensionAudit.Infrastructure.BestPractices;
 using GenesysExtensionAudit.Infrastructure.Application;
 using GenesysExtensionAudit.Infrastructure.Configuration;
 using GenesysExtensionAudit.Infrastructure.Domain.Services;
@@ -75,6 +76,7 @@ static async Task<int> RunAsync(string[] args)
                 services.Configure<SharePointOptions>(ctx.Configuration.GetSection("SharePoint"));
                 services.Configure<GitHubOptions>(ctx.Configuration.GetSection("GitHub"));
                 services.Configure<ElasticExportOptions>(ctx.Configuration.GetSection("ElasticExport"));
+                services.Configure<BestPracticesOptions>(ctx.Configuration.GetSection("BestPractices"));
                 services.AddSingleton<IUserSettingsService, UserSettingsService>();
 
                 // ── Core domain services ──────────────────────────────────────
@@ -183,6 +185,10 @@ static async Task<int> RunAsync(string[] args)
                 services.AddSingleton<IExcelReportService, ExcelReportService>();
                 services.AddSingleton<ICareEvidenceExportService, CareEvidenceExportService>();
                 services.AddSingleton<ICareEvidenceArtifactService, CareEvidenceArtifactService>();
+                services.AddSingleton<IBestPracticesContentService, BestPracticesContentService>();
+                services.AddSingleton<IBestPracticeRepository, BestPracticeRepository>();
+                services.AddSingleton<IGlossaryRepository, GlossaryRepository>();
+                services.AddSingleton<IFindingBestPracticeEnricher, FindingBestPracticeEnricher>();
                 services.AddSingleton<IAuditSnapshotService, AuditSnapshotService>();
                 services.AddSingleton<IFileUploadService, SharePointUploadService>();
                 services.AddHttpClient<IGitHubUploadService, GitHubUploadService>();
@@ -203,6 +209,8 @@ static async Task<int> RunAsync(string[] args)
         var githubOpts = host.Services.GetRequiredService<IOptions<GitHubOptions>>().Value;
         var elasticOpts = host.Services.GetRequiredService<IOptions<ElasticExportOptions>>().Value;
         var elasticExportService = host.Services.GetRequiredService<IElasticAuditExportService>();
+        var bestPracticesContentService = host.Services.GetRequiredService<IBestPracticesContentService>();
+        bestPracticesContentService.EnsureLoaded();
 
         logger.LogInformation(
             "GenesysExtensionAudit Runner starting. Region={Region} DryRun={DryRun} ScheduleProfile={ScheduleProfile}",

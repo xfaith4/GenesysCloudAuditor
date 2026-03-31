@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using GenesysExtensionAudit.Application;
+using GenesysExtensionAudit.Infrastructure.BestPractices;
 using GenesysExtensionAudit.Infrastructure.Application;
 using GenesysExtensionAudit.Infrastructure.Genesys.Dtos;
 using GenesysExtensionAudit.Infrastructure.Configuration;
@@ -37,6 +38,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private readonly ICareEvidenceArtifactService _careEvidenceArtifactService;
     private readonly IElasticAuditExportService _elasticAuditExportService;
     private readonly IAuditSnapshotService _snapshotService;
+    private readonly IBestPracticesContentService _bestPracticesContentService;
     private readonly IAuditLogCatalogCache _auditLogCatalogCache;
     private readonly IGitHubUploadService _gitHubUploadService;
     private readonly IOptionsMonitor<GitHubOptions> _gitHubOptions;
@@ -46,6 +48,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private readonly ObservableCollection<string> _auditLogEntityTypes = [];
     private readonly ObservableCollection<string> _auditLogSortOrders = ["Descending", "Ascending"];
     private readonly ObservableCollection<RunSummaryRow> _lastRunSummary = [];
+    private readonly ObservableCollection<BestPracticeGuidanceFinding> _bestPracticeGuidance = [];
     private readonly ObservableCollection<string> _workbookExportModes = [ConsolidatedExportMode, SeparateExportMode];
 
     private int _pageSize = 100;
@@ -74,6 +77,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private string _selectedWorkbookExportMode = ConsolidatedExportMode;
     private bool _pushToGitHub;
     private bool _pushToElasticSearch;
+    private string _bestPracticesStatusSummary = "Best-practices content has not been evaluated yet.";
+    private string _bestPracticesStatusDetails = string.Empty;
+    private string _unmappedBestPracticeFindingTypesSummary = string.Empty;
     private bool _isRunning;
     private int _progressPercent;
     private string _progressMessage = string.Empty;
@@ -90,6 +96,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         ICareEvidenceArtifactService careEvidenceArtifactService,
         IElasticAuditExportService elasticAuditExportService,
         IAuditSnapshotService snapshotService,
+        IBestPracticesContentService bestPracticesContentService,
         IAuditLogCatalogCache auditLogCatalogCache,
         IGitHubUploadService gitHubUploadService,
         IOptionsMonitor<GitHubOptions> gitHubOptions,
@@ -101,6 +108,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         _careEvidenceArtifactService = careEvidenceArtifactService ?? throw new ArgumentNullException(nameof(careEvidenceArtifactService));
         _elasticAuditExportService = elasticAuditExportService ?? throw new ArgumentNullException(nameof(elasticAuditExportService));
         _snapshotService = snapshotService ?? throw new ArgumentNullException(nameof(snapshotService));
+        _bestPracticesContentService = bestPracticesContentService ?? throw new ArgumentNullException(nameof(bestPracticesContentService));
         _auditLogCatalogCache = auditLogCatalogCache ?? throw new ArgumentNullException(nameof(auditLogCatalogCache));
         _gitHubUploadService = gitHubUploadService ?? throw new ArgumentNullException(nameof(gitHubUploadService));
         _gitHubOptions = gitHubOptions ?? throw new ArgumentNullException(nameof(gitHubOptions));
@@ -117,6 +125,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         ExportCommand = new RelayCommand(ExportLastReport, () => !IsRunning && _lastReport is not null);
 
         _auditLogEntities.Add(AllCatalogEntitiesOption);
+        RefreshBestPracticesStatus();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -385,6 +394,28 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
     public bool HasReport => _lastReport is not null;
     public ObservableCollection<RunSummaryRow> LastRunSummary => _lastRunSummary;
+    public ObservableCollection<BestPracticeGuidanceFinding> BestPracticeGuidance => _bestPracticeGuidance;
+    public bool HasBestPracticeGuidance => _bestPracticeGuidance.Count > 0;
+
+    public string BestPracticesStatusSummary
+    {
+        get => _bestPracticesStatusSummary;
+        private set => SetField(ref _bestPracticesStatusSummary, value);
+    }
+
+    public string BestPracticesStatusDetails
+    {
+        get => _bestPracticesStatusDetails;
+        private set => SetField(ref _bestPracticesStatusDetails, value);
+    }
+
+    public string UnmappedBestPracticeFindingTypesSummary
+    {
+        get => _unmappedBestPracticeFindingTypesSummary;
+        private set => SetField(ref _unmappedBestPracticeFindingTypesSummary, value);
+    }
+
+    public bool HasUnmappedBestPracticeFindingTypes => !string.IsNullOrWhiteSpace(UnmappedBestPracticeFindingTypesSummary);
 
     public bool IsRunning
     {
@@ -505,6 +536,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             }, progress, ct).ConfigureAwait(true);
 
             _lastReport = report;
+            BuildBestPracticeGuidance(report);
             BuildLastRunSummary(report);
             OnPropertyChanged(nameof(HasReport));
             RaiseCommandCanExecuteChanged();
@@ -856,6 +888,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeExtensions = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -867,6 +900,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeGroups = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -878,6 +912,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeQueues = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -889,6 +924,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeFlows = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -900,6 +936,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeInactiveUsers = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -911,6 +948,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeDids = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -922,6 +960,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeAuditLogs = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -933,6 +972,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeOperationalEvents = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -944,6 +984,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeOutboundEvents = true,
+                IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
             }));
@@ -1031,6 +1072,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             ("Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count),
             ("Edge Performance", report.Options.RunSiteTopologyAudit && report.Options.RunOperationalEventLogs, report.EdgePerformanceObservations.Count(o => o.IsAnomalous)),
             ("OutboundEvents", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count),
+            ("Best Practice Guidance", report.BestPracticeGuidanceWasComputed, report.BestPracticeGuidanceFindings.Count),
             ("Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count),
             ("Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count)
         };
@@ -1042,6 +1084,30 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
             _lastRunSummary.Add(new RunSummaryRow(item.Name, item.Count));
         }
+    }
+
+    private void BuildBestPracticeGuidance(AuditReportData report)
+    {
+        _bestPracticeGuidance.Clear();
+        foreach (var guidance in report.BestPracticeGuidanceFindings.Take(10))
+            _bestPracticeGuidance.Add(guidance);
+
+        UnmappedBestPracticeFindingTypesSummary = report.UnmappedBestPracticeFindingTypes.Count == 0
+            ? string.Empty
+            : $"Unmapped finding types: {string.Join(", ", report.UnmappedBestPracticeFindingTypes)}";
+
+        RefreshBestPracticesStatus();
+        OnPropertyChanged(nameof(HasBestPracticeGuidance));
+        OnPropertyChanged(nameof(HasUnmappedBestPracticeFindingTypes));
+    }
+
+    private void RefreshBestPracticesStatus()
+    {
+        var status = _bestPracticesContentService.GetStatus();
+        BestPracticesStatusSummary = status.Summary;
+        BestPracticesStatusDetails = status.Messages.Count == 0
+            ? "Catalog, mapping, and glossary content loaded successfully."
+            : string.Join(Environment.NewLine, status.Messages.Take(4));
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

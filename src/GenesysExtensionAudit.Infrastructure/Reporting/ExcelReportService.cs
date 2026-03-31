@@ -1,6 +1,7 @@
 using ClosedXML.Excel;
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Domain.Services;
+using GenesysExtensionAudit.Infrastructure.BestPractices;
 
 namespace GenesysExtensionAudit.Infrastructure.Reporting;
 
@@ -32,6 +33,7 @@ public sealed class ExcelWorkbookScopeOptions
     public bool IncludeHotSpot { get; init; } = true;
     public bool IncludeFindingLifecycle { get; init; } = true;
     public bool IncludeHistoricalDrift { get; init; } = true;
+    public bool IncludeBestPracticeGuidance { get; init; } = true;
 }
 
 /// <summary>
@@ -190,6 +192,9 @@ public sealed class ExcelReportService : IExcelReportService
         if (scopeOptions.IncludeHistoricalDrift && report.HistoricalDriftWasComputed)
             WriteHistoricalDriftSheet(wb, report);
 
+        if (scopeOptions.IncludeBestPracticeGuidance && report.BestPracticeGuidanceWasComputed)
+            WriteBestPracticeGuidanceSheet(wb, report);
+
         using var ms = new MemoryStream();
         wb.SaveAs(ms);
         return Task.FromResult(ms.ToArray());
@@ -203,7 +208,7 @@ public sealed class ExcelReportService : IExcelReportService
 
         var auditRows = BuildSummaryAuditRows(report, carePacket).ToList();
         var totalFindings = auditRows
-            .Where(r => r.Performed && r.Sheet is not "Care_Case_Summary" and not "Relationship_Explainability")
+            .Where(r => r.Performed && r.Sheet is not "Care_Case_Summary" and not "Relationship_Explainability" and not "Best_Practice_Guidance")
             .Sum(r => r.Count);
         var duration = report.RunCompletedAtUtc > report.RunStartedAtUtc
             ? report.RunCompletedAtUtc - report.RunStartedAtUtc
@@ -441,6 +446,7 @@ public sealed class ExcelReportService : IExcelReportService
             new("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
             new("Finding_Lifecycle", "Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
             new("Historical_Drift", "Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count, "High", "Material telephony, routing, and topology relationship changes compared to the previous saved snapshot"),
+            new("Best_Practice_Guidance", "Best Practice Guidance", report.BestPracticeGuidanceWasComputed, report.BestPracticeGuidanceFindings.Count, "Info", "Mapped policy guidance, remediation, ownership, and glossary context derived from the shared best-practices catalog"),
         };
 
         if (carePacket is not null)
@@ -1805,6 +1811,48 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 10);
+    }
+
+    private static void WriteBestPracticeGuidanceSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Best_Practice_Guidance");
+        var findings = report.BestPracticeGuidanceFindings;
+
+        string[] headers =
+        [
+            "Source Domain", "Source Finding Type", "Object Type", "Object Name", "Object ID",
+            "Severity", "Best Practice Keys", "Best Practice Titles", "Control Family", "Pillar",
+            "Why It Matters", "Recommended Action", "Owner", "Evidence Examples", "Glossary Terms"
+        ];
+        WriteSheetHeader(ws, "Best Practice Guidance", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var finding in findings)
+        {
+            ws.Cell(row, 1).Value = finding.SourceDomain;
+            ws.Cell(row, 2).Value = finding.SourceFindingType;
+            ws.Cell(row, 3).Value = finding.SourceObjectType;
+            ws.Cell(row, 4).Value = finding.SourceObjectName;
+            ws.Cell(row, 5).Value = finding.SourceObjectId;
+            ws.Cell(row, 6).Value = finding.EffectiveSeverity;
+            ws.Cell(row, 7).Value = finding.BestPracticeKeysDisplay;
+            ws.Cell(row, 8).Value = finding.BestPracticeTitlesDisplay;
+            ws.Cell(row, 9).Value = finding.ControlFamily;
+            ws.Cell(row, 10).Value = finding.Pillar;
+            ws.Cell(row, 11).Value = finding.WhyItMatters;
+            ws.Cell(row, 12).Value = string.IsNullOrWhiteSpace(finding.RecommendedActionDetailed)
+                ? finding.RecommendedActionShort
+                : finding.RecommendedActionDetailed;
+            ws.Cell(row, 13).Value = finding.OwnerDisplay;
+            ws.Cell(row, 14).Value = finding.EvidenceExamplesDisplay;
+            ws.Cell(row, 15).Value = finding.GlossaryTermsDisplay;
+
+            ApplySeverityFill(ws.Cell(row, 6), finding.EffectiveSeverity);
+            ApplyAltRow(ws, row, 15);
+            row++;
+        }
+
+        AdjustColumns(ws, 15, minWidth: 12, maxWidth: 60);
     }
 
     // ─── Finding Lifecycle (Phase 4.1) ──────────────────────────────────────

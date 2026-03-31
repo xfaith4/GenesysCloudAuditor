@@ -1,5 +1,6 @@
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Domain.Services;
+using GenesysExtensionAudit.Infrastructure.BestPractices;
 
 namespace GenesysExtensionAudit.Infrastructure.Reporting;
 
@@ -725,4 +726,9 @@ public sealed class AuditReportData
     public IReadOnlyList<AuditRelationshipSnapshot> RelationshipSnapshots { get; init; } = [];
     public bool HistoricalDriftWasComputed { get; set; }
     public IReadOnlyList<HistoricalDriftFinding> HistoricalDriftFindings { get; set; } = [];
+
+    // Phase 2.4 — Best-practice policy guidance
+    public bool BestPracticeGuidanceWasComputed { get; set; }
+    public IReadOnlyList<BestPracticeGuidanceFinding> BestPracticeGuidanceFindings { get; set; } = [];
+    public IReadOnlyList<string> UnmappedBestPracticeFindingTypes { get; set; } = [];
 }

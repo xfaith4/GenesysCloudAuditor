@@ -333,6 +333,45 @@
                 </DataGrid>
             </GroupBox>
 
+            <GroupBox Header="Best Practice Guidance"
+                      Padding="12"
+                      Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="{Binding BestPracticesStatusSummary}"
+                               FontWeight="SemiBold"
+                               Foreground="#1F2937"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding BestPracticesStatusDetails}"
+                               Foreground="#6B7280"
+                               FontSize="11"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8" />
+                    <TextBlock Text="{Binding UnmappedBestPracticeFindingTypesSummary}"
+                               Foreground="#92400E"
+                               FontSize="11"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8"
+                               Visibility="{Binding HasUnmappedBestPracticeFindingTypes, Converter={StaticResource BoolToVisibility}}" />
+                    <DataGrid ItemsSource="{Binding BestPracticeGuidance}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              RowHeaderWidth="0"
+                              Visibility="{Binding HasBestPracticeGuidance, Converter={StaticResource BoolToVisibility}}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Domain" Binding="{Binding SourceDomain}" Width="*" />
+                            <DataGridTextColumn Header="Object" Binding="{Binding SourceObjectName}" Width="*" />
+                            <DataGridTextColumn Header="Best Practice" Binding="{Binding BestPracticeTitlesDisplay}" Width="2*" />
+                            <DataGridTextColumn Header="Why It Matters" Binding="{Binding WhyItMatters}" Width="2*" />
+                            <DataGridTextColumn Header="Recommended Action" Binding="{Binding RecommendedActionShort}" Width="2*" />
+                            <DataGridTextColumn Header="Owner" Binding="{Binding OwnerDisplay}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </GroupBox>
+
             <!-- ─── Error ─── -->
             <Border Background="#FEF2F2"
                     BorderBrush="#FCA5A5"

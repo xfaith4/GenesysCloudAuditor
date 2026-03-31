@@ -11,6 +11,7 @@ This folder contains architecture, operations, quality, and release documentatio
 | Operations | [Setup and Operations Guide](setup-and-operations.md) |
 | Operations | [Run Audit Workflow](run-audit-workflow.md) |
 | Domain logic | [Data Model and Audit Algorithms](data-model-and-audit-algorithms.md) |
+| Domain logic | [Best Practices Integration](best-practices-integration.md) |
 | Domain logic | [Extension Normalization Policy](extension-normalization-policy.md) |
 | Requirements | [Inactive/Pagination/Normalization Requirements](requirements-inactive-pagination-normalization.md) |
 | QA | [Detailed QA Matrix](detailed-qa-matrix.md) |

@@ -1,6 +1,7 @@
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Domain.Paging;
 using GenesysExtensionAudit.Domain.Services;
+using GenesysExtensionAudit.Infrastructure.BestPractices;
 using GenesysExtensionAudit.Infrastructure.Application;
 using GenesysExtensionAudit.Infrastructure.Configuration;
 using GenesysExtensionAudit.Infrastructure.Domain.Services;
@@ -61,6 +62,7 @@ public static class Bootstrapper
                 services.Configure<ScheduledAuditOptions>(ctx.Configuration.GetSection("Scheduling"));
                 services.Configure<GitHubOptions>(ctx.Configuration.GetSection("GitHub"));
                 services.Configure<ElasticExportOptions>(ctx.Configuration.GetSection("ElasticExport"));
+                services.Configure<BestPracticesOptions>(ctx.Configuration.GetSection("BestPractices"));
 
                 // User settings persistence
                 services.AddSingleton<IUserSettingsService, UserSettingsService>();
@@ -174,6 +176,10 @@ public static class Bootstrapper
                 services.AddSingleton<IExcelReportService, ExcelReportService>();
                 services.AddSingleton<ICareEvidenceExportService, CareEvidenceExportService>();
                 services.AddSingleton<ICareEvidenceArtifactService, CareEvidenceArtifactService>();
+                services.AddSingleton<IBestPracticesContentService, BestPracticesContentService>();
+                services.AddSingleton<IBestPracticeRepository, BestPracticeRepository>();
+                services.AddSingleton<IGlossaryRepository, GlossaryRepository>();
+                services.AddSingleton<IFindingBestPracticeEnricher, FindingBestPracticeEnricher>();
                 services.AddHttpClient<IElasticAuditExportService, ElasticAuditExportService>();
                 services.AddSingleton<IAuditSnapshotService, AuditSnapshotService>();
                 services.AddHttpClient<IGitHubUploadService, GitHubUploadService>();
@@ -201,6 +207,7 @@ public static class Bootstrapper
 
         Logging.ConfigureSerilog(hostBuilder);
         _host = hostBuilder.Build();
+        _host.Services.GetRequiredService<IBestPracticesContentService>().EnsureLoaded();
 
         var navigation = _host.Services.GetRequiredService<INavigationService>();
         navigation.Register(

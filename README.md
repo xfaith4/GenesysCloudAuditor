@@ -42,6 +42,18 @@ Genesys Cloud Auditor is built to answer five practical questions:
 
 The current application already provides a strong audit foundation.
 
+### Best-practice policy layer
+
+The auditor now consumes the shared `shared/Genesys.BestPractices` package as a first-class policy/reference layer.
+
+- catalog, mapping, and glossary content are loaded and validated at startup
+- findings can be mapped to stable best-practice keys and remediation guidance
+- the workbook includes a `Best_Practice_Guidance` sheet for mapped findings
+- the Run Audit UI surfaces content health plus a compact guidance panel
+- missing or invalid policy files degrade safely and log diagnostics instead of breaking the audit run
+
+See [docs/best-practices-integration.md](docs/best-practices-integration.md) for runtime assumptions, update guidance, and analyzer mapping rules.
+
 ### Implemented audit checks
 
 | Check                                    | Sheet                    | Severity |
@@ -169,5 +181,6 @@ For setup, configuration, local execution, and runner usage, see:
 - [QuickStart.md](QuickStart.md)
 - [ROADMAP.md](ROADMAP.md)
 - [docs/](docs/)
+- [docs/best-practices-integration.md](docs/best-practices-integration.md)
 - [QA.md](QA.md)
 
