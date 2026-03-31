@@ -56,17 +56,32 @@ The current application already provides a strong audit foundation.
 | Stale token users                        | `Stale_Tokens`           | Warning  |
 | Users missing location                   | `Users_No_Location`      | Warning  |
 | DID mismatches                           | `DID_Mismatches`         | Warning  |
+| Stale license usage                      | `Stale_Licenses`         | Warning  |
+| License over-provisioning                | `License_Over_Provisioning` | Warning |
+| Role / group overlap                     | `Role_Group_Overlap`     | Warning  |
+| User telephony integrity                 | `User_Telephony_Integrity` | High   |
+| Queue serviceability                     | `Queue_Serviceability`   | High     |
+| IVR flow dependency                      | `IVR_Flow_Bindings`      | Critical |
+| Site / edge / trunk topology integrity   | `Site_Topology`          | Critical |
+| Prompt hygiene                           | `Prompt_Hygiene`         | Warning  |
+| Change adjacency correlation             | `Change_Adjacency`       | Info     |
+| Flapping / instability detection         | `Flapping_Detection`     | Info     |
+| Cross-domain hot spot ranking            | `Hot_Spots`              | Info     |
+| Genesys Care escalation summary          | `Care_Case_Summary`      | Triage   |
 | Audit log export                         | `Audit_Logs`             | Info     |
 | Operational event export                 | `Operational_Events`     | Info     |
 | Outbound event export                    | `Outbound_Events`        | Info     |
+| Care evidence JSON packet                | `.care-evidence.json`    | Triage   |
 
 ### Current delivery model
 
 - Windows desktop application for interactive auditing
 - Headless runner for scheduled execution
 - Multi-sheet Excel workbook export
+- Parallel machine-readable Care evidence JSON export
 - Optional scheduled task integration
 - Optional SharePoint upload in runner mode
+- Optional GitHub upload in runner mode
 
 ---
 
@@ -104,8 +119,8 @@ Key roadmap themes include:
 - edge / site / trunk topology integrity checks
 - change-to-symptom timeline correlation
 - flapping / instability detection
+- support-readiness scoring and Genesys Care evidence export
 - historical drift analysis
-- support case evidence packet generation
 
 See [ROADMAP.md](ROADMAP.md) for the full feature plan.
 

@@ -33,6 +33,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
     private readonly IAuditOrchestrator _orchestrator;
     private readonly IExcelReportService _excelService;
+    private readonly IAuditSnapshotService _snapshotService;
     private readonly IAuditLogCatalogCache _auditLogCatalogCache;
     private readonly IGitHubUploadService _gitHubUploadService;
     private readonly IOptionsMonitor<GitHubOptions> _gitHubOptions;
@@ -80,12 +81,14 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     public RunAuditViewModel(
         IAuditOrchestrator orchestrator,
         IExcelReportService excelService,
+        IAuditSnapshotService snapshotService,
         IAuditLogCatalogCache auditLogCatalogCache,
         IGitHubUploadService gitHubUploadService,
         IOptionsMonitor<GitHubOptions> gitHubOptions)
     {
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
+        _snapshotService = snapshotService ?? throw new ArgumentNullException(nameof(snapshotService));
         _auditLogCatalogCache = auditLogCatalogCache ?? throw new ArgumentNullException(nameof(auditLogCatalogCache));
         _gitHubUploadService = gitHubUploadService ?? throw new ArgumentNullException(nameof(gitHubUploadService));
         _gitHubOptions = gitHubOptions ?? throw new ArgumentNullException(nameof(gitHubOptions));
@@ -708,6 +711,16 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
         Directory.CreateDirectory(outputDirectory);
 
+        const string snapshotPrefix = "GenesysCloudAudit";
+        var previousSnapshot = await _snapshotService
+            .LoadLatestAsync(outputDirectory, snapshotPrefix, ct)
+            .ConfigureAwait(true);
+        var snapshotComparison = _snapshotService.Compare(report, previousSnapshot.Snapshot);
+        report.FindingLifecycleFindings = snapshotComparison.LifecycleFindings;
+        report.FindingLifecycleWasComputed = true;
+        report.PreviousSnapshotGeneratedAtUtc = previousSnapshot.Snapshot?.GeneratedUtc;
+        report.PreviousSnapshotPath = previousSnapshot.Path;
+
         var datePrefix = DateTime.Now.ToString("yyyy-MM-dd");
         if (string.Equals(SelectedWorkbookExportMode, SeparateExportMode, StringComparison.Ordinal))
         {
@@ -731,6 +744,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             StatusMessage = $"Saved {generatedFiles.Count} report(s) to {outputDirectory}";
 
             await TryPushToGitHubAsync(generatedPayloads, ct).ConfigureAwait(true);
+            await _snapshotService
+                .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDirectory, snapshotPrefix, ct)
+                .ConfigureAwait(true);
             return;
         }
 
@@ -744,6 +760,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         StatusMessage = $"Saved: {Path.GetFileName(consolidatedPath)}";
 
         await TryPushToGitHubAsync([(Path.GetFileName(consolidatedPath), consolidatedXlsx)], ct).ConfigureAwait(true);
+        await _snapshotService
+            .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDirectory, snapshotPrefix, ct)
+            .ConfigureAwait(true);
     }
 
     private string? SelectOutputDirectory()
@@ -782,7 +801,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("Extensions", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeExtensions = true
+                IncludeExtensions = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -791,7 +811,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("Groups", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeGroups = true
+                IncludeGroups = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -800,7 +821,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("Queues", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeQueues = true
+                IncludeQueues = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -809,7 +831,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("Flows", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeFlows = true
+                IncludeFlows = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -818,7 +841,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("InactiveUsers", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeInactiveUsers = true
+                IncludeInactiveUsers = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -827,7 +851,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("DIDs", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeDids = true
+                IncludeDids = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -836,7 +861,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("AuditLogs", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeAuditLogs = true
+                IncludeAuditLogs = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -845,7 +871,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("OperationalEvents", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeOperationalEvents = true
+                IncludeOperationalEvents = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -854,7 +881,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("OutboundEvents", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeOutboundEvents = true
+                IncludeOutboundEvents = true,
+                IncludeFindingLifecycle = false
             }));
         }
 
@@ -913,7 +941,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             ("DIDs", report.Options.RunDidAudit, report.DidFindings.Count),
             ("Audit Logs", report.Options.RunAuditLogs, report.AuditLogFindings.Count),
             ("Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count),
-            ("OutboundEvents", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count)
+            ("OutboundEvents", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count),
+            ("Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count)
         };
 
         foreach (var item in runFlags)

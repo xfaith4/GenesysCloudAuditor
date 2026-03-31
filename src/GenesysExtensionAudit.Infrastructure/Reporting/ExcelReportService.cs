@@ -29,6 +29,7 @@ public sealed class ExcelWorkbookScopeOptions
     public bool IncludeChangeAdjacency { get; init; } = true;
     public bool IncludeFlappingDetection { get; init; } = true;
     public bool IncludeHotSpot { get; init; } = true;
+    public bool IncludeFindingLifecycle { get; init; } = true;
 }
 
 /// <summary>
@@ -131,6 +132,9 @@ public sealed class ExcelReportService : IExcelReportService
         if (scopeOptions.IncludeHotSpot)
             WriteHotSpotSheet(wb, report);
 
+        if (scopeOptions.IncludeFindingLifecycle && report.FindingLifecycleWasComputed)
+            WriteFindingLifecycleSheet(wb, report);
+
         using var ms = new MemoryStream();
         wb.SaveAs(ms);
         return Task.FromResult(ms.ToArray());
@@ -167,6 +171,7 @@ public sealed class ExcelReportService : IExcelReportService
             ("Role_Group_Overlap", "Role & Group Overlap", report.Options.RunRoleGroupOverlapAudit, report.RoleGroupOverlapFindings.Count, "Warning", "Direct role assignments that are already covered by a group-inherited role in the same division"),
             ("Site_Topology", "Site–Edge–Trunk Topology", report.Options.RunSiteTopologyAudit, report.SiteTopologyFindings.Count, "Critical", "Sites with no active edges, offline edges, orphaned edge–site bindings, or trunks that are down/out-of-service"),
             ("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
+            ("Finding_Lifecycle", "Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
         };
 
         var totalFindings = rows.Where(r => r.Item3).Sum(r => r.Item4);
@@ -651,7 +656,7 @@ public sealed class ExcelReportService : IExcelReportService
         titleCell.Style.Font.FontSize = 14;
         titleCell.Style.Font.FontColor = XLColor.White;
         titleCell.Style.Fill.BackgroundColor = CareTitleBg;
-        ws.Range(1, 1, 1, 12).Merge();
+        ws.Range(1, 1, 1, 20).Merge();
 
         // ── Subtitle (summary stats + timestamp) ──────────────────────────────
         ws.Row(2).Height = 15;
@@ -659,20 +664,22 @@ public sealed class ExcelReportService : IExcelReportService
             $"Generated: {report.GeneratedAt:yyyy-MM-dd HH:mm} UTC  |  " +
             $"Region: {report.OrgRegion}  |  " +
             $"Escalation Candidates: {packet.Summary.EscalationCandidateCount}  |  " +
+            $"Ready: {packet.Summary.ReadyForCareCount}  Needs Review: {packet.Summary.NeedsReviewCount}  Monitor: {packet.Summary.MonitorCount}  |  " +
             $"Total Findings This Run: {packet.Summary.TotalFindingsInRun}  |  " +
             $"Critical: {packet.Summary.CriticalCount}  High: {packet.Summary.HighCount}  Medium: {packet.Summary.MediumCount}";
         ws.Cell(2, 1).Style.Font.Italic = true;
         ws.Cell(2, 1).Style.Font.FontSize = 10;
-        ws.Range(2, 1, 2, 12).Merge();
+        ws.Range(2, 1, 2, 20).Merge();
 
         // ── Column headers ────────────────────────────────────────────────────
         ws.Row(3).Height = 18;
         string[] headers =
         [
-            "Domain", "Finding Code", "Severity", "Affected Object",
-            "Affected Object ID", "Related Objects", "API Surfaces",
-            "Evidence Summary", "Suggested Case Text", "Recommended Action",
-            "Workbook Sheet", "Category"
+            "Domain", "Finding Code", "Severity", "Support Readiness",
+            "Readiness Score", "Confidence", "Blast Radius", "Suspected Owner",
+            "Probable Cause", "Affected Object", "Affected Object ID", "Related Objects",
+            "API Surfaces", "Recent Change Context", "Qualification Notes", "Evidence Summary",
+            "Suggested Case Text", "Recommended Action", "Workbook Sheet", "Category"
         ];
 
         for (int c = 1; c <= headers.Length; c++)
@@ -695,6 +702,12 @@ public sealed class ExcelReportService : IExcelReportService
             ws.Cell(row, 1).Value = c.Domain;
             ws.Cell(row, 2).Value = c.FindingCode;
             ws.Cell(row, 3).Value = c.Severity;
+            ws.Cell(row, 4).Value = c.SupportReadiness;
+            ws.Cell(row, 5).Value = c.SupportReadinessScore;
+            ws.Cell(row, 6).Value = c.Confidence;
+            ws.Cell(row, 7).Value = c.BlastRadius;
+            ws.Cell(row, 8).Value = c.SuspectedOwner;
+            ws.Cell(row, 9).Value = c.ProbableCauseCategory;
 
             // Severity cell colour
             ws.Cell(row, 3).Style.Fill.BackgroundColor = c.Severity switch
@@ -704,22 +717,31 @@ public sealed class ExcelReportService : IExcelReportService
                 _ => XLColor.NoColor
             };
 
-            ws.Cell(row, 4).Value = c.AffectedObjectName ?? c.AffectedObjectId;
-            ws.Cell(row, 5).Value = c.AffectedObjectId;
-            ws.Cell(row, 6).Value = c.RelatedObjectNames.Count > 0
+            ws.Cell(row, 4).Style.Fill.BackgroundColor = c.SupportReadiness switch
+            {
+                "Ready" => SeverityCritical,
+                "NeedsReview" => SeverityWarning,
+                _ => SeverityInfo
+            };
+
+            ws.Cell(row, 10).Value = c.AffectedObjectName ?? c.AffectedObjectId;
+            ws.Cell(row, 11).Value = c.AffectedObjectId;
+            ws.Cell(row, 12).Value = c.RelatedObjectNames.Count > 0
                 ? string.Join(", ", c.RelatedObjectNames)
                 : string.Join(", ", c.RelatedObjectIds);
-            ws.Cell(row, 7).Value = string.Join("; ", c.ApiSurfaces);
-            ws.Cell(row, 8).Value = c.EvidenceSummary;
-            ws.Cell(row, 9).Value = c.SuggestedCaseText;
-            ws.Cell(row, 10).Value = c.RecommendedAction;
-            ws.Cell(row, 11).Value = c.WorkbookSheet;
-            ws.Cell(row, 12).Value = c.Category;
+            ws.Cell(row, 13).Value = string.Join("; ", c.ApiSurfaces);
+            ws.Cell(row, 14).Value = c.RecentChangeContext;
+            ws.Cell(row, 15).Value = string.Join(" | ", c.QualificationNotes);
+            ws.Cell(row, 16).Value = c.EvidenceSummary;
+            ws.Cell(row, 17).Value = c.SuggestedCaseText;
+            ws.Cell(row, 18).Value = c.RecommendedAction;
+            ws.Cell(row, 19).Value = c.WorkbookSheet;
+            ws.Cell(row, 20).Value = c.Category;
 
             // Alternate row background using Care palette
             if (row % 2 == 0)
             {
-                ws.Range(row, 1, row, 12)
+                ws.Range(row, 1, row, 20)
                   .Cells()
                   .Where(cell => cell.Style.Fill.BackgroundColor == XLColor.NoColor)
                   .ToList()
@@ -730,21 +752,29 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         // ── Column widths ─────────────────────────────────────────────────────
-        ws.Column(1).Width = 28;        // Domain
-        ws.Column(2).Width = 26;        // Finding Code
-        ws.Column(3).Width = 12;        // Severity
-        ws.Column(4).Width = 32;        // Affected Object
-        ws.Column(5).Width = 38;        // Affected Object ID (GUIDs)
-        ws.Column(6).Width = 32;        // Related Objects
-        ws.Column(7).Width = 60;        // API Surfaces
-        ws.Column(8).Width = 65;        // Evidence Summary
-        ws.Column(9).Width = 80;        // Suggested Case Text
-        ws.Column(10).Width = 65;       // Recommended Action
-        ws.Column(11).Width = 28;       // Workbook Sheet
-        ws.Column(12).Width = 28;       // Category
+        ws.Column(1).Width = 24;
+        ws.Column(2).Width = 24;
+        ws.Column(3).Width = 12;
+        ws.Column(4).Width = 18;
+        ws.Column(5).Width = 14;
+        ws.Column(6).Width = 12;
+        ws.Column(7).Width = 34;
+        ws.Column(8).Width = 24;
+        ws.Column(9).Width = 28;
+        ws.Column(10).Width = 28;
+        ws.Column(11).Width = 38;
+        ws.Column(12).Width = 30;
+        ws.Column(13).Width = 54;
+        ws.Column(14).Width = 48;
+        ws.Column(15).Width = 56;
+        ws.Column(16).Width = 60;
+        ws.Column(17).Width = 78;
+        ws.Column(18).Width = 60;
+        ws.Column(19).Width = 24;
+        ws.Column(20).Width = 24;
 
         // Wrap long text columns
-        foreach (int col in new[] { 8, 9, 10 })
+        foreach (int col in new[] { 7, 9, 13, 14, 15, 16, 17, 18 })
             ws.Column(col).Style.Alignment.WrapText = true;
 
         ws.Row(3).Style.Alignment.WrapText = false;
@@ -1239,6 +1269,59 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 10);
+    }
+
+    // ─── Finding Lifecycle (Phase 4.1) ──────────────────────────────────────
+
+    private static void WriteFindingLifecycleSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Finding_Lifecycle");
+        var findings = report.FindingLifecycleFindings;
+
+        string[] headers =
+        [
+            "Lifecycle Status", "Domain", "Finding Type", "Object Name", "Object ID",
+            "First Seen (UTC)", "Last Seen (UTC)", "Observation Count", "Severity", "Issue", "Finding Key"
+        ];
+        WriteSheetHeader(ws, "Finding Lifecycle — Comparison Against Previous Snapshot", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.LifecycleStatus;
+            ws.Cell(row, 2).Value = f.Domain;
+            ws.Cell(row, 3).Value = f.FindingType;
+            ws.Cell(row, 4).Value = f.ObjectName;
+            ws.Cell(row, 5).Value = f.ObjectId;
+            ws.Cell(row, 6).Value = f.FirstSeenUtc.UtcDateTime.ToString("u");
+            ws.Cell(row, 7).Value = f.LastSeenUtc.UtcDateTime.ToString("u");
+            ws.Cell(row, 8).Value = f.ObservationCount;
+            ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 9).Value = f.Severity.ToString();
+            ws.Cell(row, 10).Value = f.Issue;
+            ws.Cell(row, 11).Value = f.FindingKey;
+
+            ws.Cell(row, 1).Style.Fill.BackgroundColor = f.LifecycleStatus switch
+            {
+                FindingLifecycleStatus.New => SeverityWarning,
+                FindingLifecycleStatus.Recurrent => SeverityCritical,
+                FindingLifecycleStatus.Resolved => SeverityInfo,
+                _ => XLColor.NoColor
+            };
+
+            var severityCell = ws.Cell(row, 9);
+            if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
+                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
+            else if (f.Severity == FindingSeverity.Medium)
+                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
+            else
+                severityCell.Style.Fill.BackgroundColor = SeverityInfo;
+
+            ApplyAltRow(ws, row, 11);
+            row++;
+        }
+
+        AdjustColumns(ws, 11);
     }
 
     private static IXLWorksheet WriteSheetHeader(

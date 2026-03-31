@@ -50,6 +50,15 @@ public sealed class CareEvidenceSummary
 
     [JsonPropertyName("escalationCandidateCount")]
     public int EscalationCandidateCount { get; init; }
+
+    [JsonPropertyName("readyForCareCount")]
+    public int ReadyForCareCount { get; init; }
+
+    [JsonPropertyName("needsReviewCount")]
+    public int NeedsReviewCount { get; init; }
+
+    [JsonPropertyName("monitorCount")]
+    public int MonitorCount { get; init; }
 }
 
 /// <summary>
@@ -73,6 +82,24 @@ public sealed class CareEscalationCandidate
     [JsonPropertyName("category")]
     public string Category { get; init; } = string.Empty;
 
+    [JsonPropertyName("confidence")]
+    public string Confidence { get; init; } = string.Empty;
+
+    [JsonPropertyName("suspectedOwner")]
+    public string SuspectedOwner { get; init; } = string.Empty;
+
+    [JsonPropertyName("probableCauseCategory")]
+    public string ProbableCauseCategory { get; init; } = string.Empty;
+
+    [JsonPropertyName("blastRadius")]
+    public string BlastRadius { get; init; } = string.Empty;
+
+    [JsonPropertyName("supportReadiness")]
+    public string SupportReadiness { get; init; } = string.Empty;
+
+    [JsonPropertyName("supportReadinessScore")]
+    public int SupportReadinessScore { get; init; }
+
     [JsonPropertyName("affectedObjectId")]
     public string? AffectedObjectId { get; init; }
 
@@ -92,6 +119,12 @@ public sealed class CareEscalationCandidate
     /// <summary>Which Genesys Cloud API endpoints were involved in detecting this finding.</summary>
     [JsonPropertyName("apiSurfaces")]
     public IReadOnlyList<string> ApiSurfaces { get; init; } = [];
+
+    [JsonPropertyName("recentChangeContext")]
+    public string? RecentChangeContext { get; init; }
+
+    [JsonPropertyName("qualificationNotes")]
+    public IReadOnlyList<string> QualificationNotes { get; init; } = [];
 
     /// <summary>Human-readable summary of the contradictory or invalid state observed.</summary>
     [JsonPropertyName("evidenceSummary")]

@@ -171,6 +171,18 @@ public static class ChangeAdjacencyCode
     public const string RepeatedChanges = "REPEATED_CHANGES";
 }
 
+// ─── Phase 4.1 — Finding lifecycle classification ───────────────────────────
+
+/// <summary>
+/// Lifecycle states assigned when comparing the current run to the previous saved snapshot.
+/// </summary>
+public static class FindingLifecycleStatus
+{
+    public const string New = "New";
+    public const string Recurrent = "Recurrent";
+    public const string Resolved = "Resolved";
+}
+
 // ─── Findings ───────────────────────────────────────────────────────────────
 
 public sealed record GroupFinding(
@@ -526,6 +538,23 @@ public sealed record QueueServiceabilityFinding(
     FindingCategory Category,
     string RecommendedAction);
 
+/// <summary>
+/// A lifecycle view over finding summaries when comparing the current run to the previously saved snapshot.
+/// </summary>
+public sealed record FindingLifecycleFinding(
+    /// <summary>One of the <see cref="FindingLifecycleStatus"/> constants.</summary>
+    string LifecycleStatus,
+    string Domain,
+    string FindingType,
+    string FindingKey,
+    string? ObjectId,
+    string? ObjectName,
+    string Issue,
+    FindingSeverity Severity,
+    DateTimeOffset FirstSeenUtc,
+    DateTimeOffset LastSeenUtc,
+    int ObservationCount);
+
 // ─── Combined report ─────────────────────────────────────────────────────────
 
 /// <summary>
@@ -581,4 +610,10 @@ public sealed class AuditReportData
 
     // Phase 2.3 — Hot spot ranking (objects appearing in multiple audit domains)
     public IReadOnlyList<HotSpotFinding> HotSpotFindings { get; init; } = [];
+
+    // Phase 4.1 — Historical baseline comparison
+    public bool FindingLifecycleWasComputed { get; set; }
+    public DateTimeOffset? PreviousSnapshotGeneratedAtUtc { get; set; }
+    public string? PreviousSnapshotPath { get; set; }
+    public IReadOnlyList<FindingLifecycleFinding> FindingLifecycleFindings { get; set; } = [];
 }

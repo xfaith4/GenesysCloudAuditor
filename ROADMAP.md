@@ -10,7 +10,7 @@ The application’s purpose is to:
 - produce actionable remediation guidance for internal change management teams
 - generate evidence-rich escalation packets for **Genesys Care** when findings appear platform-side rather than customer-side
 
-This roadmap builds on the current implemented checks for extension integrity, DID mismatches, queue/group hygiene, stale flows, inactive-user signals, and exported audit/operational/outbound events.
+This roadmap builds on the current implemented checks for extension integrity, DID mismatches, queue/group hygiene, stale flows, inactive-user signals, user telephony integrity, queue serviceability, IVR flow dependency, site topology integrity, prompt hygiene, change adjacency, flapping detection, hot-spot ranking, and exported audit/operational/outbound/Care evidence outputs.
 
 ---
 
@@ -60,10 +60,24 @@ The current product already provides an effective foundation for the roadmap:
 | Stale flow checks                              | Implemented   |
 | Inactive / stale token user checks             | Implemented   |
 | Missing location checks                        | Implemented   |
+| Stale license usage audit                     | Implemented   |
+| License over-provisioning audit               | Implemented   |
+| Role / group overlap audit                    | Implemented   |
+| User telephony integrity audit                 | Implemented (partial Phase 1.2 scope) |
+| Queue serviceability audit                     | Implemented (partial Phase 1.3 scope) |
+| IVR flow dependency audit                      | Implemented (partial Phase 1.4 scope) |
+| Site / edge / trunk topology audit             | Implemented (partial Phase 1.5 scope) |
+| Architect prompt hygiene audit                 | Implemented   |
+| Change adjacency correlation                   | Implemented   |
+| Flapping / instability detection               | Implemented   |
+| Cross-domain hot spot ranking                  | Implemented   |
 | Audit log export                               | Implemented   |
 | Operational event export                       | Implemented   |
 | Outbound event export                          | Implemented   |
 | Excel workbook export                          | Implemented   |
+| Genesys Care workbook summary                  | Implemented   |
+| Genesys Care evidence JSON export              | Implemented   |
+| Support-readiness scoring                      | Implemented (single-run, correlation-based) |
 | Desktop and scheduled/headless execution model | Implemented   |
 
 ---
@@ -117,14 +131,16 @@ Correlate:
 
 ### Planned checks
 
-| Check                             | Priority | Description                                                                               |
-| --------------------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| User telephony completeness       | High     | User appears active and telephony-enabled but lacks a coherent station/extension/DID path |
-| DID ownership mismatch            | High     | A DID is associated to a user profile but assigned elsewhere in telephony                 |
-| Station–user assignment conflict  | High     | A station references a user, but user/profile/telephony state disagrees                   |
-| User–site telephony contradiction | Medium   | User location/site and telephony resource site do not align                               |
-| Ghost telephony assignment        | High     | Telephony asset references a deleted, inactive, or otherwise invalid user/resource        |
-| Multiple ownership contradiction  | High     | Same telephony asset appears attributable to more than one active identity                |
+| Check                             | Priority | Description                                                                               | Status |
+| --------------------------------- | -------- | ----------------------------------------------------------------------------------------- | ------ |
+| User telephony completeness       | High     | User appears active and telephony-enabled but lacks a coherent station/extension/DID path | **Implemented** |
+| DID ownership mismatch            | High     | A DID is associated to a user profile but assigned elsewhere in telephony                 | Partial |
+| Station–user assignment conflict  | High     | A station references a user, but user/profile/telephony state disagrees                   | **Implemented** |
+| User–site telephony contradiction | Medium   | User location/site and telephony resource site do not align                               | Planned |
+| Ghost telephony assignment        | High     | Telephony asset references a deleted, inactive, or otherwise invalid user/resource        | Planned |
+| Multiple ownership contradiction  | High     | Same telephony asset appears attributable to more than one active identity                | Planned |
+
+Currently implemented in `AuditOrchestrator`: profile extension with no station, station with no profile extension, and DID-to-profile ownership mismatch checks. Remaining Phase 1.2 work is the deeper site-aware and multi-owner correlation.
 
 ### Why this matters
 
@@ -147,13 +163,15 @@ Correlate:
 
 ### Planned checks
 
-| Check                                      | Priority | Description                                                                                   |
-| ------------------------------------------ | -------- | --------------------------------------------------------------------------------------------- |
-| Queue with non-serviceable membership      | High     | Queue has members on paper, but no realistically serviceable agents after filters are applied |
-| Queue skill mismatch                       | High     | Queue requires skills/languages that none of its members possess                              |
-| Queue membership drift                     | Medium   | Queue membership exists, but many members are inactive, unlicensed, or otherwise non-usable   |
-| Duplicate semantic queues                  | Medium   | Queues are near-duplicates by name, membership, and routing intent                            |
-| Queue with incomplete routing dependencies | High     | Queue is missing downstream config required to actually process interactions                  |
+| Check                                      | Priority | Description                                                                                   | Status |
+| ------------------------------------------ | -------- | --------------------------------------------------------------------------------------------- | ------ |
+| Queue with non-serviceable membership      | High     | Queue has members on paper, but no realistically serviceable agents after filters are applied | **Implemented** |
+| Queue skill mismatch                       | High     | Queue requires skills/languages that none of its members possess                              | Planned |
+| Queue membership drift                     | Medium   | Queue membership exists, but many members are inactive, unlicensed, or otherwise non-usable   | Partial |
+| Duplicate semantic queues                  | Medium   | Queues are near-duplicates by name, membership, and routing intent                            | Partial |
+| Queue with incomplete routing dependencies | High     | Queue is missing downstream config required to actually process interactions                  | Planned |
+
+The current implementation covers member-state viability with bounded queue-member sampling and explicit oversized-queue warnings. Remaining work is the deeper routing dependency and skill/language correlation layer.
 
 ### Why this matters
 
@@ -174,12 +192,14 @@ Correlate:
 
 ### Planned checks
 
-| Check                          | Priority | Description                                                                         |
-| ------------------------------ | -------- | ----------------------------------------------------------------------------------- |
-| IVR–flow binding stale         | High     | Number points to a flow that is deleted, stale, unpublished, or errored             |
-| Dead route dependency          | High     | Flow references queue/schedule/destination that no longer exists                    |
-| Flow dependency drift          | Medium   | Flow is published, but dependent objects have changed materially since last publish |
-| Critical entry-point fragility | Medium   | Important numbers depend on brittle or stale routing chains                         |
+| Check                          | Priority | Description                                                                         | Status |
+| ------------------------------ | -------- | ----------------------------------------------------------------------------------- | ------ |
+| IVR–flow binding stale         | High     | Number points to a flow that is deleted, stale, unpublished, or errored             | **Implemented** |
+| Dead route dependency          | High     | Flow references queue/schedule/destination that no longer exists                    | Planned |
+| Flow dependency drift          | Medium   | Flow is published, but dependent objects have changed materially since last publish | Planned |
+| Critical entry-point fragility | Medium   | Important numbers depend on brittle or stale routing chains                         | Planned |
+
+The current `IvrFlowBindingFinding` path covers missing open-hours bindings, missing schedule groups, deleted flows, draft flows, and stale published flows. Dependency traversal past the IVR/flow boundary remains future work.
 
 ### Why this matters
 
@@ -200,12 +220,14 @@ Correlate:
 
 ### Planned checks
 
-| Check                          | Priority | Description                                                                |
-| ------------------------------ | -------- | -------------------------------------------------------------------------- |
-| Trunk–edge assignment orphan   | Medium   | Edge references trunk/site state that no longer reconciles                 |
-| Site–edge mismatch             | High     | Site relationship differs across authoritative edge/site resources         |
-| Station topology contradiction | Medium   | Station/site/location relationships appear internally inconsistent         |
-| DID inventory orphan           | Medium   | DID ranges exist in inventory but do not reconcile to active service paths |
+| Check                          | Priority | Description                                                                | Status |
+| ------------------------------ | -------- | -------------------------------------------------------------------------- | ------ |
+| Trunk–edge assignment orphan   | Medium   | Edge references trunk/site state that no longer reconciles                 | **Implemented** |
+| Site–edge mismatch             | High     | Site relationship differs across authoritative edge/site resources         | **Implemented** |
+| Station topology contradiction | Medium   | Station/site/location relationships appear internally inconsistent         | Planned |
+| DID inventory orphan           | Medium   | DID ranges exist in inventory but do not reconcile to active service paths | Planned |
+
+The current `SiteTopologyAnalyzer` already detects orphaned edge-to-site bindings, offline edges, sites with no active edges, trunks hosted on offline edges, trunks out of service, and trunks reporting down/unknown state.
 
 ---
 
@@ -225,15 +247,19 @@ Correlate current findings with:
 
 ### Planned checks
 
-| Check                    | Priority | Description                                                                   |
-| ------------------------ | -------- | ----------------------------------------------------------------------------- |
-| Regression chain builder | High     | Build a timeline showing config changes followed by symptoms/findings         |
-| Change adjacency marker  | High     | Surface recent changes that touched related objects within the finding window |
-| Suspect release window   | Medium   | Group findings by likely onset window after correlated changes                |
+| Check                    | Priority | Description                                                                   | Status |
+| ------------------------ | -------- | ----------------------------------------------------------------------------- | ------ |
+| Regression chain builder | High     | Build a timeline showing config changes followed by symptoms/findings         | Planned |
+| Change adjacency marker  | High     | Surface recent changes that touched related objects within the finding window | **Implemented** |
+| Suspect release window   | Medium   | Group findings by likely onset window after correlated changes                | Planned |
 
 ### Example output
 
 “Queue membership changed at 14:03; routing anomalies began at 14:07; serviceability fell to zero by 14:11.”
+
+---
+
+`ChangeAdjacencyAnalyzer` is implemented and exported to the `Change_Adjacency` worksheet. It correlates audit-log changes to active findings by object ID/name within a configurable lookback window.
 
 ---
 
@@ -302,6 +328,8 @@ Every major finding should emit:
 | Monitor / Re-run         | Evidence is weak or transient; continue observation                              |
 | Escalate to Genesys Care | Evidence suggests probable platform-side issue or unresolved contradictory state |
 
+This model is now in active use across the newer correlation findings. `FindingSeverity` and `FindingCategory` are emitted for user telephony, queue serviceability, IVR flow dependency, site topology, prompt hygiene, change adjacency, flapping, and hot-spot outputs. `CareEvidencePacket` also carries confidence, blast radius, suspected owner, probable cause category, support readiness, and recommended action for escalation candidates.
+
 ---
 
 ## 3.2 Probable platform issue qualification
@@ -320,11 +348,13 @@ A finding is a candidate for support escalation when:
 
 ### Planned checks
 
-| Check                             | Priority | Description                                                                                        |
-| --------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
-| Persistent contradiction detector | High     | Contradictory API state persists across collections/runs                                           |
-| No-local-cause qualifier          | High     | Finding remains after excluding recent tenant changes as an explanation                            |
-| Support-readiness scorer          | High     | Finding contains sufficient object IDs, timestamps, evidence, and impact context for case creation |
+| Check                             | Priority | Description                                                                                        | Status |
+| --------------------------------- | -------- | -------------------------------------------------------------------------------------------------- | ------ |
+| Persistent contradiction detector | High     | Contradictory API state persists across collections/runs                                           | Planned |
+| No-local-cause qualifier          | High     | Finding remains after excluding recent tenant changes as an explanation                            | Partial |
+| Support-readiness scorer          | High     | Finding contains sufficient object IDs, timestamps, evidence, and impact context for case creation | **Implemented** |
+
+The current support-readiness scorer is single-run and correlation-based. It uses finding severity/category, object identity completeness, API-surface count, recent change adjacency, hot-spot presence, and flapping signals to classify each candidate as `Ready`, `NeedsReview`, or `Monitor`. Historical persistence across runs remains part of the future Phase 4 dependency.
 
 ---
 
@@ -348,11 +378,13 @@ Generate a structured escalation packet for support-worthy findings.
 
 ### Planned outputs
 
-| Output               | Priority | Description                                                  |
-| -------------------- | -------- | ------------------------------------------------------------ |
-| Support case summary | High     | Human-readable case narrative for Care ticket entry          |
-| Evidence JSON        | High     | Machine-readable evidence package for archival or automation |
-| Timeline appendix    | Medium   | Event and change history supporting the escalation           |
+| Output               | Priority | Description                                                  | Status |
+| -------------------- | -------- | ------------------------------------------------------------ | ------ |
+| Support case summary | High     | Human-readable case narrative for Care ticket entry          | **Implemented** |
+| Evidence JSON        | High     | Machine-readable evidence package for archival or automation | **Implemented** |
+| Timeline appendix    | Medium   | Event and change history supporting the escalation           | Partial |
+
+The runner now writes a `.care-evidence.json` artifact alongside the workbook, and the workbook includes a `Care_Case_Summary` sheet with support readiness, confidence, blast radius, suspected owner, probable cause, recent change context, and qualification notes. Current packet coverage includes IVR/flow dependency, user telephony integrity, queue serviceability, and site topology escalation candidates.
 
 ---
 
@@ -629,28 +661,28 @@ This enables:
 
 ## Near-term priority
 
-1. Correlation engine
-2. User–station–extension–DID–site integrity audit
-3. Queue serviceability audit
-4. Flow dependency audit
-5. Action model (owner + next step)
-6. Support case evidence packet export
+1. Finish the remaining unimplemented Phase 1 correlation checks
+2. Add persistent contradiction tracking across runs
+3. Implement snapshot persistence and historical diffing
+4. Expand flow and queue dependency traversal
+5. Add timeline appendix generation for Care packets
+6. Promote summary sheets into a true triage-first workbook layout
 
 ## Mid-term priority
 
-1. Snapshot persistence
-2. Drift engine
-3. Change-to-symptom correlation
-4. Flapping detection
-5. Topology integrity checks
+1. Drift engine
+2. Finding lifecycle classification
+3. Suspect release window / regression chain builder
+4. Domain health scoring
+5. Cross-sheet evidence linking
 
 ## Long-term priority
 
-1. Domain health scoring
-2. Rule-pack extensibility
-3. HTML evidence reports
-4. Advanced trend analytics
-5. Customer-tunable risk models
+1. Rule-pack extensibility
+2. HTML evidence reports
+3. Advanced trend analytics
+4. Customer-tunable risk models
+5. ElasticSearch export and downstream indexing
 
 ---
 

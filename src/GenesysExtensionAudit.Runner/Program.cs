@@ -181,6 +181,7 @@ static async Task<int> RunAsync(string[] args)
                 services.AddSingleton<IAuditOrchestrator, AuditOrchestrator>();
                 services.AddSingleton<IExcelReportService, ExcelReportService>();
                 services.AddSingleton<ICareEvidenceExportService, CareEvidenceExportService>();
+                services.AddSingleton<IAuditSnapshotService, AuditSnapshotService>();
                 services.AddSingleton<IFileUploadService, SharePointUploadService>();
                 services.AddHttpClient<IGitHubUploadService, GitHubUploadService>();
             })
@@ -190,6 +191,7 @@ static async Task<int> RunAsync(string[] args)
         var orchestrator = host.Services.GetRequiredService<IAuditOrchestrator>();
         var excelService = host.Services.GetRequiredService<IExcelReportService>();
         var careService = host.Services.GetRequiredService<ICareEvidenceExportService>();
+        var snapshotService = host.Services.GetRequiredService<IAuditSnapshotService>();
         var genesysOpts = host.Services.GetRequiredService<IOptions<GenesysRegionOptions>>().Value;
         var auditOpts = host.Services.GetRequiredService<IOptions<AuditOptions>>().Value;
         var exportOpts = host.Services.GetRequiredService<IOptions<ExportOptions>>().Value;
@@ -224,6 +226,26 @@ static async Task<int> RunAsync(string[] args)
 
         var report = await orchestrator.RunAsync(runOptions, progress, cts.Token);
 
+        // ── Phase 4.1: snapshot persistence + lifecycle classification ───────
+        var outputDir = Path.GetFullPath(exportOpts.OutputDirectory);
+        Directory.CreateDirectory(outputDir);
+
+        logger.LogInformation("Loading latest audit snapshot from {OutputDirectory}", outputDir);
+        var previousSnapshot = await snapshotService
+            .LoadLatestAsync(outputDir, exportOpts.FilePrefix, cts.Token)
+            .ConfigureAwait(false);
+        var snapshotComparison = snapshotService.Compare(report, previousSnapshot.Snapshot);
+        report.FindingLifecycleFindings = snapshotComparison.LifecycleFindings;
+        report.FindingLifecycleWasComputed = true;
+        report.PreviousSnapshotGeneratedAtUtc = previousSnapshot.Snapshot?.GeneratedUtc;
+        report.PreviousSnapshotPath = previousSnapshot.Path;
+
+        logger.LogInformation(
+            "Finding lifecycle classified. PreviousSnapshot={PreviousSnapshot} NewOrRecurrent={ActiveCount} LifecycleEntries={LifecycleCount}",
+            previousSnapshot.Path ?? "(none)",
+            snapshotComparison.Snapshot.FindingCount,
+            snapshotComparison.LifecycleFindings.Count);
+
         // ── Build care evidence packet ────────────────────────────────────────
         logger.LogInformation("Building Genesys Care evidence packet...");
         var carePacket = careService.BuildPacket(report);
@@ -238,9 +260,6 @@ static async Task<int> RunAsync(string[] args)
         var xlsx = await excelService.GenerateAsync(report, cts.Token, carePacket: carePacket);
 
         // ── Save locally ──────────────────────────────────────────────────────
-        var outputDir = Path.GetFullPath(exportOpts.OutputDirectory);
-        Directory.CreateDirectory(outputDir);
-
         var fileName = $"{exportOpts.FilePrefix}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
         var filePath = Path.Combine(outputDir, fileName);
 
@@ -259,6 +278,14 @@ static async Task<int> RunAsync(string[] args)
         logger.LogInformation(
             "Care evidence JSON saved: {FilePath} ({Candidates} escalation candidates)",
             careJsonPath, carePacket.Summary.EscalationCandidateCount);
+
+        // ── Write historical snapshot JSON ───────────────────────────────────
+        var snapshotPath = await snapshotService
+            .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDir, exportOpts.FilePrefix, cts.Token)
+            .ConfigureAwait(false);
+        logger.LogInformation(
+            "Audit snapshot JSON saved: {FilePath} ({Findings} active findings)",
+            snapshotPath, snapshotComparison.Snapshot.FindingCount);
 
         // ── Upload to SharePoint ──────────────────────────────────────────────
         if (dryRun)
