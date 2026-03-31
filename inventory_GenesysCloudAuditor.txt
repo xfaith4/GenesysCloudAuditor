@@ -1,0 +1,2506 @@
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                .claude
+d----          2026-03-03  1:21 AM                .github
+d----          2026-03-03  1:21 AM                .vscode
+d----          2026-03-12  3:45 AM                docs
+d----          2026-03-09 10:44 AM                scripts
+d----          2026-03-31  7:12 AM                shared
+d----          2026-03-08  1:56 PM                site
+d----          2026-03-03  1:21 AM                src
+d----          2026-03-03  1:21 AM                tests
+-a---          2026-03-03  1:21 AM            110 .gitignore
+-a---          2026-03-08  3:46 PM            163 build-app.log
+-a---          2026-03-08  3:45 PM           4789 build-infra.log
+-a---          2026-03-08  3:46 PM        1793062 diag-app.log
+-a---          2026-03-08  3:24 PM            965 Directory.Build.props
+-a---          2026-03-03  1:21 AM           7407 GenesysExtensionAudit_scaffold.sln
+-a---          2026-03-31  7:13 AM              0 inventory.txt
+-a---          2026-03-31  4:12 AM           2347 NOTES.md
+-a---          2026-03-18 12:34 PM           2846 QA.md
+-a---          2026-03-31  5:31 AM          12903 QuickStart.md
+-a---          2026-03-08  2:57 PM         140266 QuickStart.pdf
+-a---          2026-03-31  5:31 AM           7404 README.md
+-a---          2026-03-08  2:21 PM          75857 README.pdf
+-a---          2026-03-31  5:48 AM          42416 ROADMAP.md
+-a---          2026-03-08  2:10 PM         107518 ROADMAP.pdf
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\.claude
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM           1789 settings.local.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\.github
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-08  1:56 PM                workflows
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\.github\workflows
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-08  1:56 PM            816 pages.yml
+-a---          2026-03-03  1:21 AM           2548 release-zip.yml
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\.vscode
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  2:54 AM           1284 settings.json
+-a---          2026-03-03  1:21 AM            220 tasks.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\docs
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-08  1:56 PM                examples
+-a---          2026-03-08  1:49 PM           2075 application-architecture.md
+-a---          2026-03-08  1:56 PM           7340 architecture.md
+-a---          2026-03-08  1:56 PM           8395 audit-checks.md
+-a---          2026-03-08  3:48 PM           5914 authentication.md
+-a---          2026-03-08  1:49 PM           2237 data-model-and-audit-algorithms.md
+-a---          2026-03-08  1:56 PM           5181 deployment.md
+-a---          2026-03-08  1:49 PM           2753 detailed-qa-matrix.md
+-a---          2026-03-08  1:49 PM           2008 extension-collision-tests.md
+-a---          2026-03-08  1:49 PM           1942 extension-normalization-policy.md
+-a---          2026-03-08  1:49 PM           2104 oauth-and-api-resilience.md
+-a---          2026-03-12 12:54 PM           2555 PotentialEnhancements.md
+-a---          2026-03-08  1:56 PM           5238 qa-test-plan.md
+-a---          2026-03-08  1:49 PM           1319 README.md
+-a---          2026-03-08  1:49 PM           2721 release-packaging-and-signing.md
+-a---          2026-03-08  1:49 PM           2265 requirements-inactive-pagination-normalization.md
+-a---          2026-03-08  1:49 PM           2360 run-audit-workflow.md
+-a---          2026-03-08  1:49 PM           2861 setup-and-operations.md
+-a---          2026-03-08  1:49 PM           1670 solution-and-project-map.md
+-a---          2026-03-08  1:49 PM           1448 style-guide.md
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\docs\examples
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  4:12 AM           3877 did-mismatches.md
+-a---          2026-03-08  1:56 PM           2650 empty-groups.md
+-a---          2026-03-08  1:56 PM           3192 empty-queues.md
+-a---          2026-03-31  4:12 AM           3737 ext-assign-vs-profile.md
+-a---          2026-03-31  4:12 AM           3104 ext-duplicates-profile.md
+-a---          2026-03-31  4:12 AM           3998 ext-ownership-mismatch.md
+-a---          2026-03-31  4:12 AM           4103 inactive-users.md
+-a---          2026-03-31  4:12 AM           3865 invalid-extensions.md
+-a---          2026-03-08  1:56 PM           2425 README.md
+-a---          2026-03-08  1:56 PM           3235 stale-flows.md
+-a---          2026-03-08  1:56 PM           3406 summary.md
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\scripts
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  4:12 AM          19351 Invoke-ExtensionAudit.ps1
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\shared
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  7:09 AM                Genesys.BestPractices
+-a---          2026-03-31  7:12 AM           1492 inventory.txt
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\shared\Genesys.BestPractices
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  7:09 AM                best-practices
+-a---          2026-03-31  7:00 AM           1394 Glossary.md
+-a---          2026-03-31  7:00 AM           1228 README.md
+-a---          2026-03-31  7:00 AM           6080 Roadmap.md
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\shared\Genesys.BestPractices\best-practices
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  7:00 AM           7282 best-practices-map.json
+-a---          2026-03-31  7:00 AM           1213 best-practices-map.schema.json
+-a---          2026-03-31  7:00 AM          70911 best-practices.catalog.json
+-a---          2026-03-31  7:00 AM           5965 best-practices.schema.json
+-a---          2026-03-31  7:00 AM           3361 BestPractices.md
+-a---          2026-03-31  7:00 AM           1880 glossary.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\site
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-08  1:56 PM          27306 index.html
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                GenesysExtensionAudit.App
+d----          2026-03-03  1:21 AM                GenesysExtensionAudit.Core
+d----          2026-03-03  1:21 AM                GenesysExtensionAudit.Domain
+d----          2026-03-03  1:21 AM                GenesysExtensionAudit.Infrastructure
+d----          2026-03-18  1:01 PM                GenesysExtensionAudit.Runner
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:31 AM                bin
+d----          2026-03-08  3:18 PM                Converters
+d----          2026-03-03  1:21 AM                Navigation
+d----          2026-03-31  6:21 AM                obj
+d----          2026-03-08  1:56 PM                Scheduling
+d----          2026-03-18 12:06 PM                Services
+d----          2026-03-18 12:48 PM                ViewModels
+d----          2026-03-18 12:48 PM                Views
+-a---          2026-03-08  3:18 PM           1140 App.xaml
+-a---          2026-03-03 10:25 AM           1021 App.xaml.cs
+-a---          2026-03-31  4:56 AM           1788 appsettings.json
+-a---          2026-03-31  4:54 AM          11737 Bootstrapper.cs
+-a---          2026-03-08  3:14 PM           1442 GenesysExtensionAudit.App.csproj
+-a---          2026-03-03 12:21 PM           2992 MainWindow.xaml
+-a---          2026-03-03 12:21 PM            990 MainWindow.xaml.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\bin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  1:31 AM                Release
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\bin\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:31 AM                net8.0-windows
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\bin\Debug\net8.0-windows
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-16  3:52 AM                logs
+-a---          2026-03-31  4:56 AM           1788 appsettings.json
+-a---          2024-10-09  5:14 PM         426552 Azure.Core.dll
+-a---          2024-06-17 11:37 AM         350752 Azure.Identity.dll
+-a---          2025-05-14  4:51 PM        1691136 ClosedXML.dll
+-a---          2025-04-03  7:11 PM         192000 ClosedXML.Parser.dll
+-a---          2024-09-18  7:52 AM         120616 CommunityToolkit.Mvvm.dll
+-a---          2024-10-15  3:18 PM        6349424 DocumentFormat.OpenXml.dll
+-a---          2024-10-15  3:18 PM         471152 DocumentFormat.OpenXml.Framework.dll
+-a---          2020-10-02  4:42 AM          30720 ExcelNumberFormat.dll
+-a---          2026-03-31  5:30 AM          60928 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  5:30 AM          24656 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  3:52 AM          62427 GenesysExtensionAudit.deps.json
+-a---          2026-03-31  5:31 AM         177664 GenesysExtensionAudit.dll
+-a---          2026-03-31  5:31 AM         152064 GenesysExtensionAudit.exe
+-a---          2026-03-31  5:30 AM         722432 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  5:30 AM         179888 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-31  5:31 AM          66852 GenesysExtensionAudit.pdb
+-a---          2026-03-31  3:52 AM            510 GenesysExtensionAudit.runtimeconfig.json
+-a---          2021-10-22  7:47 PM          16000 Microsoft.Bcl.AsyncInterfaces.dll
+-a---          2023-11-30  3:24 AM          17696 Microsoft.Bcl.TimeProvider.dll
+-a---          2023-10-31 10:59 AM          27936 Microsoft.Extensions.Configuration.Abstractions.dll
+-a---          2023-10-31 10:59 AM          42656 Microsoft.Extensions.Configuration.Binder.dll
+-a---          2023-10-31 10:59 AM          24736 Microsoft.Extensions.Configuration.CommandLine.dll
+-a---          2023-10-31 10:59 AM          43800 Microsoft.Extensions.Configuration.dll
+-a---          2023-10-31 10:59 AM          21280 Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+-a---          2023-10-31 10:59 AM          27936 Microsoft.Extensions.Configuration.FileExtensions.dll
+-a---          2023-10-31 10:59 AM          26784 Microsoft.Extensions.Configuration.Json.dll
+-a---          2023-10-31 10:59 AM          25360 Microsoft.Extensions.Configuration.UserSecrets.dll
+-a---          2023-10-31 10:58 AM          64288 Microsoft.Extensions.DependencyInjection.Abstractions.dll
+-a---          2023-10-31 10:59 AM          92320 Microsoft.Extensions.DependencyInjection.dll
+-a---          2023-10-31 10:59 AM          30368 Microsoft.Extensions.Diagnostics.Abstractions.dll
+-a---          2023-10-31 10:59 AM          35488 Microsoft.Extensions.Diagnostics.dll
+-a---          2023-10-31 10:59 AM          22176 Microsoft.Extensions.FileProviders.Abstractions.dll
+-a---          2023-10-31 10:59 AM          44808 Microsoft.Extensions.FileProviders.Physical.dll
+-a---          2023-10-31 10:58 AM          45848 Microsoft.Extensions.FileSystemGlobbing.dll
+-a---          2023-10-31 10:59 AM          51360 Microsoft.Extensions.Hosting.Abstractions.dll
+-a---          2023-10-31 10:59 AM          72480 Microsoft.Extensions.Hosting.dll
+-a---          2023-10-31 10:59 AM          88736 Microsoft.Extensions.Http.dll
+-a---          2023-10-31 10:59 AM          65184 Microsoft.Extensions.Logging.Abstractions.dll
+-a---          2023-10-31 10:59 AM          27928 Microsoft.Extensions.Logging.Configuration.dll
+-a---          2023-10-31 10:59 AM          71448 Microsoft.Extensions.Logging.Console.dll
+-a---          2023-10-31 10:59 AM          20128 Microsoft.Extensions.Logging.Debug.dll
+-a---          2023-10-31 10:59 AM          50848 Microsoft.Extensions.Logging.dll
+-a---          2023-10-31 10:59 AM          25880 Microsoft.Extensions.Logging.EventLog.dll
+-a---          2023-10-31 10:59 AM          34592 Microsoft.Extensions.Logging.EventSource.dll
+-a---          2023-10-31 10:59 AM          22688 Microsoft.Extensions.Options.ConfigurationExtensions.dll
+-a---          2023-10-31 10:59 AM          64672 Microsoft.Extensions.Options.dll
+-a---          2023-10-31 10:58 AM          43680 Microsoft.Extensions.Primitives.dll
+-a---          2024-11-18  8:37 AM         139824 Microsoft.Graph.Core.dll
+-a---          2024-12-05  4:19 AM       40942648 Microsoft.Graph.dll
+-a---          2024-06-06  6:09 PM        1005600 Microsoft.Identity.Client.dll
+-a---          2024-06-06  6:14 PM          66592 Microsoft.Identity.Client.Extensions.Msal.dll
+-a---          2024-11-01  7:45 PM          19512 Microsoft.IdentityModel.Abstractions.dll
+-a---          2024-11-01  7:46 PM         161824 Microsoft.IdentityModel.JsonWebTokens.dll
+-a---          2024-11-01  7:46 PM          36896 Microsoft.IdentityModel.Logging.dll
+-a---          2024-11-01  7:45 PM          41016 Microsoft.IdentityModel.Protocols.dll
+-a---          2024-11-01  7:46 PM         137248 Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+-a---          2024-11-01  7:46 PM         350240 Microsoft.IdentityModel.Tokens.dll
+-a---          2024-11-01  7:45 PM          40480 Microsoft.IdentityModel.Validators.dll
+-a---          2024-11-14  1:41 AM          98888 Microsoft.Kiota.Abstractions.dll
+-a---          2024-11-14  1:41 AM          22072 Microsoft.Kiota.Authentication.Azure.dll
+-a---          2024-11-14  1:40 AM         101944 Microsoft.Kiota.Http.HttpClientLibrary.dll
+-a---          2024-11-06  3:32 AM          35376 Microsoft.Kiota.Serialization.Form.dll
+-a---          2024-11-14  1:41 AM          70200 Microsoft.Kiota.Serialization.Json.dll
+-a---          2024-11-06  3:32 AM          20520 Microsoft.Kiota.Serialization.Multipart.dll
+-a---          2024-11-06  3:32 AM          27176 Microsoft.Kiota.Serialization.Text.dll
+-a---          2024-11-18 10:48 AM          34816 RBush.dll
+-a---          2024-06-01  2:19 AM         153088 Serilog.dll
+-a---          2023-10-03  1:58 AM           7680 Serilog.Enrichers.Environment.dll
+-a---          2024-06-14  5:03 AM           6656 Serilog.Enrichers.Process.dll
+-a---          2019-05-02  7:41 PM           6144 Serilog.Enrichers.Thread.dll
+-a---          2023-11-14  9:04 PM          29696 Serilog.Extensions.Hosting.dll
+-a---          2023-11-14  5:47 PM          29696 Serilog.Extensions.Logging.dll
+-a---          2023-11-09  1:54 AM          10240 Serilog.Formatting.Compact.dll
+-a---          2022-09-05  8:58 PM          35328 Serilog.Sinks.Console.dll
+-a---          2021-06-25  4:00 AM          31232 Serilog.Sinks.File.dll
+-a---          2023-08-11  8:04 AM        1135616 SixLabors.Fonts.dll
+-a---          2024-11-12  9:52 AM          23912 Std.UriTemplate.dll
+-a---          2024-09-17 12:20 PM         111128 System.ClientModel.dll
+-a---          2024-11-01  7:46 PM          90656 System.IdentityModel.Tokens.Jwt.dll
+-a---          2024-09-16  7:09 PM         142136 System.IO.Packaging.dll
+-a---          2021-10-22  7:47 PM          28264 System.Memory.Data.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\bin\Debug\net8.0-windows\logs
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-08  3:31 PM          26416 app-20260308.log
+-a---          2026-03-16  3:52 AM           8112 app-20260316.log
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\bin\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0-windows
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\bin\Release\net8.0-windows
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  4:46 AM                logs
+d----          2026-03-03  7:38 AM                publish
+-a---          2026-03-31  4:56 AM           1788 appsettings.json
+-a---          2024-10-09  5:14 PM         426552 Azure.Core.dll
+-a---          2024-06-17 11:37 AM         350752 Azure.Identity.dll
+-a---          2025-05-14  4:51 PM        1691136 ClosedXML.dll
+-a---          2025-04-03  7:11 PM         192000 ClosedXML.Parser.dll
+-a---          2024-09-18  7:52 AM         120616 CommunityToolkit.Mvvm.dll
+-a---          2024-10-15  3:18 PM        6349424 DocumentFormat.OpenXml.dll
+-a---          2024-10-15  3:18 PM         471152 DocumentFormat.OpenXml.Framework.dll
+-a---          2020-10-02  4:42 AM          30720 ExcelNumberFormat.dll
+-a---          2026-03-31  6:21 AM          59392 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  6:21 AM          23872 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  4:45 AM          62427 GenesysExtensionAudit.deps.json
+-a---          2026-03-31  6:21 AM         155136 GenesysExtensionAudit.dll
+-a---          2026-03-31  6:21 AM         152064 GenesysExtensionAudit.exe
+-a---          2026-03-31  6:21 AM         684032 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  6:21 AM         155880 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-31  6:21 AM          62684 GenesysExtensionAudit.pdb
+-a---          2026-03-31  4:45 AM            582 GenesysExtensionAudit.runtimeconfig.json
+-a---          2021-10-22  7:47 PM          16000 Microsoft.Bcl.AsyncInterfaces.dll
+-a---          2023-11-30  3:24 AM          17696 Microsoft.Bcl.TimeProvider.dll
+-a---          2023-10-31 10:59 AM          27936 Microsoft.Extensions.Configuration.Abstractions.dll
+-a---          2023-10-31 10:59 AM          42656 Microsoft.Extensions.Configuration.Binder.dll
+-a---          2023-10-31 10:59 AM          24736 Microsoft.Extensions.Configuration.CommandLine.dll
+-a---          2023-10-31 10:59 AM          43800 Microsoft.Extensions.Configuration.dll
+-a---          2023-10-31 10:59 AM          21280 Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+-a---          2023-10-31 10:59 AM          27936 Microsoft.Extensions.Configuration.FileExtensions.dll
+-a---          2023-10-31 10:59 AM          26784 Microsoft.Extensions.Configuration.Json.dll
+-a---          2023-10-31 10:59 AM          25360 Microsoft.Extensions.Configuration.UserSecrets.dll
+-a---          2023-10-31 10:58 AM          64288 Microsoft.Extensions.DependencyInjection.Abstractions.dll
+-a---          2023-10-31 10:59 AM          92320 Microsoft.Extensions.DependencyInjection.dll
+-a---          2023-10-31 10:59 AM          30368 Microsoft.Extensions.Diagnostics.Abstractions.dll
+-a---          2023-10-31 10:59 AM          35488 Microsoft.Extensions.Diagnostics.dll
+-a---          2023-10-31 10:59 AM          22176 Microsoft.Extensions.FileProviders.Abstractions.dll
+-a---          2023-10-31 10:59 AM          44808 Microsoft.Extensions.FileProviders.Physical.dll
+-a---          2023-10-31 10:58 AM          45848 Microsoft.Extensions.FileSystemGlobbing.dll
+-a---          2023-10-31 10:59 AM          51360 Microsoft.Extensions.Hosting.Abstractions.dll
+-a---          2023-10-31 10:59 AM          72480 Microsoft.Extensions.Hosting.dll
+-a---          2023-10-31 10:59 AM          88736 Microsoft.Extensions.Http.dll
+-a---          2023-10-31 10:59 AM          65184 Microsoft.Extensions.Logging.Abstractions.dll
+-a---          2023-10-31 10:59 AM          27928 Microsoft.Extensions.Logging.Configuration.dll
+-a---          2023-10-31 10:59 AM          71448 Microsoft.Extensions.Logging.Console.dll
+-a---          2023-10-31 10:59 AM          20128 Microsoft.Extensions.Logging.Debug.dll
+-a---          2023-10-31 10:59 AM          50848 Microsoft.Extensions.Logging.dll
+-a---          2023-10-31 10:59 AM          25880 Microsoft.Extensions.Logging.EventLog.dll
+-a---          2023-10-31 10:59 AM          34592 Microsoft.Extensions.Logging.EventSource.dll
+-a---          2023-10-31 10:59 AM          22688 Microsoft.Extensions.Options.ConfigurationExtensions.dll
+-a---          2023-10-31 10:59 AM          64672 Microsoft.Extensions.Options.dll
+-a---          2023-10-31 10:58 AM          43680 Microsoft.Extensions.Primitives.dll
+-a---          2024-11-18  8:37 AM         139824 Microsoft.Graph.Core.dll
+-a---          2024-12-05  4:19 AM       40942648 Microsoft.Graph.dll
+-a---          2024-06-06  6:09 PM        1005600 Microsoft.Identity.Client.dll
+-a---          2024-06-06  6:14 PM          66592 Microsoft.Identity.Client.Extensions.Msal.dll
+-a---          2024-11-01  7:45 PM          19512 Microsoft.IdentityModel.Abstractions.dll
+-a---          2024-11-01  7:46 PM         161824 Microsoft.IdentityModel.JsonWebTokens.dll
+-a---          2024-11-01  7:46 PM          36896 Microsoft.IdentityModel.Logging.dll
+-a---          2024-11-01  7:45 PM          41016 Microsoft.IdentityModel.Protocols.dll
+-a---          2024-11-01  7:46 PM         137248 Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+-a---          2024-11-01  7:46 PM         350240 Microsoft.IdentityModel.Tokens.dll
+-a---          2024-11-01  7:45 PM          40480 Microsoft.IdentityModel.Validators.dll
+-a---          2024-11-14  1:41 AM          98888 Microsoft.Kiota.Abstractions.dll
+-a---          2024-11-14  1:41 AM          22072 Microsoft.Kiota.Authentication.Azure.dll
+-a---          2024-11-14  1:40 AM         101944 Microsoft.Kiota.Http.HttpClientLibrary.dll
+-a---          2024-11-06  3:32 AM          35376 Microsoft.Kiota.Serialization.Form.dll
+-a---          2024-11-14  1:41 AM          70200 Microsoft.Kiota.Serialization.Json.dll
+-a---          2024-11-06  3:32 AM          20520 Microsoft.Kiota.Serialization.Multipart.dll
+-a---          2024-11-06  3:32 AM          27176 Microsoft.Kiota.Serialization.Text.dll
+-a---          2026-03-03  2:00 AM       13868564 publish.zip
+-a---          2024-11-18 10:48 AM          34816 RBush.dll
+-a---          2024-06-01  2:19 AM         153088 Serilog.dll
+-a---          2023-10-03  1:58 AM           7680 Serilog.Enrichers.Environment.dll
+-a---          2024-06-14  5:03 AM           6656 Serilog.Enrichers.Process.dll
+-a---          2019-05-02  7:41 PM           6144 Serilog.Enrichers.Thread.dll
+-a---          2023-11-14  9:04 PM          29696 Serilog.Extensions.Hosting.dll
+-a---          2023-11-14  5:47 PM          29696 Serilog.Extensions.Logging.dll
+-a---          2023-11-09  1:54 AM          10240 Serilog.Formatting.Compact.dll
+-a---          2022-09-05  8:58 PM          35328 Serilog.Sinks.Console.dll
+-a---          2021-06-25  4:00 AM          31232 Serilog.Sinks.File.dll
+-a---          2023-08-11  8:04 AM        1135616 SixLabors.Fonts.dll
+-a---          2024-11-12  9:52 AM          23912 Std.UriTemplate.dll
+-a---          2024-09-17 12:20 PM         111128 System.ClientModel.dll
+-a---          2024-11-01  7:46 PM          90656 System.IdentityModel.Tokens.Jwt.dll
+-a---          2024-09-16  7:09 PM         142136 System.IO.Packaging.dll
+-a---          2021-10-22  7:47 PM          28264 System.Memory.Data.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\bin\Release\net8.0-windows\logs
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:26 AM          67147 app-20260331.log
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\bin\Release\net8.0-windows\publish
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:34 AM                logs
+-a---          2026-03-03  1:49 AM           1121 appsettings.json
+-a---          2024-10-09  5:14 PM         426552 Azure.Core.dll
+-a---          2024-06-17 11:37 AM         350752 Azure.Identity.dll
+-a---          2025-05-14  4:51 PM        1691136 ClosedXML.dll
+-a---          2025-04-03  7:11 PM         192000 ClosedXML.Parser.dll
+-a---          2024-09-18  7:52 AM         120616 CommunityToolkit.Mvvm.dll
+-a---          2024-10-15  3:18 PM        6349424 DocumentFormat.OpenXml.dll
+-a---          2024-10-15  3:18 PM         471152 DocumentFormat.OpenXml.Framework.dll
+-a---          2020-10-02  4:42 AM          30720 ExcelNumberFormat.dll
+-a---          2026-03-03  7:38 AM          50176 GenesysExtensionAudit.Core.dll
+-a---          2026-03-03  7:38 AM          21408 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-03  1:31 AM          62069 GenesysExtensionAudit.deps.json
+-a---          2026-03-03  7:38 AM         103936 GenesysExtensionAudit.dll
+-a---          2026-03-03  7:38 AM         152064 GenesysExtensionAudit.exe
+-a---          2026-03-03  7:38 AM         209920 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-03  7:38 AM          60692 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-03  7:38 AM          48540 GenesysExtensionAudit.pdb
+-a---          2026-03-03  1:31 AM            582 GenesysExtensionAudit.runtimeconfig.json
+-a---          2021-10-22  7:47 PM          16000 Microsoft.Bcl.AsyncInterfaces.dll
+-a---          2023-11-30  3:24 AM          17696 Microsoft.Bcl.TimeProvider.dll
+-a---          2023-10-31 10:59 AM          27936 Microsoft.Extensions.Configuration.Abstractions.dll
+-a---          2023-10-31 10:59 AM          42656 Microsoft.Extensions.Configuration.Binder.dll
+-a---          2023-10-31 10:59 AM          24736 Microsoft.Extensions.Configuration.CommandLine.dll
+-a---          2023-10-31 10:59 AM          43800 Microsoft.Extensions.Configuration.dll
+-a---          2023-10-31 10:59 AM          21280 Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+-a---          2023-10-31 10:59 AM          27936 Microsoft.Extensions.Configuration.FileExtensions.dll
+-a---          2023-10-31 10:59 AM          26784 Microsoft.Extensions.Configuration.Json.dll
+-a---          2023-10-31 10:59 AM          25360 Microsoft.Extensions.Configuration.UserSecrets.dll
+-a---          2023-10-31 10:58 AM          64288 Microsoft.Extensions.DependencyInjection.Abstractions.dll
+-a---          2023-10-31 10:59 AM          92320 Microsoft.Extensions.DependencyInjection.dll
+-a---          2023-10-31 10:59 AM          30368 Microsoft.Extensions.Diagnostics.Abstractions.dll
+-a---          2023-10-31 10:59 AM          35488 Microsoft.Extensions.Diagnostics.dll
+-a---          2023-10-31 10:59 AM          22176 Microsoft.Extensions.FileProviders.Abstractions.dll
+-a---          2023-10-31 10:59 AM          44808 Microsoft.Extensions.FileProviders.Physical.dll
+-a---          2023-10-31 10:58 AM          45848 Microsoft.Extensions.FileSystemGlobbing.dll
+-a---          2023-10-31 10:59 AM          51360 Microsoft.Extensions.Hosting.Abstractions.dll
+-a---          2023-10-31 10:59 AM          72480 Microsoft.Extensions.Hosting.dll
+-a---          2023-10-31 10:59 AM          88736 Microsoft.Extensions.Http.dll
+-a---          2023-10-31 10:59 AM          65184 Microsoft.Extensions.Logging.Abstractions.dll
+-a---          2023-10-31 10:59 AM          27928 Microsoft.Extensions.Logging.Configuration.dll
+-a---          2023-10-31 10:59 AM          71448 Microsoft.Extensions.Logging.Console.dll
+-a---          2023-10-31 10:59 AM          20128 Microsoft.Extensions.Logging.Debug.dll
+-a---          2023-10-31 10:59 AM          50848 Microsoft.Extensions.Logging.dll
+-a---          2023-10-31 10:59 AM          25880 Microsoft.Extensions.Logging.EventLog.dll
+-a---          2023-10-31 10:59 AM          34592 Microsoft.Extensions.Logging.EventSource.dll
+-a---          2023-10-31 10:59 AM          22688 Microsoft.Extensions.Options.ConfigurationExtensions.dll
+-a---          2023-10-31 10:59 AM          64672 Microsoft.Extensions.Options.dll
+-a---          2023-10-31 10:58 AM          43680 Microsoft.Extensions.Primitives.dll
+-a---          2024-11-18  8:37 AM         139824 Microsoft.Graph.Core.dll
+-a---          2024-12-05  4:19 AM       40942648 Microsoft.Graph.dll
+-a---          2024-06-06  6:09 PM        1005600 Microsoft.Identity.Client.dll
+-a---          2024-06-06  6:14 PM          66592 Microsoft.Identity.Client.Extensions.Msal.dll
+-a---          2024-11-01  7:45 PM          19512 Microsoft.IdentityModel.Abstractions.dll
+-a---          2024-11-01  7:46 PM         161824 Microsoft.IdentityModel.JsonWebTokens.dll
+-a---          2024-11-01  7:46 PM          36896 Microsoft.IdentityModel.Logging.dll
+-a---          2024-11-01  7:45 PM          41016 Microsoft.IdentityModel.Protocols.dll
+-a---          2024-11-01  7:46 PM         137248 Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+-a---          2024-11-01  7:46 PM         350240 Microsoft.IdentityModel.Tokens.dll
+-a---          2024-11-01  7:45 PM          40480 Microsoft.IdentityModel.Validators.dll
+-a---          2024-11-14  1:41 AM          98888 Microsoft.Kiota.Abstractions.dll
+-a---          2024-11-14  1:41 AM          22072 Microsoft.Kiota.Authentication.Azure.dll
+-a---          2024-11-14  1:40 AM         101944 Microsoft.Kiota.Http.HttpClientLibrary.dll
+-a---          2024-11-06  3:32 AM          35376 Microsoft.Kiota.Serialization.Form.dll
+-a---          2024-11-14  1:41 AM          70200 Microsoft.Kiota.Serialization.Json.dll
+-a---          2024-11-06  3:32 AM          20520 Microsoft.Kiota.Serialization.Multipart.dll
+-a---          2024-11-06  3:32 AM          27176 Microsoft.Kiota.Serialization.Text.dll
+-a---          2024-11-18 10:48 AM          34816 RBush.dll
+-a---          2024-06-01  2:19 AM         153088 Serilog.dll
+-a---          2023-10-03  1:58 AM           7680 Serilog.Enrichers.Environment.dll
+-a---          2024-06-14  5:03 AM           6656 Serilog.Enrichers.Process.dll
+-a---          2019-05-02  7:41 PM           6144 Serilog.Enrichers.Thread.dll
+-a---          2023-11-14  9:04 PM          29696 Serilog.Extensions.Hosting.dll
+-a---          2023-11-14  5:47 PM          29696 Serilog.Extensions.Logging.dll
+-a---          2023-11-09  1:54 AM          10240 Serilog.Formatting.Compact.dll
+-a---          2022-09-05  8:58 PM          35328 Serilog.Sinks.Console.dll
+-a---          2021-06-25  4:00 AM          31232 Serilog.Sinks.File.dll
+-a---          2023-08-11  8:04 AM        1135616 SixLabors.Fonts.dll
+-a---          2024-11-12  9:52 AM          23912 Std.UriTemplate.dll
+-a---          2024-09-17 12:20 PM         111128 System.ClientModel.dll
+-a---          2024-11-01  7:46 PM          90656 System.IdentityModel.Tokens.Jwt.dll
+-a---          2024-09-16  7:09 PM         142136 System.IO.Packaging.dll
+-a---          2021-10-22  7:47 PM          28264 System.Memory.Data.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\Converters
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-08  3:18 PM            736 StringToVisibilityConverter.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\Navigation
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM           1112 INavigationService.cs
+-a---          2026-03-03  1:21 AM           1375 NavigationService.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  1:31 AM                Release
+-a---          2026-03-03  1:21 AM          11905 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.csproj.nuget.dgspec.json
+-a---          2026-03-03  1:21 AM           1740 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.csproj.nuget.g.props
+-a---          2026-03-03  1:21 AM           2011 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.csproj.nuget.g.targets
+-a---          2026-03-11  8:46 AM          12412 GenesysExtensionAudit.App_bdqdym2f_wpftmp.csproj.nuget.dgspec.json
+-a---          2026-03-03  1:21 AM           1740 GenesysExtensionAudit.App_bdqdym2f_wpftmp.csproj.nuget.g.props
+-a---          2026-03-08  3:16 PM           2165 GenesysExtensionAudit.App_bdqdym2f_wpftmp.csproj.nuget.g.targets
+-a---          2026-03-31  2:55 AM          12678 GenesysExtensionAudit.App.csproj.nuget.dgspec.json
+-a---          2026-03-03  1:21 AM           1740 GenesysExtensionAudit.App.csproj.nuget.g.props
+-a---          2026-03-08  3:16 PM           2165 GenesysExtensionAudit.App.csproj.nuget.g.targets
+-a---          2026-03-31  2:55 AM         167957 project.assets.json
+-a---          2026-03-31  2:55 AM          11131 project.nuget.cache
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:31 AM                net8.0-windows
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Debug\net8.0-windows
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                ref
+d----          2026-03-18 12:37 PM                refint
+d----          2026-03-31  5:31 AM                Views
+-a---          2026-03-03  1:21 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  5:31 AM           2032 App.baml
+-a---          2026-03-31  5:31 AM           2733 App.g.cs
+-a---          2026-03-31  5:31 AM         152064 apphost.exe
+-a---          2026-03-31  5:31 AM              7 GeneratedInternalTypeHelper.g.cs
+-a---          2026-03-31  5:31 AM              0 GenesysE.2D95D6CC.Up2Date
+-a---          2026-03-31  5:31 AM            671 GenesysExtensionAudit_MarkupCompile.cache
+-a---          2026-03-31  5:31 AM            728 GenesysExtensionAudit_MarkupCompile.lref
+-a---          2026-03-16  3:39 AM           1355 GenesysExtensionAudit.App_1zafo4hp_wpftmp.AssemblyInfo.cs
+-a---          2026-03-16  3:39 AM             66 GenesysExtensionAudit.App_1zafo4hp_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-16  3:39 AM          50383 GenesysExtensionAudit.App_1zafo4hp_wpftmp.assets.cache
+-a---          2026-03-16  3:39 AM            869 GenesysExtensionAudit.App_1zafo4hp_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-16  3:39 AM            223 GenesysExtensionAudit.App_1zafo4hp_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-16  3:39 AM            176 GenesysExtensionAudit.App_1zafo4hp_wpftmp.sourcelink.json
+-a---          2026-03-16  3:52 AM           1355 GenesysExtensionAudit.App_32h5zkpj_wpftmp.AssemblyInfo.cs
+-a---          2026-03-16  3:52 AM             66 GenesysExtensionAudit.App_32h5zkpj_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-16  3:52 AM          50383 GenesysExtensionAudit.App_32h5zkpj_wpftmp.assets.cache
+-a---          2026-03-16  3:52 AM            869 GenesysExtensionAudit.App_32h5zkpj_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-16  3:52 AM            223 GenesysExtensionAudit.App_32h5zkpj_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-16  3:52 AM            176 GenesysExtensionAudit.App_32h5zkpj_wpftmp.sourcelink.json
+-a---          2026-03-31  3:52 AM           1356 GenesysExtensionAudit.App_3jfdupuh_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  3:52 AM             66 GenesysExtensionAudit.App_3jfdupuh_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  3:52 AM          50383 GenesysExtensionAudit.App_3jfdupuh_wpftmp.assets.cache
+-a---          2026-03-31  3:52 AM            882 GenesysExtensionAudit.App_3jfdupuh_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  3:52 AM            223 GenesysExtensionAudit.App_3jfdupuh_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  3:52 AM            190 GenesysExtensionAudit.App_3jfdupuh_wpftmp.sourcelink.json
+-a---          2026-03-31  5:31 AM           1356 GenesysExtensionAudit.App_4obpsw3e_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  5:31 AM             66 GenesysExtensionAudit.App_4obpsw3e_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  5:31 AM          50383 GenesysExtensionAudit.App_4obpsw3e_wpftmp.assets.cache
+-a---          2026-03-31  5:31 AM            882 GenesysExtensionAudit.App_4obpsw3e_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  5:31 AM            223 GenesysExtensionAudit.App_4obpsw3e_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  5:31 AM            190 GenesysExtensionAudit.App_4obpsw3e_wpftmp.sourcelink.json
+-a---          2026-03-03 12:21 PM           1345 GenesysExtensionAudit.App_4r5a1lwe_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03 12:21 PM             66 GenesysExtensionAudit.App_4r5a1lwe_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03 12:21 PM          50258 GenesysExtensionAudit.App_4r5a1lwe_wpftmp.assets.cache
+-a---          2026-03-03 12:21 PM            869 GenesysExtensionAudit.App_4r5a1lwe_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03 12:21 PM            223 GenesysExtensionAudit.App_4r5a1lwe_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03 12:21 PM            176 GenesysExtensionAudit.App_4r5a1lwe_wpftmp.sourcelink.json
+-a---          2026-03-08  2:38 PM           1345 GenesysExtensionAudit.App_a0gojayj_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  2:38 PM             66 GenesysExtensionAudit.App_a0gojayj_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  2:38 PM          50258 GenesysExtensionAudit.App_a0gojayj_wpftmp.assets.cache
+-a---          2026-03-08  2:38 PM            869 GenesysExtensionAudit.App_a0gojayj_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  2:38 PM            223 GenesysExtensionAudit.App_a0gojayj_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  2:38 PM            176 GenesysExtensionAudit.App_a0gojayj_wpftmp.sourcelink.json
+-a---          2026-03-31  5:00 AM           1356 GenesysExtensionAudit.App_avjrhnfm_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  5:00 AM             66 GenesysExtensionAudit.App_avjrhnfm_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  5:00 AM          50383 GenesysExtensionAudit.App_avjrhnfm_wpftmp.assets.cache
+-a---          2026-03-31  5:00 AM            882 GenesysExtensionAudit.App_avjrhnfm_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  5:00 AM            223 GenesysExtensionAudit.App_avjrhnfm_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  5:00 AM            190 GenesysExtensionAudit.App_avjrhnfm_wpftmp.sourcelink.json
+-a---          2026-03-18 12:09 PM           1355 GenesysExtensionAudit.App_bdqdym2f_wpftmp.AssemblyInfo.cs
+-a---          2026-03-18 12:09 PM             66 GenesysExtensionAudit.App_bdqdym2f_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-18 12:09 PM          50383 GenesysExtensionAudit.App_bdqdym2f_wpftmp.assets.cache
+-a---          2026-03-18 12:09 PM            869 GenesysExtensionAudit.App_bdqdym2f_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-18 12:09 PM            223 GenesysExtensionAudit.App_bdqdym2f_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-18 12:09 PM            176 GenesysExtensionAudit.App_bdqdym2f_wpftmp.sourcelink.json
+-a---          2026-03-18 12:49 PM           1356 GenesysExtensionAudit.App_dnylohgb_wpftmp.AssemblyInfo.cs
+-a---          2026-03-18 12:49 PM             66 GenesysExtensionAudit.App_dnylohgb_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-18 12:49 PM          50383 GenesysExtensionAudit.App_dnylohgb_wpftmp.assets.cache
+-a---          2026-03-18 12:49 PM            869 GenesysExtensionAudit.App_dnylohgb_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-18 12:49 PM            223 GenesysExtensionAudit.App_dnylohgb_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-18 12:49 PM            176 GenesysExtensionAudit.App_dnylohgb_wpftmp.sourcelink.json
+-a---          2026-03-31  4:15 AM           1356 GenesysExtensionAudit.App_e1ildaqb_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  4:15 AM             66 GenesysExtensionAudit.App_e1ildaqb_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:15 AM          50383 GenesysExtensionAudit.App_e1ildaqb_wpftmp.assets.cache
+-a---          2026-03-31  4:15 AM            882 GenesysExtensionAudit.App_e1ildaqb_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  4:15 AM            223 GenesysExtensionAudit.App_e1ildaqb_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  4:15 AM            190 GenesysExtensionAudit.App_e1ildaqb_wpftmp.sourcelink.json
+-a---          2026-03-08  3:21 PM           1356 GenesysExtensionAudit.App_esigx0hm_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  3:21 PM             66 GenesysExtensionAudit.App_esigx0hm_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  3:21 PM          50383 GenesysExtensionAudit.App_esigx0hm_wpftmp.assets.cache
+-a---          2026-03-08  3:21 PM            869 GenesysExtensionAudit.App_esigx0hm_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  3:21 PM            223 GenesysExtensionAudit.App_esigx0hm_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  3:21 PM            176 GenesysExtensionAudit.App_esigx0hm_wpftmp.sourcelink.json
+-a---          2026-03-08  3:24 PM           1345 GenesysExtensionAudit.App_gewd05zk_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  3:24 PM             66 GenesysExtensionAudit.App_gewd05zk_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  3:24 PM          50383 GenesysExtensionAudit.App_gewd05zk_wpftmp.assets.cache
+-a---          2026-03-08  3:24 PM            869 GenesysExtensionAudit.App_gewd05zk_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  3:24 PM            223 GenesysExtensionAudit.App_gewd05zk_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  3:24 PM            176 GenesysExtensionAudit.App_gewd05zk_wpftmp.sourcelink.json
+-a---          2026-03-18 11:51 AM           1355 GenesysExtensionAudit.App_hgf13klf_wpftmp.AssemblyInfo.cs
+-a---          2026-03-18 11:51 AM             66 GenesysExtensionAudit.App_hgf13klf_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-18 11:51 AM          50383 GenesysExtensionAudit.App_hgf13klf_wpftmp.assets.cache
+-a---          2026-03-18 11:51 AM            869 GenesysExtensionAudit.App_hgf13klf_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-18 11:51 AM            223 GenesysExtensionAudit.App_hgf13klf_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-18 11:51 AM            176 GenesysExtensionAudit.App_hgf13klf_wpftmp.sourcelink.json
+-a---          2026-03-18 12:36 PM           1355 GenesysExtensionAudit.App_ihwehegv_wpftmp.AssemblyInfo.cs
+-a---          2026-03-18 12:36 PM             66 GenesysExtensionAudit.App_ihwehegv_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-18 12:36 PM          50383 GenesysExtensionAudit.App_ihwehegv_wpftmp.assets.cache
+-a---          2026-03-18 12:36 PM            869 GenesysExtensionAudit.App_ihwehegv_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-18 12:36 PM            223 GenesysExtensionAudit.App_ihwehegv_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-18 12:36 PM            176 GenesysExtensionAudit.App_ihwehegv_wpftmp.sourcelink.json
+-a---          2026-03-16  2:53 AM           1355 GenesysExtensionAudit.App_iihkyovt_wpftmp.AssemblyInfo.cs
+-a---          2026-03-16  2:53 AM             66 GenesysExtensionAudit.App_iihkyovt_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-16  2:53 AM          50383 GenesysExtensionAudit.App_iihkyovt_wpftmp.assets.cache
+-a---          2026-03-16  2:53 AM            869 GenesysExtensionAudit.App_iihkyovt_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-16  2:53 AM            223 GenesysExtensionAudit.App_iihkyovt_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-16  2:53 AM            176 GenesysExtensionAudit.App_iihkyovt_wpftmp.sourcelink.json
+-a---          2026-03-18 12:37 PM           1355 GenesysExtensionAudit.App_ivtuu1yg_wpftmp.AssemblyInfo.cs
+-a---          2026-03-18 12:37 PM             66 GenesysExtensionAudit.App_ivtuu1yg_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-18 12:37 PM          50383 GenesysExtensionAudit.App_ivtuu1yg_wpftmp.assets.cache
+-a---          2026-03-18 12:37 PM            869 GenesysExtensionAudit.App_ivtuu1yg_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-18 12:37 PM            223 GenesysExtensionAudit.App_ivtuu1yg_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-18 12:37 PM            176 GenesysExtensionAudit.App_ivtuu1yg_wpftmp.sourcelink.json
+-a---          2026-03-08  3:24 PM           1356 GenesysExtensionAudit.App_m2e1vebm_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  3:24 PM             66 GenesysExtensionAudit.App_m2e1vebm_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  3:24 PM          50383 GenesysExtensionAudit.App_m2e1vebm_wpftmp.assets.cache
+-a---          2026-03-08  3:24 PM            869 GenesysExtensionAudit.App_m2e1vebm_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  3:24 PM            223 GenesysExtensionAudit.App_m2e1vebm_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  3:24 PM            176 GenesysExtensionAudit.App_m2e1vebm_wpftmp.sourcelink.json
+-a---          2026-03-18 12:37 PM           1355 GenesysExtensionAudit.App_mvmar004_wpftmp.AssemblyInfo.cs
+-a---          2026-03-18 12:37 PM             66 GenesysExtensionAudit.App_mvmar004_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-18 12:37 PM          50383 GenesysExtensionAudit.App_mvmar004_wpftmp.assets.cache
+-a---          2026-03-18 12:37 PM            869 GenesysExtensionAudit.App_mvmar004_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-18 12:37 PM            223 GenesysExtensionAudit.App_mvmar004_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-18 12:37 PM            176 GenesysExtensionAudit.App_mvmar004_wpftmp.sourcelink.json
+-a---          2026-03-31  4:36 AM           1356 GenesysExtensionAudit.App_n0ho1xiq_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  4:36 AM             66 GenesysExtensionAudit.App_n0ho1xiq_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:36 AM          50383 GenesysExtensionAudit.App_n0ho1xiq_wpftmp.assets.cache
+-a---          2026-03-31  4:36 AM            882 GenesysExtensionAudit.App_n0ho1xiq_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  4:36 AM            223 GenesysExtensionAudit.App_n0ho1xiq_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  4:36 AM            190 GenesysExtensionAudit.App_n0ho1xiq_wpftmp.sourcelink.json
+-a---          2026-03-31  4:03 AM           1356 GenesysExtensionAudit.App_nwwoqjhu_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  4:03 AM             66 GenesysExtensionAudit.App_nwwoqjhu_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:03 AM          50383 GenesysExtensionAudit.App_nwwoqjhu_wpftmp.assets.cache
+-a---          2026-03-31  4:03 AM            882 GenesysExtensionAudit.App_nwwoqjhu_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  4:03 AM            223 GenesysExtensionAudit.App_nwwoqjhu_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  4:03 AM            190 GenesysExtensionAudit.App_nwwoqjhu_wpftmp.sourcelink.json
+-a---          2026-03-08  2:57 PM           1345 GenesysExtensionAudit.App_p0gxeblb_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  2:57 PM             66 GenesysExtensionAudit.App_p0gxeblb_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  2:57 PM          50258 GenesysExtensionAudit.App_p0gxeblb_wpftmp.assets.cache
+-a---          2026-03-08  2:57 PM            869 GenesysExtensionAudit.App_p0gxeblb_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  2:57 PM            223 GenesysExtensionAudit.App_p0gxeblb_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  2:57 PM            176 GenesysExtensionAudit.App_p0gxeblb_wpftmp.sourcelink.json
+-a---          2026-03-18 12:09 PM           1355 GenesysExtensionAudit.App_psj5woug_wpftmp.AssemblyInfo.cs
+-a---          2026-03-18 12:09 PM             66 GenesysExtensionAudit.App_psj5woug_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-18 12:09 PM          50383 GenesysExtensionAudit.App_psj5woug_wpftmp.assets.cache
+-a---          2026-03-18 12:09 PM            869 GenesysExtensionAudit.App_psj5woug_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-18 12:09 PM            223 GenesysExtensionAudit.App_psj5woug_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-18 12:09 PM            176 GenesysExtensionAudit.App_psj5woug_wpftmp.sourcelink.json
+-a---          2026-03-08  3:29 PM           1355 GenesysExtensionAudit.App_qzpbwagd_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  3:29 PM             66 GenesysExtensionAudit.App_qzpbwagd_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  3:29 PM          50383 GenesysExtensionAudit.App_qzpbwagd_wpftmp.assets.cache
+-a---          2026-03-08  3:29 PM            869 GenesysExtensionAudit.App_qzpbwagd_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  3:29 PM            223 GenesysExtensionAudit.App_qzpbwagd_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  3:29 PM            176 GenesysExtensionAudit.App_qzpbwagd_wpftmp.sourcelink.json
+-a---          2026-03-16  3:05 AM           1355 GenesysExtensionAudit.App_sylngbsh_wpftmp.AssemblyInfo.cs
+-a---          2026-03-16  3:05 AM             66 GenesysExtensionAudit.App_sylngbsh_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-16  3:05 AM          50383 GenesysExtensionAudit.App_sylngbsh_wpftmp.assets.cache
+-a---          2026-03-16  3:05 AM            869 GenesysExtensionAudit.App_sylngbsh_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-16  3:05 AM            223 GenesysExtensionAudit.App_sylngbsh_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-16  3:05 AM            176 GenesysExtensionAudit.App_sylngbsh_wpftmp.sourcelink.json
+-a---          2026-03-16  2:56 AM           1355 GenesysExtensionAudit.App_tfdpmakt_wpftmp.AssemblyInfo.cs
+-a---          2026-03-16  2:56 AM             66 GenesysExtensionAudit.App_tfdpmakt_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-16  2:56 AM          50383 GenesysExtensionAudit.App_tfdpmakt_wpftmp.assets.cache
+-a---          2026-03-16  2:56 AM            869 GenesysExtensionAudit.App_tfdpmakt_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-16  2:56 AM            223 GenesysExtensionAudit.App_tfdpmakt_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-16  2:56 AM            176 GenesysExtensionAudit.App_tfdpmakt_wpftmp.sourcelink.json
+-a---          2026-03-31  4:30 AM           1356 GenesysExtensionAudit.App_uftllw5b_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  4:30 AM             66 GenesysExtensionAudit.App_uftllw5b_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:30 AM          50383 GenesysExtensionAudit.App_uftllw5b_wpftmp.assets.cache
+-a---          2026-03-31  4:30 AM            882 GenesysExtensionAudit.App_uftllw5b_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  4:30 AM            223 GenesysExtensionAudit.App_uftllw5b_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  4:30 AM            190 GenesysExtensionAudit.App_uftllw5b_wpftmp.sourcelink.json
+-a---          2026-03-31  4:14 AM           1356 GenesysExtensionAudit.App_uuba5n3m_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  4:14 AM             66 GenesysExtensionAudit.App_uuba5n3m_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:14 AM          50383 GenesysExtensionAudit.App_uuba5n3m_wpftmp.assets.cache
+-a---          2026-03-31  4:14 AM            882 GenesysExtensionAudit.App_uuba5n3m_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  4:14 AM            223 GenesysExtensionAudit.App_uuba5n3m_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  4:14 AM            190 GenesysExtensionAudit.App_uuba5n3m_wpftmp.sourcelink.json
+-a---          2026-03-31  4:02 AM           1356 GenesysExtensionAudit.App_vexbyvai_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  4:02 AM             66 GenesysExtensionAudit.App_vexbyvai_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:02 AM          50383 GenesysExtensionAudit.App_vexbyvai_wpftmp.assets.cache
+-a---          2026-03-31  4:02 AM            882 GenesysExtensionAudit.App_vexbyvai_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  4:02 AM            223 GenesysExtensionAudit.App_vexbyvai_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  4:02 AM            190 GenesysExtensionAudit.App_vexbyvai_wpftmp.sourcelink.json
+-a---          2026-03-03 10:27 AM           1345 GenesysExtensionAudit.App_vfztaxva_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03 10:27 AM             66 GenesysExtensionAudit.App_vfztaxva_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03 10:27 AM          50258 GenesysExtensionAudit.App_vfztaxva_wpftmp.assets.cache
+-a---          2026-03-03 10:27 AM            869 GenesysExtensionAudit.App_vfztaxva_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03 10:27 AM            223 GenesysExtensionAudit.App_vfztaxva_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03 10:27 AM            176 GenesysExtensionAudit.App_vfztaxva_wpftmp.sourcelink.json
+-a---          2026-03-31  4:41 AM           1356 GenesysExtensionAudit.App_voe45zgi_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  4:41 AM             66 GenesysExtensionAudit.App_voe45zgi_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:41 AM          50383 GenesysExtensionAudit.App_voe45zgi_wpftmp.assets.cache
+-a---          2026-03-31  4:41 AM            882 GenesysExtensionAudit.App_voe45zgi_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  4:41 AM            223 GenesysExtensionAudit.App_voe45zgi_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  4:41 AM            190 GenesysExtensionAudit.App_voe45zgi_wpftmp.sourcelink.json
+-a---          2026-03-08  2:50 PM           1345 GenesysExtensionAudit.App_zfmy4tbg_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  2:50 PM             66 GenesysExtensionAudit.App_zfmy4tbg_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  2:50 PM          50258 GenesysExtensionAudit.App_zfmy4tbg_wpftmp.assets.cache
+-a---          2026-03-08  2:50 PM            869 GenesysExtensionAudit.App_zfmy4tbg_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  2:50 PM            223 GenesysExtensionAudit.App_zfmy4tbg_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  2:50 PM            176 GenesysExtensionAudit.App_zfmy4tbg_wpftmp.sourcelink.json
+-a---          2026-03-31  5:31 AM           1356 GenesysExtensionAudit.App.AssemblyInfo.cs
+-a---          2026-03-31  5:31 AM             66 GenesysExtensionAudit.App.AssemblyInfoInputs.cache
+-a---          2026-03-31  2:55 AM          50383 GenesysExtensionAudit.App.assets.cache
+-a---          2026-03-31  5:31 AM          40102 GenesysExtensionAudit.App.csproj.AssemblyReference.cache
+-a---          2026-03-31  3:52 AM             66 GenesysExtensionAudit.App.csproj.CoreCompileInputs.cache
+-a---          2026-03-31  3:52 AM          31227 GenesysExtensionAudit.App.csproj.FileListAbsolute.txt
+-a---          2026-03-31  2:55 AM            882 GenesysExtensionAudit.App.GeneratedMSBuildEditorConfig.editorconfig
+-a---          2026-03-31  3:52 AM             66 GenesysExtensionAudit.App.genruntimeconfig.cache
+-a---          2026-03-03  1:21 AM            223 GenesysExtensionAudit.App.GlobalUsings.g.cs
+-a---          2026-03-31  5:31 AM            190 GenesysExtensionAudit.App.sourcelink.json
+-a---          2026-03-31  5:31 AM         177664 GenesysExtensionAudit.dll
+-a---          2026-03-31  5:31 AM          49748 GenesysExtensionAudit.g.resources
+-a---          2026-03-31  5:31 AM          66852 GenesysExtensionAudit.pdb
+-a---          2026-03-31  5:31 AM           2518 MainWindow.baml
+-a---          2026-03-31  5:31 AM           3528 MainWindow.g.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Debug\net8.0-windows\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:31 AM          37888 GenesysExtensionAudit.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Debug\net8.0-windows\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:31 AM          37888 GenesysExtensionAudit.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Debug\net8.0-windows\Views
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:31 AM           8240 ResultsViews.baml
+-a---          2026-03-31  5:31 AM          12442 RunAuditView.baml
+-a---          2026-03-31  5:31 AM           3129 RunAuditView.g.cs
+-a---          2026-03-31  5:31 AM          10922 ScheduleAuditView.baml
+-a---          2026-03-31  5:31 AM           3603 ScheduleAuditView.g.cs
+-a---          2026-03-31  5:31 AM          13066 SettingsView.baml
+-a---          2026-03-31  5:31 AM           4626 SettingsView.g.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0-windows
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Release\net8.0-windows
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:31 AM                ref
+d----          2026-03-03  1:31 AM                refint
+d----          2026-03-31  6:21 AM                Views
+-a---          2026-03-03  1:31 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  6:21 AM           1773 App.baml
+-a---          2026-03-31  6:21 AM           2733 App.g.cs
+-a---          2026-03-31  6:21 AM         152064 apphost.exe
+-a---          2026-03-31  6:21 AM              7 GeneratedInternalTypeHelper.g.cs
+-a---          2026-03-31  6:21 AM              0 GenesysE.2D95D6CC.Up2Date
+-a---          2026-03-31  6:23 AM            676 GenesysExtensionAudit_MarkupCompile.cache
+-a---          2026-03-31  6:21 AM            730 GenesysExtensionAudit_MarkupCompile.lref
+-a---          2026-03-03  8:53 AM           1347 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03  8:53 AM             66 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03  8:53 AM          50258 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.assets.cache
+-a---          2026-03-03  8:53 AM            869 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03  8:53 AM            223 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03  8:53 AM            176 GenesysExtensionAudit.App_0ug0bhrx_wpftmp.sourcelink.json
+-a---          2026-03-03  1:31 AM           1347 GenesysExtensionAudit.App_0uo1kwhu_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03  1:31 AM             66 GenesysExtensionAudit.App_0uo1kwhu_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03  1:31 AM          50258 GenesysExtensionAudit.App_0uo1kwhu_wpftmp.assets.cache
+-a---          2026-03-03  1:31 AM            869 GenesysExtensionAudit.App_0uo1kwhu_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03  1:31 AM            223 GenesysExtensionAudit.App_0uo1kwhu_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03  1:31 AM            176 GenesysExtensionAudit.App_0uo1kwhu_wpftmp.sourcelink.json
+-a---          2026-03-03  7:38 AM           1347 GenesysExtensionAudit.App_3pzcddhe_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03  7:38 AM             66 GenesysExtensionAudit.App_3pzcddhe_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03  7:38 AM          50258 GenesysExtensionAudit.App_3pzcddhe_wpftmp.assets.cache
+-a---          2026-03-03  7:38 AM            869 GenesysExtensionAudit.App_3pzcddhe_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03  7:38 AM            223 GenesysExtensionAudit.App_3pzcddhe_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03  7:38 AM            176 GenesysExtensionAudit.App_3pzcddhe_wpftmp.sourcelink.json
+-a---          2026-03-03  8:53 AM           1347 GenesysExtensionAudit.App_5vbxh0em_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03  8:53 AM             66 GenesysExtensionAudit.App_5vbxh0em_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03  8:53 AM          50258 GenesysExtensionAudit.App_5vbxh0em_wpftmp.assets.cache
+-a---          2026-03-03  8:53 AM            869 GenesysExtensionAudit.App_5vbxh0em_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03  8:53 AM            223 GenesysExtensionAudit.App_5vbxh0em_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03  8:53 AM            176 GenesysExtensionAudit.App_5vbxh0em_wpftmp.sourcelink.json
+-a---          2026-03-16  3:51 AM           1357 GenesysExtensionAudit.App_enjwaxnv_wpftmp.AssemblyInfo.cs
+-a---          2026-03-16  3:51 AM             66 GenesysExtensionAudit.App_enjwaxnv_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-16  3:51 AM          50383 GenesysExtensionAudit.App_enjwaxnv_wpftmp.assets.cache
+-a---          2026-03-16  3:51 AM            869 GenesysExtensionAudit.App_enjwaxnv_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-16  3:51 AM            223 GenesysExtensionAudit.App_enjwaxnv_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-16  3:51 AM            176 GenesysExtensionAudit.App_enjwaxnv_wpftmp.sourcelink.json
+-a---          2026-03-08  2:56 PM           1347 GenesysExtensionAudit.App_g4k0l30q_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  2:56 PM             66 GenesysExtensionAudit.App_g4k0l30q_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  2:56 PM          50258 GenesysExtensionAudit.App_g4k0l30q_wpftmp.assets.cache
+-a---          2026-03-08  2:56 PM            869 GenesysExtensionAudit.App_g4k0l30q_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  2:56 PM            223 GenesysExtensionAudit.App_g4k0l30q_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  2:56 PM            176 GenesysExtensionAudit.App_g4k0l30q_wpftmp.sourcelink.json
+-a---          2026-03-03  7:38 AM           1347 GenesysExtensionAudit.App_m4evgeqa_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03  7:38 AM             66 GenesysExtensionAudit.App_m4evgeqa_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03  7:38 AM          50258 GenesysExtensionAudit.App_m4evgeqa_wpftmp.assets.cache
+-a---          2026-03-03  7:38 AM            869 GenesysExtensionAudit.App_m4evgeqa_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03  7:38 AM            223 GenesysExtensionAudit.App_m4evgeqa_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03  7:38 AM            176 GenesysExtensionAudit.App_m4evgeqa_wpftmp.sourcelink.json
+-a---          2026-03-03  1:59 AM           1347 GenesysExtensionAudit.App_nn0t3113_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03  1:59 AM             66 GenesysExtensionAudit.App_nn0t3113_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03  1:59 AM          50258 GenesysExtensionAudit.App_nn0t3113_wpftmp.assets.cache
+-a---          2026-03-03  1:59 AM            869 GenesysExtensionAudit.App_nn0t3113_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03  1:59 AM            223 GenesysExtensionAudit.App_nn0t3113_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03  1:59 AM            176 GenesysExtensionAudit.App_nn0t3113_wpftmp.sourcelink.json
+-a---          2026-03-31  4:45 AM           1358 GenesysExtensionAudit.App_t4itzm4w_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  4:45 AM             66 GenesysExtensionAudit.App_t4itzm4w_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:45 AM          50383 GenesysExtensionAudit.App_t4itzm4w_wpftmp.assets.cache
+-a---          2026-03-31  4:45 AM            882 GenesysExtensionAudit.App_t4itzm4w_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  4:45 AM            223 GenesysExtensionAudit.App_t4itzm4w_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  4:45 AM            190 GenesysExtensionAudit.App_t4itzm4w_wpftmp.sourcelink.json
+-a---          2026-03-08  3:29 PM           1357 GenesysExtensionAudit.App_xodqeywm_wpftmp.AssemblyInfo.cs
+-a---          2026-03-08  3:29 PM             66 GenesysExtensionAudit.App_xodqeywm_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-08  3:29 PM          50383 GenesysExtensionAudit.App_xodqeywm_wpftmp.assets.cache
+-a---          2026-03-08  3:29 PM            869 GenesysExtensionAudit.App_xodqeywm_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-08  3:29 PM            223 GenesysExtensionAudit.App_xodqeywm_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-08  3:29 PM            176 GenesysExtensionAudit.App_xodqeywm_wpftmp.sourcelink.json
+-a---          2026-03-03  7:29 AM           1347 GenesysExtensionAudit.App_xrrvx0hq_wpftmp.AssemblyInfo.cs
+-a---          2026-03-03  7:29 AM             66 GenesysExtensionAudit.App_xrrvx0hq_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-03  7:29 AM          50258 GenesysExtensionAudit.App_xrrvx0hq_wpftmp.assets.cache
+-a---          2026-03-03  7:29 AM            869 GenesysExtensionAudit.App_xrrvx0hq_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-03  7:29 AM            223 GenesysExtensionAudit.App_xrrvx0hq_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-03  7:29 AM            176 GenesysExtensionAudit.App_xrrvx0hq_wpftmp.sourcelink.json
+-a---          2026-03-31  6:21 AM           1358 GenesysExtensionAudit.App_z4xxvts0_wpftmp.AssemblyInfo.cs
+-a---          2026-03-31  6:21 AM             66 GenesysExtensionAudit.App_z4xxvts0_wpftmp.AssemblyInfoInputs.cache
+-a---          2026-03-31  6:21 AM          50383 GenesysExtensionAudit.App_z4xxvts0_wpftmp.assets.cache
+-a---          2026-03-31  6:21 AM            882 GenesysExtensionAudit.App_z4xxvts0_wpftmp.GeneratedMSBuildEditorConfig
+                                                  .editorconfig
+-a---          2026-03-31  6:21 AM            223 GenesysExtensionAudit.App_z4xxvts0_wpftmp.GlobalUsings.g.cs
+-a---          2026-03-31  6:21 AM            190 GenesysExtensionAudit.App_z4xxvts0_wpftmp.sourcelink.json
+-a---          2026-03-31  6:21 AM           1358 GenesysExtensionAudit.App.AssemblyInfo.cs
+-a---          2026-03-31  6:21 AM             66 GenesysExtensionAudit.App.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:45 AM          50383 GenesysExtensionAudit.App.assets.cache
+-a---          2026-03-31  6:21 AM          40106 GenesysExtensionAudit.App.csproj.AssemblyReference.cache
+-a---          2026-03-31  4:45 AM             66 GenesysExtensionAudit.App.csproj.CoreCompileInputs.cache
+-a---          2026-03-31  4:45 AM          31663 GenesysExtensionAudit.App.csproj.FileListAbsolute.txt
+-a---          2026-03-31  4:45 AM            882 GenesysExtensionAudit.App.GeneratedMSBuildEditorConfig.editorconfig
+-a---          2026-03-31  4:45 AM             66 GenesysExtensionAudit.App.genruntimeconfig.cache
+-a---          2026-03-03  1:31 AM            223 GenesysExtensionAudit.App.GlobalUsings.g.cs
+-a---          2026-03-31  6:21 AM            190 GenesysExtensionAudit.App.sourcelink.json
+-a---          2026-03-31  6:21 AM         155136 GenesysExtensionAudit.dll
+-a---          2026-03-31  6:21 AM          35720 GenesysExtensionAudit.g.resources
+-a---          2026-03-31  6:21 AM          62684 GenesysExtensionAudit.pdb
+-a---          2026-03-31  6:21 AM           1884 MainWindow.baml
+-a---          2026-03-31  6:21 AM           3528 MainWindow.g.cs
+-a---          2026-03-03  7:38 AM          12086 PublishOutputs.5108b833a0.txt
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Release\net8.0-windows\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM          39424 GenesysExtensionAudit.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Release\net8.0-windows\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM          39424 GenesysExtensionAudit.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\obj\Release\net8.0-windows\Views
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM           5909 ResultsViews.baml
+-a---          2026-03-31  6:21 AM           8723 RunAuditView.baml
+-a---          2026-03-31  6:21 AM           3129 RunAuditView.g.cs
+-a---          2026-03-31  6:21 AM           7734 ScheduleAuditView.baml
+-a---          2026-03-31  6:21 AM           3603 ScheduleAuditView.g.cs
+-a---          2026-03-31  6:21 AM           9169 SettingsView.baml
+-a---          2026-03-31  6:21 AM           4626 SettingsView.g.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\Scheduling
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM            341 IScheduledAuditService.cs
+-a---          2026-03-31  4:54 AM           2918 ScheduledAuditModels.cs
+-a---          2026-03-31  4:55 AM          17522 ScheduledAuditService.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\Services
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-18 12:06 PM           2809 AuditLogCatalogCache.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\ViewModels
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:29 AM          41024 AuditRunViewModel.cs
+-a---          2026-03-03  1:50 AM           2726 MainViewModel.cs
+-a---          2026-03-31  4:55 AM          16491 ScheduleAuditViewModel.cs
+-a---          2026-03-31  4:56 AM          16610 SettingsViewModel.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.App\Views
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM          13343 ResultsViews.xaml
+-a---          2026-03-31  4:56 AM          20922 RunAuditView.xaml
+-a---          2026-03-03  1:21 AM            204 RunAuditView.xaml.cs
+-a---          2026-03-31  4:56 AM          14961 ScheduleAuditView.xaml
+-a---          2026-03-03  1:21 AM            498 ScheduleAuditView.xaml.cs
+-a---          2026-03-31  4:56 AM          20742 SettingsView.xaml
+-a---          2026-03-08  3:44 PM           1061 SettingsView.xaml.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:34 PM                Application
+d----          2026-03-03  1:31 AM                bin
+d----          2026-03-03  1:21 AM                Domain
+d----          2026-03-31  2:55 AM                obj
+-a---          2026-03-03  1:21 AM            637 GenesysExtensionAudit.Core.csproj
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\Application
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-18 12:02 PM            952 AuditLogFilter.cs
+-a---          2026-03-03  1:21 AM            681 AuditProgress.cs
+-a---          2026-03-18 12:34 PM          11762 AuditRunOptions.cs
+-a---          2026-03-08  2:32 PM           2137 FindingEnums.cs
+-a---          2026-03-03  1:21 AM            382 IAuditRunner.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\bin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  1:31 AM                Release
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\bin\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:30 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\bin\Debug\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  3:02 AM            866 GenesysExtensionAudit.Core.deps.json
+-a---          2026-03-31  5:30 AM          60928 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  5:30 AM          24656 GenesysExtensionAudit.Core.pdb
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\bin\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\bin\Release\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  4:45 AM            866 GenesysExtensionAudit.Core.deps.json
+-a---          2026-03-31  6:21 AM          59392 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  6:21 AM          23872 GenesysExtensionAudit.Core.pdb
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\Domain
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Models
+d----          2026-03-03  1:21 AM                Paging
+d----          2026-03-03  1:21 AM                Services
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\Domain\Models
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM            349 AssignedExtensionRecord.cs
+-a---          2026-03-03  1:21 AM           1150 AuditFindings.cs
+-a---          2026-03-03  1:21 AM            370 UserProfileExtensionRecord.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\Domain\Paging
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM            581 IPaginator.cs
+-a---          2026-03-03  1:21 AM            316 PagedResult.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\Domain\Services
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM           3834 ExtensionNormalization.cs
+-a---          2026-03-03  1:21 AM            479 IAuditAnalyzer.cs
+-a---          2026-03-03  1:21 AM            296 IExtensionNormalizer.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  1:31 AM                Release
+-a---          2026-03-31  2:55 AM           3082 GenesysExtensionAudit.Core.csproj.nuget.dgspec.json
+-a---          2026-03-08  8:44 PM           1303 GenesysExtensionAudit.Core.csproj.nuget.g.props
+-a---          2026-03-08  8:44 PM            407 GenesysExtensionAudit.Core.csproj.nuget.g.targets
+-a---          2026-03-31  2:55 AM           4723 project.assets.json
+-a---          2026-03-31  2:55 AM            363 project.nuget.cache
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj\Debug\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                ref
+d----          2026-03-18 12:37 PM                refint
+-a---          2026-03-03  1:21 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  5:30 AM           1063 GenesysExtensionAudit.Core.AssemblyInfo.cs
+-a---          2026-03-31  5:30 AM             66 GenesysExtensionAudit.Core.AssemblyInfoInputs.cache
+-a---          2026-03-31  2:55 AM            411 GenesysExtensionAudit.Core.assets.cache
+-a---          2026-03-18 12:37 PM             66 GenesysExtensionAudit.Core.csproj.CoreCompileInputs.cache
+-a---          2026-03-31  3:02 AM           3434 GenesysExtensionAudit.Core.csproj.FileListAbsolute.txt
+-a---          2026-03-31  5:30 AM          60928 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  2:55 AM            742 GenesysExtensionAudit.Core.GeneratedMSBuildEditorConfig.editorconfig
+-a---          2026-03-03  1:21 AM            295 GenesysExtensionAudit.Core.GlobalUsings.g.cs
+-a---          2026-03-31  5:30 AM          24656 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  5:30 AM            190 GenesysExtensionAudit.Core.sourcelink.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj\Debug\net8.0\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:30 AM          28672 GenesysExtensionAudit.Core.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj\Debug\net8.0\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:30 AM          28672 GenesysExtensionAudit.Core.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:31 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj\Release\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:31 AM                ref
+d----          2026-03-03  1:31 AM                refint
+-a---          2026-03-03  1:31 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  6:21 AM           1065 GenesysExtensionAudit.Core.AssemblyInfo.cs
+-a---          2026-03-31  6:21 AM             66 GenesysExtensionAudit.Core.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:45 AM            411 GenesysExtensionAudit.Core.assets.cache
+-a---          2026-03-31  4:45 AM             66 GenesysExtensionAudit.Core.csproj.CoreCompileInputs.cache
+-a---          2026-03-31  4:45 AM           3482 GenesysExtensionAudit.Core.csproj.FileListAbsolute.txt
+-a---          2026-03-31  6:21 AM          59392 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  4:45 AM            742 GenesysExtensionAudit.Core.GeneratedMSBuildEditorConfig.editorconfig
+-a---          2026-03-03  1:31 AM            295 GenesysExtensionAudit.Core.GlobalUsings.g.cs
+-a---          2026-03-31  6:21 AM          23872 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  6:21 AM            190 GenesysExtensionAudit.Core.sourcelink.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj\Release\net8.0\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM          28672 GenesysExtensionAudit.Core.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Core\obj\Release\net8.0\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM          28672 GenesysExtensionAudit.Core.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Domain
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-08  1:56 PM                Services
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Domain\Services
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-08  1:56 PM          18090 AuditEngine.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:36 PM                Application
+d----          2026-03-03  1:31 AM                bin
+d----          2026-03-31  4:53 AM                Configuration
+d----          2026-03-03  1:21 AM                Domain
+d----          2026-03-08  1:56 PM                Genesys
+d----          2026-03-18 12:47 PM                Http
+d----          2026-03-03  1:21 AM                Logging
+d----          2026-03-31  2:55 AM                obj
+d----          2026-03-31  4:54 AM                Reporting
+-a---          2026-03-03  1:21 AM           1510 GenesysExtensionAudit.Infrastructure.csproj
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Application
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:28 AM         103685 AuditOrchestrator.cs
+-a---          2026-03-03  1:21 AM           6861 AuditRunner.cs
+-a---          2026-03-03  1:21 AM            531 IAuditOrchestrator.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\bin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  1:31 AM                Release
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\bin\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:30 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\bin\Debug\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:30 AM          60928 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  5:30 AM          24656 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  3:02 AM          48353 GenesysExtensionAudit.Infrastructure.deps.json
+-a---          2026-03-31  5:30 AM         722432 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  5:30 AM         179888 GenesysExtensionAudit.Infrastructure.pdb
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\bin\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\bin\Release\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM          59392 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  6:21 AM          23872 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  4:45 AM          48353 GenesysExtensionAudit.Infrastructure.deps.json
+-a---          2026-03-31  6:21 AM         684032 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  6:21 AM         155880 GenesysExtensionAudit.Infrastructure.pdb
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Configuration
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-16  2:55 AM           1847 AuditOptions.cs
+-a---          2026-03-31  4:53 AM           2245 ElasticExportOptions.cs
+-a---          2026-03-03  1:21 AM            566 ExportOptions.cs
+-a---          2026-03-08  3:15 PM           2225 GitHubOptions.cs
+-a---          2026-03-31  4:53 AM           1835 IUserSettingsService.cs
+-a---          2026-03-03  1:21 AM           1622 ScheduledAuditCommandLine.cs
+-a---          2026-03-31  4:55 AM           2281 ScheduledAuditProfile.cs
+-a---          2026-03-03  1:21 AM           1445 SharePointOptions.cs
+-a---          2026-03-31  4:53 AM          12074 UserSettingsService.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Domain
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:28 AM                Services
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Domain\Services
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM           3133 AuditAnalyzer.cs
+-a---          2026-03-18 12:34 PM           9281 ChangeAdjacencyAnalyzer.cs
+-a---          2026-03-31  5:30 AM          22169 EdgePerformanceAnalyzer.cs
+-a---          2026-03-03  1:21 AM            561 ExtensionNormalizer.cs
+-a---          2026-03-18 12:34 PM          10033 FlappingDetectionAnalyzer.cs
+-a---          2026-03-31  5:28 AM           8388 HotSpotAnalyzer.cs
+-a---          2026-03-16  2:55 AM          15371 LicenseHygieneAnalyzer.cs
+-a---          2026-03-18 12:34 PM           3864 PromptHygieneAnalyzer.cs
+-a---          2026-03-18 12:34 PM          13215 SiteTopologyAnalyzer.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Genesys
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18  1:01 PM                Clients
+d----          2026-03-18 12:03 PM                Dtos
+d----          2026-03-08  1:56 PM                Json
+d----          2026-03-03  1:21 AM                Pagination
+d----          2026-03-03  1:21 AM                Paging
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Genesys\Clients
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-18 12:04 PM          10421 GenesysAuditLogsClient.cs
+-a---          2026-03-18  1:01 PM          14403 GenesysCloudApiClient.cs
+-a---          2026-03-03  1:21 AM           1996 GenesysDidsClient.cs
+-a---          2026-03-16  2:58 AM           1334 GenesysEdgesClient.cs
+-a---          2026-03-03  1:21 AM           1541 GenesysExtensionsClient.cs
+-a---          2026-03-03  1:21 AM           1415 GenesysFlowsClient.cs
+-a---          2026-03-03  1:21 AM           1326 GenesysGroupsClient.cs
+-a---          2026-03-08  2:42 PM           1312 GenesysIvrsClient.cs
+-a---          2026-03-16  2:55 AM           1682 GenesysLicenseUsersClient.cs
+-a---          2026-03-03  1:47 AM           2081 GenesysOperationalEventsClient.cs
+-a---          2026-03-03  1:47 AM           1412 GenesysOutboundEventsClient.cs
+-a---          2026-03-16  3:34 AM           1453 GenesysPromptsClient.cs
+-a---          2026-03-08  2:32 PM           1446 GenesysQueueMembersClient.cs
+-a---          2026-03-03  1:21 AM           1334 GenesysQueuesClient.cs
+-a---          2026-03-16  2:57 AM           1340 GenesysSitesClient.cs
+-a---          2026-03-16  2:58 AM           1352 GenesysTrunksClient.cs
+-a---          2026-03-16  2:55 AM           1655 GenesysUserRolesClient.cs
+-a---          2026-03-03 10:24 AM           1692 GenesysUsersClient.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Genesys\Dtos
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-18 12:03 PM           4454 Dtos.AuditLogs.cs
+-a---          2026-03-03  1:21 AM           1596 Dtos.Dids.cs
+-a---          2026-03-18 11:51 AM           2429 Dtos.Edges.cs
+-a---          2026-03-03  1:21 AM           1805 Dtos.Extensions.cs
+-a---          2026-03-03  1:21 AM           1041 Dtos.Flows.cs
+-a---          2026-03-03  1:21 AM            691 Dtos.Groups.cs
+-a---          2026-03-08  2:42 PM           2449 Dtos.Ivrs.cs
+-a---          2026-03-16  2:55 AM           1235 Dtos.License.cs
+-a---          2026-03-03  1:46 AM           2232 Dtos.OperationalEvents.cs
+-a---          2026-03-03  1:47 AM           1431 Dtos.OutboundEvents.cs
+-a---          2026-03-16  3:34 AM           2531 Dtos.Prompts.cs
+-a---          2026-03-08  2:32 PM           2156 Dtos.QueueMembers.cs
+-a---          2026-03-03  1:21 AM            668 Dtos.Queues.cs
+-a---          2026-03-16  2:57 AM           2426 Dtos.Sites.cs
+-a---          2026-03-16  2:57 AM           2619 Dtos.Trunks.cs
+-a---          2026-03-16  2:55 AM           2093 Dtos.UserRoles.cs
+-a---          2026-03-09  7:59 AM           4142 Dtos.Users.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Genesys\Json
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-08  1:56 PM           1711 NullableDateTimeConverter.cs
+-a---          2026-03-09  7:56 AM           1876 NullableDateTimeOffsetConverter.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Genesys\Pagination
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM           1731 Paginator.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Genesys\Paging
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM          12716 PagingOrchestrator.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Http
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-08  3:40 PM            384 GenesysPkceAuthResult.cs
+-a---          2026-03-18 12:59 PM          14100 GenesysPkceAuthService.cs
+-a---          2026-03-08  3:42 PM            900 GenesysRegionOptions.cs
+-a---          2026-03-03  1:21 AM           1690 HttpLoggingHandler.cs
+-a---          2026-03-08  3:40 PM            247 IGenesysPkceAuthService.cs
+-a---          2026-03-03  1:21 AM            207 ITokenProvider.cs
+-a---          2026-03-03  1:21 AM           1014 OAuthBearerHandler.cs
+-a---          2026-03-03  1:21 AM           1986 RateLimitHandler.cs
+-a---          2026-03-18 12:59 PM          12330 TokenProvider.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Logging
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-03  1:21 AM          16443 Logging.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  1:31 AM                Release
+-a---          2026-03-31  2:55 AM           8268 GenesysExtensionAudit.Infrastructure.csproj.nuget.dgspec.json
+-a---          2026-03-08  8:44 PM           1303 GenesysExtensionAudit.Infrastructure.csproj.nuget.g.props
+-a---          2026-03-08  8:44 PM           1599 GenesysExtensionAudit.Infrastructure.csproj.nuget.g.targets
+-a---          2026-03-31  2:55 AM         129448 project.assets.json
+-a---          2026-03-31  2:55 AM           9045 project.nuget.cache
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:30 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj\Debug\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                ref
+d----          2026-03-18 12:37 PM                refint
+-a---          2026-03-03  1:21 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  5:30 AM              0 GenesysE.495B2B21.Up2Date
+-a---          2026-03-31  5:30 AM           1093 GenesysExtensionAudit.Infrastructure.AssemblyInfo.cs
+-a---          2026-03-31  5:30 AM             66 GenesysExtensionAudit.Infrastructure.AssemblyInfoInputs.cache
+-a---          2026-03-31  2:55 AM          40983 GenesysExtensionAudit.Infrastructure.assets.cache
+-a---          2026-03-31  5:30 AM          29848 GenesysExtensionAudit.Infrastructure.csproj.AssemblyReference.cache
+-a---          2026-03-31  5:30 AM             66 GenesysExtensionAudit.Infrastructure.csproj.CoreCompileInputs.cache
+-a---          2026-03-31  3:02 AM           5118 GenesysExtensionAudit.Infrastructure.csproj.FileListAbsolute.txt
+-a---          2026-03-31  5:30 AM         722432 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  2:55 AM            752 GenesysExtensionAudit.Infrastructure.GeneratedMSBuildEditorConfig.edit
+                                                  orconfig
+-a---          2026-03-03  1:21 AM            295 GenesysExtensionAudit.Infrastructure.GlobalUsings.g.cs
+-a---          2026-03-31  5:30 AM         179888 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-31  5:30 AM            190 GenesysExtensionAudit.Infrastructure.sourcelink.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj\Debug\net8.0\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:30 AM         178688 GenesysExtensionAudit.Infrastructure.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj\Debug\net8.0\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:30 AM         178688 GenesysExtensionAudit.Infrastructure.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj\Release\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:31 AM                ref
+d----          2026-03-03  1:31 AM                refint
+-a---          2026-03-03  1:31 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  6:21 AM              0 GenesysE.495B2B21.Up2Date
+-a---          2026-03-31  6:21 AM           1095 GenesysExtensionAudit.Infrastructure.AssemblyInfo.cs
+-a---          2026-03-31  6:21 AM             66 GenesysExtensionAudit.Infrastructure.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:45 AM          40983 GenesysExtensionAudit.Infrastructure.assets.cache
+-a---          2026-03-31  6:21 AM          29850 GenesysExtensionAudit.Infrastructure.csproj.AssemblyReference.cache
+-a---          2026-03-31  6:21 AM             66 GenesysExtensionAudit.Infrastructure.csproj.CoreCompileInputs.cache
+-a---          2026-03-31  4:45 AM           5182 GenesysExtensionAudit.Infrastructure.csproj.FileListAbsolute.txt
+-a---          2026-03-31  6:21 AM         684032 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  4:45 AM            752 GenesysExtensionAudit.Infrastructure.GeneratedMSBuildEditorConfig.edit
+                                                  orconfig
+-a---          2026-03-03  1:31 AM            295 GenesysExtensionAudit.Infrastructure.GlobalUsings.g.cs
+-a---          2026-03-31  6:21 AM         155880 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-31  6:21 AM            190 GenesysExtensionAudit.Infrastructure.sourcelink.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj\Release\net8.0\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM         184832 GenesysExtensionAudit.Infrastructure.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\obj\Release\net8.0\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM         184832 GenesysExtensionAudit.Infrastructure.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Infrastructure\Reporting
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:27 AM          31806 AuditReportData.cs
+-a---          2026-03-31  4:00 AM          31491 AuditSnapshotService.cs
+-a---          2026-03-31  4:39 AM           8923 CareEvidenceArtifactService.cs
+-a---          2026-03-31  4:34 AM          39330 CareEvidenceExportService.cs
+-a---          2026-03-31  4:33 AM           5907 CareEvidencePacket.cs
+-a---          2026-03-31  4:58 AM          19399 ElasticAuditExportService.cs
+-a---          2026-03-31  5:29 AM          94364 ExcelReportService.cs
+-a---          2026-03-03  1:21 AM          15422 ExportService.cs
+-a---          2026-03-08  3:16 PM          15801 GitHubUploadService.cs
+-a---          2026-03-03  1:21 AM            468 IFileUploadService.cs
+-a---          2026-03-08  1:56 PM            630 IGitHubUploadService.cs
+-a---          2026-03-03  1:21 AM           2664 SharePointUploadService.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:28 AM                bin
+d----          2026-03-31  2:55 AM                obj
+-a---          2026-03-31  4:57 AM           1611 appsettings.json
+-a---          2026-03-03  1:21 AM           1233 GenesysExtensionAudit.Runner.csproj
+-a---          2026-03-31  4:54 AM          27083 Program.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  7:28 AM                Release
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:31 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-08  2:38 PM                runtimes
+-a---          2026-03-31  4:57 AM           1611 appsettings.json
+-a---          2024-10-09  5:14 PM         426552 Azure.Core.dll
+-a---          2024-06-17 11:37 AM         350752 Azure.Identity.dll
+-a---          2025-05-14  4:51 PM        1691136 ClosedXML.dll
+-a---          2025-04-03  7:11 PM         192000 ClosedXML.Parser.dll
+-a---          2024-10-15  3:18 PM        6349424 DocumentFormat.OpenXml.dll
+-a---          2024-10-15  3:18 PM         471152 DocumentFormat.OpenXml.Framework.dll
+-a---          2020-10-02  4:42 AM          30720 ExcelNumberFormat.dll
+-a---          2026-03-31  5:30 AM          60928 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  5:30 AM          24656 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  5:30 AM         722432 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  5:30 AM         179888 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-31  3:52 AM          65086 GenesysExtensionAudit.Runner.deps.json
+-a---          2026-03-31  5:31 AM          34816 GenesysExtensionAudit.Runner.dll
+-a---          2026-03-31  5:31 AM         152064 GenesysExtensionAudit.Runner.exe
+-a---          2026-03-31  5:31 AM          20508 GenesysExtensionAudit.Runner.pdb
+-a---          2026-03-31  3:52 AM            268 GenesysExtensionAudit.Runner.runtimeconfig.json
+-a---          2021-10-22  7:47 PM          16000 Microsoft.Bcl.AsyncInterfaces.dll
+-a---          2023-11-30  3:24 AM          17696 Microsoft.Bcl.TimeProvider.dll
+-a---          2026-01-25 12:29 PM          27912 Microsoft.Extensions.Configuration.Abstractions.dll
+-a---          2026-01-25 12:31 PM          42800 Microsoft.Extensions.Configuration.Binder.dll
+-a---          2026-01-25 12:31 PM          24888 Microsoft.Extensions.Configuration.CommandLine.dll
+-a---          2026-01-25 12:31 PM          43784 Microsoft.Extensions.Configuration.dll
+-a---          2026-01-25 12:31 PM          22288 Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+-a---          2026-01-25 12:31 PM          27912 Microsoft.Extensions.Configuration.FileExtensions.dll
+-a---          2026-01-25 12:33 PM          26896 Microsoft.Extensions.Configuration.Json.dll
+-a---          2026-01-25 12:34 PM          25400 Microsoft.Extensions.Configuration.UserSecrets.dll
+-a---          2026-01-25 12:27 PM          65288 Microsoft.Extensions.DependencyInjection.Abstractions.dll
+-a---          2026-01-25 12:29 PM          94984 Microsoft.Extensions.DependencyInjection.dll
+-a---          2026-01-25 12:31 PM          30472 Microsoft.Extensions.Diagnostics.Abstractions.dll
+-a---          2026-01-25 12:32 PM          35640 Microsoft.Extensions.Diagnostics.dll
+-a---          2026-01-25 12:28 PM          22792 Microsoft.Extensions.FileProviders.Abstractions.dll
+-a---          2026-01-25 12:31 PM          44816 Microsoft.Extensions.FileProviders.Physical.dll
+-a---          2026-01-25 12:28 PM          46856 Microsoft.Extensions.FileSystemGlobbing.dll
+-a---          2026-01-25 12:32 PM          53512 Microsoft.Extensions.Hosting.Abstractions.dll
+-a---          2026-01-25 12:36 PM          71480 Microsoft.Extensions.Hosting.dll
+-a---          2026-01-25 12:33 PM          92472 Microsoft.Extensions.Http.dll
+-a---          2026-01-25 12:31 PM          66312 Microsoft.Extensions.Logging.Abstractions.dll
+-a---          2026-01-25 12:32 PM          27912 Microsoft.Extensions.Logging.Configuration.dll
+-a---          2026-01-25 12:35 PM          75536 Microsoft.Extensions.Logging.Console.dll
+-a---          2026-01-25 12:32 PM          20280 Microsoft.Extensions.Logging.Debug.dll
+-a---          2026-01-25 12:31 PM          50960 Microsoft.Extensions.Logging.dll
+-a---          2026-01-25 12:32 PM          25352 Microsoft.Extensions.Logging.EventLog.dll
+-a---          2026-01-25 12:32 PM          35088 Microsoft.Extensions.Logging.EventSource.dll
+-a---          2026-01-25 12:31 PM          22288 Microsoft.Extensions.Options.ConfigurationExtensions.dll
+-a---          2026-01-25 12:30 PM          64824 Microsoft.Extensions.Options.dll
+-a---          2026-01-25 12:27 PM          44344 Microsoft.Extensions.Primitives.dll
+-a---          2024-11-18  8:37 AM         139824 Microsoft.Graph.Core.dll
+-a---          2024-12-05  4:19 AM       40942648 Microsoft.Graph.dll
+-a---          2024-06-06  6:09 PM        1005600 Microsoft.Identity.Client.dll
+-a---          2024-06-06  6:14 PM          66592 Microsoft.Identity.Client.Extensions.Msal.dll
+-a---          2024-11-01  7:45 PM          19512 Microsoft.IdentityModel.Abstractions.dll
+-a---          2024-11-01  7:46 PM         161824 Microsoft.IdentityModel.JsonWebTokens.dll
+-a---          2024-11-01  7:46 PM          36896 Microsoft.IdentityModel.Logging.dll
+-a---          2024-11-01  7:45 PM          41016 Microsoft.IdentityModel.Protocols.dll
+-a---          2024-11-01  7:46 PM         137248 Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+-a---          2024-11-01  7:46 PM         350240 Microsoft.IdentityModel.Tokens.dll
+-a---          2024-11-01  7:45 PM          40480 Microsoft.IdentityModel.Validators.dll
+-a---          2024-11-14  1:41 AM          98888 Microsoft.Kiota.Abstractions.dll
+-a---          2024-11-14  1:41 AM          22072 Microsoft.Kiota.Authentication.Azure.dll
+-a---          2024-11-14  1:40 AM         101944 Microsoft.Kiota.Http.HttpClientLibrary.dll
+-a---          2024-11-06  3:32 AM          35376 Microsoft.Kiota.Serialization.Form.dll
+-a---          2024-11-14  1:41 AM          70200 Microsoft.Kiota.Serialization.Json.dll
+-a---          2024-11-06  3:32 AM          20520 Microsoft.Kiota.Serialization.Multipart.dll
+-a---          2024-11-06  3:32 AM          27176 Microsoft.Kiota.Serialization.Text.dll
+-a---          2024-11-18 10:48 AM          34816 RBush.dll
+-a---          2025-05-18  5:22 PM         163328 Serilog.dll
+-a---          2023-10-03  1:58 AM           7680 Serilog.Enrichers.Environment.dll
+-a---          2024-06-14  5:03 AM           6656 Serilog.Enrichers.Process.dll
+-a---          2019-05-02  7:41 PM           6144 Serilog.Enrichers.Thread.dll
+-a---          2025-11-28  1:35 AM          35840 Serilog.Extensions.Hosting.dll
+-a---          2025-11-21  4:48 PM          28672 Serilog.Extensions.Logging.dll
+-a---          2023-11-09  1:54 AM          10240 Serilog.Formatting.Compact.dll
+-a---          2025-11-02  4:00 PM          38400 Serilog.Sinks.Console.dll
+-a---          2025-04-27  8:38 PM          36864 Serilog.Sinks.File.dll
+-a---          2023-08-11  8:04 AM        1135616 SixLabors.Fonts.dll
+-a---          2024-11-12  9:52 AM          23912 Std.UriTemplate.dll
+-a---          2024-09-17 12:20 PM         111128 System.ClientModel.dll
+-a---          2026-01-25 12:27 PM         192264 System.Diagnostics.DiagnosticSource.dll
+-a---          2026-01-25 12:27 PM          52488 System.Diagnostics.EventLog.dll
+-a---          2024-11-01  7:46 PM          90656 System.IdentityModel.Tokens.Jwt.dll
+-a---          2024-09-16  7:09 PM         142136 System.IO.Packaging.dll
+-a---          2026-01-25 12:27 PM          77584 System.IO.Pipelines.dll
+-a---          2021-10-22  7:47 PM          28264 System.Memory.Data.dll
+-a---          2019-11-15  3:37 AM          17784 System.Security.Cryptography.ProtectedData.dll
+-a---          2026-01-25 12:27 PM          66320 System.Text.Encodings.Web.dll
+-a---          2026-01-25 12:30 PM         677128 System.Text.Json.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0\runtimes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-08  2:38 PM                browser
+d----          2026-03-08  2:38 PM                win
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0\runtimes\browser
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-08  2:38 PM                lib
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0\runtimes\browser\lib
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0\runtimes\browser\lib\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-01-25 12:29 PM          66360 System.Text.Encodings.Web.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0\runtimes\win
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-08  2:38 PM                lib
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0\runtimes\win\lib
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                net8.0
+d----          2026-03-18 12:37 PM                netstandard2.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0\runtimes\win\lib\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-01-25 12:33 PM         175880 System.Diagnostics.EventLog.dll
+-a---          2026-01-25 12:27 PM         801040 System.Diagnostics.EventLog.Messages.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Debug\net8.0\runtimes\win\lib\netstandard2.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2019-11-15  3:53 AM          25464 System.Security.Cryptography.ProtectedData.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                runtimes
+-a---          2026-03-31  4:57 AM           1611 appsettings.json
+-a---          2024-10-09  5:14 PM         426552 Azure.Core.dll
+-a---          2024-06-17 11:37 AM         350752 Azure.Identity.dll
+-a---          2025-05-14  4:51 PM        1691136 ClosedXML.dll
+-a---          2025-04-03  7:11 PM         192000 ClosedXML.Parser.dll
+-a---          2024-10-15  3:18 PM        6349424 DocumentFormat.OpenXml.dll
+-a---          2024-10-15  3:18 PM         471152 DocumentFormat.OpenXml.Framework.dll
+-a---          2020-10-02  4:42 AM          30720 ExcelNumberFormat.dll
+-a---          2026-03-31  6:21 AM          59392 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  6:21 AM          23872 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  6:21 AM         684032 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  6:21 AM         155880 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-31  4:45 AM          65086 GenesysExtensionAudit.Runner.deps.json
+-a---          2026-03-31  6:21 AM          32768 GenesysExtensionAudit.Runner.dll
+-a---          2026-03-31  6:21 AM         152064 GenesysExtensionAudit.Runner.exe
+-a---          2026-03-31  6:21 AM          19648 GenesysExtensionAudit.Runner.pdb
+-a---          2026-03-31  4:45 AM            340 GenesysExtensionAudit.Runner.runtimeconfig.json
+-a---          2021-10-22  7:47 PM          16000 Microsoft.Bcl.AsyncInterfaces.dll
+-a---          2023-11-30  3:24 AM          17696 Microsoft.Bcl.TimeProvider.dll
+-a---          2026-01-25 12:29 PM          27912 Microsoft.Extensions.Configuration.Abstractions.dll
+-a---          2026-01-25 12:31 PM          42800 Microsoft.Extensions.Configuration.Binder.dll
+-a---          2026-01-25 12:31 PM          24888 Microsoft.Extensions.Configuration.CommandLine.dll
+-a---          2026-01-25 12:31 PM          43784 Microsoft.Extensions.Configuration.dll
+-a---          2026-01-25 12:31 PM          22288 Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+-a---          2026-01-25 12:31 PM          27912 Microsoft.Extensions.Configuration.FileExtensions.dll
+-a---          2026-01-25 12:33 PM          26896 Microsoft.Extensions.Configuration.Json.dll
+-a---          2026-01-25 12:34 PM          25400 Microsoft.Extensions.Configuration.UserSecrets.dll
+-a---          2026-01-25 12:27 PM          65288 Microsoft.Extensions.DependencyInjection.Abstractions.dll
+-a---          2026-01-25 12:29 PM          94984 Microsoft.Extensions.DependencyInjection.dll
+-a---          2026-01-25 12:31 PM          30472 Microsoft.Extensions.Diagnostics.Abstractions.dll
+-a---          2026-01-25 12:32 PM          35640 Microsoft.Extensions.Diagnostics.dll
+-a---          2026-01-25 12:28 PM          22792 Microsoft.Extensions.FileProviders.Abstractions.dll
+-a---          2026-01-25 12:31 PM          44816 Microsoft.Extensions.FileProviders.Physical.dll
+-a---          2026-01-25 12:28 PM          46856 Microsoft.Extensions.FileSystemGlobbing.dll
+-a---          2026-01-25 12:32 PM          53512 Microsoft.Extensions.Hosting.Abstractions.dll
+-a---          2026-01-25 12:36 PM          71480 Microsoft.Extensions.Hosting.dll
+-a---          2026-01-25 12:33 PM          92472 Microsoft.Extensions.Http.dll
+-a---          2026-01-25 12:31 PM          66312 Microsoft.Extensions.Logging.Abstractions.dll
+-a---          2026-01-25 12:32 PM          27912 Microsoft.Extensions.Logging.Configuration.dll
+-a---          2026-01-25 12:35 PM          75536 Microsoft.Extensions.Logging.Console.dll
+-a---          2026-01-25 12:32 PM          20280 Microsoft.Extensions.Logging.Debug.dll
+-a---          2026-01-25 12:31 PM          50960 Microsoft.Extensions.Logging.dll
+-a---          2026-01-25 12:32 PM          25352 Microsoft.Extensions.Logging.EventLog.dll
+-a---          2026-01-25 12:32 PM          35088 Microsoft.Extensions.Logging.EventSource.dll
+-a---          2026-01-25 12:31 PM          22288 Microsoft.Extensions.Options.ConfigurationExtensions.dll
+-a---          2026-01-25 12:30 PM          64824 Microsoft.Extensions.Options.dll
+-a---          2026-01-25 12:27 PM          44344 Microsoft.Extensions.Primitives.dll
+-a---          2024-11-18  8:37 AM         139824 Microsoft.Graph.Core.dll
+-a---          2024-12-05  4:19 AM       40942648 Microsoft.Graph.dll
+-a---          2024-06-06  6:09 PM        1005600 Microsoft.Identity.Client.dll
+-a---          2024-06-06  6:14 PM          66592 Microsoft.Identity.Client.Extensions.Msal.dll
+-a---          2024-11-01  7:45 PM          19512 Microsoft.IdentityModel.Abstractions.dll
+-a---          2024-11-01  7:46 PM         161824 Microsoft.IdentityModel.JsonWebTokens.dll
+-a---          2024-11-01  7:46 PM          36896 Microsoft.IdentityModel.Logging.dll
+-a---          2024-11-01  7:45 PM          41016 Microsoft.IdentityModel.Protocols.dll
+-a---          2024-11-01  7:46 PM         137248 Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+-a---          2024-11-01  7:46 PM         350240 Microsoft.IdentityModel.Tokens.dll
+-a---          2024-11-01  7:45 PM          40480 Microsoft.IdentityModel.Validators.dll
+-a---          2024-11-14  1:41 AM          98888 Microsoft.Kiota.Abstractions.dll
+-a---          2024-11-14  1:41 AM          22072 Microsoft.Kiota.Authentication.Azure.dll
+-a---          2024-11-14  1:40 AM         101944 Microsoft.Kiota.Http.HttpClientLibrary.dll
+-a---          2024-11-06  3:32 AM          35376 Microsoft.Kiota.Serialization.Form.dll
+-a---          2024-11-14  1:41 AM          70200 Microsoft.Kiota.Serialization.Json.dll
+-a---          2024-11-06  3:32 AM          20520 Microsoft.Kiota.Serialization.Multipart.dll
+-a---          2024-11-06  3:32 AM          27176 Microsoft.Kiota.Serialization.Text.dll
+-a---          2024-11-18 10:48 AM          34816 RBush.dll
+-a---          2025-05-18  5:22 PM         163328 Serilog.dll
+-a---          2023-10-03  1:58 AM           7680 Serilog.Enrichers.Environment.dll
+-a---          2024-06-14  5:03 AM           6656 Serilog.Enrichers.Process.dll
+-a---          2019-05-02  7:41 PM           6144 Serilog.Enrichers.Thread.dll
+-a---          2025-11-28  1:35 AM          35840 Serilog.Extensions.Hosting.dll
+-a---          2025-11-21  4:48 PM          28672 Serilog.Extensions.Logging.dll
+-a---          2023-11-09  1:54 AM          10240 Serilog.Formatting.Compact.dll
+-a---          2025-11-02  4:00 PM          38400 Serilog.Sinks.Console.dll
+-a---          2025-04-27  8:38 PM          36864 Serilog.Sinks.File.dll
+-a---          2023-08-11  8:04 AM        1135616 SixLabors.Fonts.dll
+-a---          2024-11-12  9:52 AM          23912 Std.UriTemplate.dll
+-a---          2024-09-17 12:20 PM         111128 System.ClientModel.dll
+-a---          2026-01-25 12:27 PM         192264 System.Diagnostics.DiagnosticSource.dll
+-a---          2026-01-25 12:27 PM          52488 System.Diagnostics.EventLog.dll
+-a---          2024-11-01  7:46 PM          90656 System.IdentityModel.Tokens.Jwt.dll
+-a---          2024-09-16  7:09 PM         142136 System.IO.Packaging.dll
+-a---          2026-01-25 12:27 PM          77584 System.IO.Pipelines.dll
+-a---          2021-10-22  7:47 PM          28264 System.Memory.Data.dll
+-a---          2019-11-15  3:37 AM          17784 System.Security.Cryptography.ProtectedData.dll
+-a---          2026-01-25 12:27 PM          66320 System.Text.Encodings.Web.dll
+-a---          2026-01-25 12:30 PM         677128 System.Text.Json.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0\runtimes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                browser
+d----          2026-03-03  7:29 AM                win
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0\runtimes\browser
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                lib
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0\runtimes\browser\lib
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0\runtimes\browser\lib\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-01-25 12:29 PM          66360 System.Text.Encodings.Web.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0\runtimes\win
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                lib
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0\runtimes\win\lib
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                net8.0
+d----          2026-03-03  7:29 AM                netstandard2.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0\runtimes\win\lib\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-01-25 12:33 PM         175880 System.Diagnostics.EventLog.dll
+-a---          2026-01-25 12:27 PM         801040 System.Diagnostics.EventLog.Messages.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\bin\Release\net8.0\runtimes\win\lib\netstandard2.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2019-11-15  3:53 AM          25464 System.Security.Cryptography.ProtectedData.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  7:28 AM                Release
+-a---          2026-03-31  2:55 AM          12681 GenesysExtensionAudit.Runner.csproj.nuget.dgspec.json
+-a---          2026-03-03  1:21 AM           1742 GenesysExtensionAudit.Runner.csproj.nuget.g.props
+-a---          2026-03-08  3:16 PM           1941 GenesysExtensionAudit.Runner.csproj.nuget.g.targets
+-a---          2026-03-31  2:55 AM         167217 project.assets.json
+-a---          2026-03-31  2:55 AM          11203 project.nuget.cache
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:31 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj\Debug\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                ref
+d----          2026-03-18 12:37 PM                refint
+-a---          2026-03-03  1:21 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  5:31 AM         152064 apphost.exe
+-a---          2026-03-31  5:31 AM              0 GenesysE.0EB2BFB5.Up2Date
+-a---          2026-03-31  5:31 AM           1069 GenesysExtensionAudit.Runner.AssemblyInfo.cs
+-a---          2026-03-31  5:31 AM             66 GenesysExtensionAudit.Runner.AssemblyInfoInputs.cache
+-a---          2026-03-31  2:55 AM          50068 GenesysExtensionAudit.Runner.assets.cache
+-a---          2026-03-31  5:31 AM          43092 GenesysExtensionAudit.Runner.csproj.AssemblyReference.cache
+-a---          2026-03-31  3:52 AM             66 GenesysExtensionAudit.Runner.csproj.CoreCompileInputs.cache
+-a---          2026-03-31  3:52 AM          29159 GenesysExtensionAudit.Runner.csproj.FileListAbsolute.txt
+-a---          2026-03-31  5:31 AM          34816 GenesysExtensionAudit.Runner.dll
+-a---          2026-03-31  2:55 AM            751 GenesysExtensionAudit.Runner.GeneratedMSBuildEditorConfig.editorconfig
+-a---          2026-03-31  3:52 AM             66 GenesysExtensionAudit.Runner.genruntimeconfig.cache
+-a---          2026-03-03  1:21 AM            295 GenesysExtensionAudit.Runner.GlobalUsings.g.cs
+-a---          2026-03-31  5:31 AM          20508 GenesysExtensionAudit.Runner.pdb
+-a---          2026-03-31  5:31 AM            190 GenesysExtensionAudit.Runner.sourcelink.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj\Debug\net8.0\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:31 AM           7680 GenesysExtensionAudit.Runner.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj\Debug\net8.0\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:31 AM           7680 GenesysExtensionAudit.Runner.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj\Release\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                ref
+d----          2026-03-03  7:29 AM                refint
+-a---          2026-03-03  7:29 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  6:21 AM         152064 apphost.exe
+-a---          2026-03-31  6:21 AM              0 GenesysE.0EB2BFB5.Up2Date
+-a---          2026-03-31  6:21 AM           1071 GenesysExtensionAudit.Runner.AssemblyInfo.cs
+-a---          2026-03-31  6:21 AM             66 GenesysExtensionAudit.Runner.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:45 AM          50068 GenesysExtensionAudit.Runner.assets.cache
+-a---          2026-03-31  6:21 AM          43096 GenesysExtensionAudit.Runner.csproj.AssemblyReference.cache
+-a---          2026-03-31  4:45 AM             66 GenesysExtensionAudit.Runner.csproj.CoreCompileInputs.cache
+-a---          2026-03-31  4:45 AM          29571 GenesysExtensionAudit.Runner.csproj.FileListAbsolute.txt
+-a---          2026-03-31  6:21 AM          32768 GenesysExtensionAudit.Runner.dll
+-a---          2026-03-31  4:45 AM            751 GenesysExtensionAudit.Runner.GeneratedMSBuildEditorConfig.editorconfig
+-a---          2026-03-31  4:45 AM             66 GenesysExtensionAudit.Runner.genruntimeconfig.cache
+-a---          2026-03-03  7:28 AM            295 GenesysExtensionAudit.Runner.GlobalUsings.g.cs
+-a---          2026-03-31  6:21 AM          19648 GenesysExtensionAudit.Runner.pdb
+-a---          2026-03-31  6:21 AM            190 GenesysExtensionAudit.Runner.sourcelink.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj\Release\net8.0\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM           9728 GenesysExtensionAudit.Runner.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\src\GenesysExtensionAudit.Runner\obj\Release\net8.0\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM           9728 GenesysExtensionAudit.Runner.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:29 AM                GenesysExtensionAudit.Infrastructure.Tests
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:28 AM                bin
+d----          2026-03-31  2:55 AM                obj
+-a---          2026-03-09  7:56 AM          28908 ApiClientIntegrationTests.cs
+-a---          2026-03-08  1:56 PM           6401 AuditEngineOwnershipMismatchTests.cs
+-a---          2026-03-31  4:03 AM          13013 AuditSnapshotServiceTests.cs
+-a---          2026-03-31  4:40 AM           4265 CareEvidenceArtifactServiceTests.cs
+-a---          2026-03-31  4:36 AM           7435 CareEvidenceExportServiceTests.cs
+-a---          2026-03-31  4:12 AM          14137 ChangeAdjacencyAnalyzerTests.cs
+-a---          2026-03-31  5:31 AM           5027 EdgePerformanceAnalyzerTests.cs
+-a---          2026-03-31  4:57 AM           7425 ElasticAuditExportServiceTests.cs
+-a---          2026-03-31  5:30 AM          15425 ExcelReportServiceSummaryTests.cs
+-a---          2026-03-31  4:12 AM          15831 FlappingDetectionAnalyzerTests.cs
+-a---          2026-03-03  1:21 AM           1029 GenesysExtensionAudit.Infrastructure.Tests.csproj
+-a---          2026-03-18  1:00 PM           1659 GenesysOAuthScopeTests.cs
+-a---          2026-03-31  4:12 AM          15906 HotSpotAnalyzerTests.cs
+-a---          2026-03-31  4:12 AM          13937 LicenseHygieneAuditTests.cs
+-a---          2026-03-08  1:56 PM           4071 ScheduledAuditProfileTests.cs
+-a---          2026-03-18 12:34 PM          16064 SiteTopologyAndPromptHygieneTests.cs
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  7:28 AM                Release
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:31 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                cs
+d----          2026-03-18 12:37 PM                de
+d----          2026-03-18 12:37 PM                es
+d----          2026-03-18 12:37 PM                fr
+d----          2026-03-18 12:37 PM                it
+d----          2026-03-18 12:37 PM                ja
+d----          2026-03-18 12:37 PM                ko
+d----          2026-03-18 12:37 PM                pl
+d----          2026-03-18 12:37 PM                pt-BR
+d----          2026-03-18 12:37 PM                ru
+d----          2026-03-03 10:27 AM                runtimes
+d----          2026-03-18 12:37 PM                tr
+d----          2026-03-18 12:37 PM                zh-Hans
+d----          2026-03-18 12:37 PM                zh-Hant
+-a---          2026-03-31  2:55 AM           2910 .msCoverageSourceRootsMapping_GenesysExtensionAudit.Infrastructure.Tes
+                                                  ts
+-a---          2024-10-09  5:14 PM         426552 Azure.Core.dll
+-a---          2024-06-17 11:37 AM         350752 Azure.Identity.dll
+-a---          2025-05-14  4:51 PM        1691136 ClosedXML.dll
+-a---          2025-04-03  7:11 PM         192000 ClosedXML.Parser.dll
+-a---          2024-10-15  3:18 PM        6349424 DocumentFormat.OpenXml.dll
+-a---          2024-10-15  3:18 PM         471152 DocumentFormat.OpenXml.Framework.dll
+-a---          2020-10-02  4:42 AM          30720 ExcelNumberFormat.dll
+-a---          2026-03-31  5:30 AM          60928 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  5:30 AM          24656 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  5:30 AM         722432 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  5:30 AM         179888 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-31  3:02 AM          66842 GenesysExtensionAudit.Infrastructure.Tests.deps.json
+-a---          2026-03-31  5:31 AM         141824 GenesysExtensionAudit.Infrastructure.Tests.dll
+-a---          2026-03-31  5:31 AM          43040 GenesysExtensionAudit.Infrastructure.Tests.pdb
+-a---          2026-03-31  3:02 AM            268 GenesysExtensionAudit.Infrastructure.Tests.runtimeconfig.json
+-a---          2021-10-22  7:47 PM          16000 Microsoft.Bcl.AsyncInterfaces.dll
+-a---          2023-11-30  3:24 AM          17696 Microsoft.Bcl.TimeProvider.dll
+-a---          2023-10-31 10:59 AM          27936 Microsoft.Extensions.Configuration.Abstractions.dll
+-a---          2023-10-31 10:59 AM          42656 Microsoft.Extensions.Configuration.Binder.dll
+-a---          2023-10-31 10:59 AM          43800 Microsoft.Extensions.Configuration.dll
+-a---          2023-10-31 10:58 AM          64288 Microsoft.Extensions.DependencyInjection.Abstractions.dll
+-a---          2023-10-31 10:59 AM          92320 Microsoft.Extensions.DependencyInjection.dll
+-a---          2023-10-31 10:59 AM          30368 Microsoft.Extensions.Diagnostics.Abstractions.dll
+-a---          2023-10-31 10:59 AM          35488 Microsoft.Extensions.Diagnostics.dll
+-a---          2023-10-31 10:59 AM          22176 Microsoft.Extensions.FileProviders.Abstractions.dll
+-a---          2023-10-31 10:59 AM          51360 Microsoft.Extensions.Hosting.Abstractions.dll
+-a---          2023-10-31 10:59 AM          88736 Microsoft.Extensions.Http.dll
+-a---          2023-10-31 10:59 AM          65184 Microsoft.Extensions.Logging.Abstractions.dll
+-a---          2023-10-31 10:59 AM          50848 Microsoft.Extensions.Logging.dll
+-a---          2023-10-31 10:59 AM          22688 Microsoft.Extensions.Options.ConfigurationExtensions.dll
+-a---          2023-10-31 10:59 AM          64672 Microsoft.Extensions.Options.dll
+-a---          2023-10-31 10:58 AM          43680 Microsoft.Extensions.Primitives.dll
+-a---          2024-11-18  8:37 AM         139824 Microsoft.Graph.Core.dll
+-a---          2024-12-05  4:19 AM       40942648 Microsoft.Graph.dll
+-a---          2024-06-06  6:09 PM        1005600 Microsoft.Identity.Client.dll
+-a---          2024-06-06  6:14 PM          66592 Microsoft.Identity.Client.Extensions.Msal.dll
+-a---          2024-11-01  7:45 PM          19512 Microsoft.IdentityModel.Abstractions.dll
+-a---          2024-11-01  7:46 PM         161824 Microsoft.IdentityModel.JsonWebTokens.dll
+-a---          2024-11-01  7:46 PM          36896 Microsoft.IdentityModel.Logging.dll
+-a---          2024-11-01  7:45 PM          41016 Microsoft.IdentityModel.Protocols.dll
+-a---          2024-11-01  7:46 PM         137248 Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+-a---          2024-11-01  7:46 PM         350240 Microsoft.IdentityModel.Tokens.dll
+-a---          2024-11-01  7:45 PM          40480 Microsoft.IdentityModel.Validators.dll
+-a---          2024-11-14  1:41 AM          98888 Microsoft.Kiota.Abstractions.dll
+-a---          2024-11-14  1:41 AM          22072 Microsoft.Kiota.Authentication.Azure.dll
+-a---          2024-11-14  1:40 AM         101944 Microsoft.Kiota.Http.HttpClientLibrary.dll
+-a---          2024-11-06  3:32 AM          35376 Microsoft.Kiota.Serialization.Form.dll
+-a---          2024-11-14  1:41 AM          70200 Microsoft.Kiota.Serialization.Json.dll
+-a---          2024-11-06  3:32 AM          20520 Microsoft.Kiota.Serialization.Multipart.dll
+-a---          2024-11-06  3:32 AM          27176 Microsoft.Kiota.Serialization.Text.dll
+-a---          2024-05-22  9:19 AM         137248 Microsoft.TestPlatform.CommunicationUtilities.dll
+-a---          2024-05-22  9:18 AM          97312 Microsoft.TestPlatform.CoreUtilities.dll
+-a---          2024-05-22  9:19 AM         315424 Microsoft.TestPlatform.CrossPlatEngine.dll
+-a---          2024-05-22  9:18 AM          53288 Microsoft.TestPlatform.PlatformAbstractions.dll
+-a---          2024-05-22  9:19 AM          67120 Microsoft.TestPlatform.Utilities.dll
+-a---          2024-03-12  5:23 PM          17440 Microsoft.VisualStudio.CodeCoverage.Shim.dll
+-a---          2024-05-22  9:19 AM         247840 Microsoft.VisualStudio.TestPlatform.Common.dll
+-a---          2024-05-22  9:19 AM         332832 Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
+-a---          2021-03-17  4:03 PM         695336 Newtonsoft.Json.dll
+-a---          2024-11-18 10:48 AM          34816 RBush.dll
+-a---          2024-06-01  2:19 AM         153088 Serilog.dll
+-a---          2023-10-03  1:58 AM           7680 Serilog.Enrichers.Environment.dll
+-a---          2024-06-14  5:03 AM           6656 Serilog.Enrichers.Process.dll
+-a---          2019-05-02  7:41 PM           6144 Serilog.Enrichers.Thread.dll
+-a---          2023-11-14  9:04 PM          29696 Serilog.Extensions.Hosting.dll
+-a---          2023-11-14  5:47 PM          29696 Serilog.Extensions.Logging.dll
+-a---          2023-11-09  1:54 AM          10240 Serilog.Formatting.Compact.dll
+-a---          2022-09-05  8:58 PM          35328 Serilog.Sinks.Console.dll
+-a---          2021-06-25  4:00 AM          31232 Serilog.Sinks.File.dll
+-a---          2023-08-11  8:04 AM        1135616 SixLabors.Fonts.dll
+-a---          2024-11-12  9:52 AM          23912 Std.UriTemplate.dll
+-a---          2024-09-17 12:20 PM         111128 System.ClientModel.dll
+-a---          2024-11-01  7:46 PM          90656 System.IdentityModel.Tokens.Jwt.dll
+-a---          2024-09-16  7:09 PM         142136 System.IO.Packaging.dll
+-a---          2021-10-22  7:47 PM          28264 System.Memory.Data.dll
+-a---          2019-11-15  3:37 AM          17784 System.Security.Cryptography.ProtectedData.dll
+-a---          2024-05-22  9:19 AM          48680 testhost.dll
+-a---          2024-05-22  9:19 AM         169512 testhost.exe
+-a---          2018-08-25  3:54 PM          21928 xunit.abstractions.dll
+-a---          2024-09-26 11:42 PM         185552 xunit.assert.dll
+-a---          2024-09-26 11:43 PM          70352 xunit.core.dll
+-a---          2024-09-26 11:43 PM         279760 xunit.execution.dotnet.dll
+-a---          2024-07-07  3:47 PM          84176 xunit.runner.reporters.netcoreapp10.dll
+-a---          2024-07-07  3:47 PM         255184 xunit.runner.utility.netcoreapp10.dll
+-a---          2024-07-07  4:35 PM         180944 xunit.runner.visualstudio.testadapter.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\cs
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16416 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20520 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23472 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\de
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16944 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\es
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          24000 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\fr
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21016 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\it
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20912 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\ja
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16920 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          17448 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          22048 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          21424 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          24608 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\ko
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16944 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21552 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20912 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\pl
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21552 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20912 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\pt-BR
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16416 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20912 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\ru
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          17440 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          17440 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          23088 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          22960 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          26048 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\runtimes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03 10:27 AM                win
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\runtimes\win
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03 10:27 AM                lib
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\runtimes\win\lib
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                netstandard2.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\runtimes\win\lib\netstandard2.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2019-11-15  3:53 AM          25464 System.Security.Cryptography.ProtectedData.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\tr
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16936 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20400 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23488 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\zh-Hans
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16424 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          20000 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          19888 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          22976 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Debug\net8.0\zh-Hant
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16424 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          20504 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          19888 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          22960 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                cs
+d----          2026-03-03  7:29 AM                de
+d----          2026-03-03  7:29 AM                es
+d----          2026-03-03  7:29 AM                fr
+d----          2026-03-03  7:29 AM                it
+d----          2026-03-03  7:29 AM                ja
+d----          2026-03-03  7:29 AM                ko
+d----          2026-03-03  7:29 AM                pl
+d----          2026-03-03  7:29 AM                pt-BR
+d----          2026-03-03  7:29 AM                ru
+d----          2026-03-03  7:29 AM                runtimes
+d----          2026-03-03  7:29 AM                tr
+d----          2026-03-03  7:29 AM                zh-Hans
+d----          2026-03-03  7:29 AM                zh-Hant
+-a---          2026-03-31  4:45 AM           2910 .msCoverageSourceRootsMapping_GenesysExtensionAudit.Infrastructure.Tes
+                                                  ts
+-a---          2024-10-09  5:14 PM         426552 Azure.Core.dll
+-a---          2024-06-17 11:37 AM         350752 Azure.Identity.dll
+-a---          2025-05-14  4:51 PM        1691136 ClosedXML.dll
+-a---          2025-04-03  7:11 PM         192000 ClosedXML.Parser.dll
+-a---          2024-10-15  3:18 PM        6349424 DocumentFormat.OpenXml.dll
+-a---          2024-10-15  3:18 PM         471152 DocumentFormat.OpenXml.Framework.dll
+-a---          2020-10-02  4:42 AM          30720 ExcelNumberFormat.dll
+-a---          2026-03-31  6:21 AM          59392 GenesysExtensionAudit.Core.dll
+-a---          2026-03-31  6:21 AM          23872 GenesysExtensionAudit.Core.pdb
+-a---          2026-03-31  6:21 AM         684032 GenesysExtensionAudit.Infrastructure.dll
+-a---          2026-03-31  6:21 AM         155880 GenesysExtensionAudit.Infrastructure.pdb
+-a---          2026-03-31  4:45 AM          66842 GenesysExtensionAudit.Infrastructure.Tests.deps.json
+-a---          2026-03-31  6:21 AM         135168 GenesysExtensionAudit.Infrastructure.Tests.dll
+-a---          2026-03-31  6:21 AM          38752 GenesysExtensionAudit.Infrastructure.Tests.pdb
+-a---          2026-03-31  4:45 AM            340 GenesysExtensionAudit.Infrastructure.Tests.runtimeconfig.json
+-a---          2021-10-22  7:47 PM          16000 Microsoft.Bcl.AsyncInterfaces.dll
+-a---          2023-11-30  3:24 AM          17696 Microsoft.Bcl.TimeProvider.dll
+-a---          2023-10-31 10:59 AM          27936 Microsoft.Extensions.Configuration.Abstractions.dll
+-a---          2023-10-31 10:59 AM          42656 Microsoft.Extensions.Configuration.Binder.dll
+-a---          2023-10-31 10:59 AM          43800 Microsoft.Extensions.Configuration.dll
+-a---          2023-10-31 10:58 AM          64288 Microsoft.Extensions.DependencyInjection.Abstractions.dll
+-a---          2023-10-31 10:59 AM          92320 Microsoft.Extensions.DependencyInjection.dll
+-a---          2023-10-31 10:59 AM          30368 Microsoft.Extensions.Diagnostics.Abstractions.dll
+-a---          2023-10-31 10:59 AM          35488 Microsoft.Extensions.Diagnostics.dll
+-a---          2023-10-31 10:59 AM          22176 Microsoft.Extensions.FileProviders.Abstractions.dll
+-a---          2023-10-31 10:59 AM          51360 Microsoft.Extensions.Hosting.Abstractions.dll
+-a---          2023-10-31 10:59 AM          88736 Microsoft.Extensions.Http.dll
+-a---          2023-10-31 10:59 AM          65184 Microsoft.Extensions.Logging.Abstractions.dll
+-a---          2023-10-31 10:59 AM          50848 Microsoft.Extensions.Logging.dll
+-a---          2023-10-31 10:59 AM          22688 Microsoft.Extensions.Options.ConfigurationExtensions.dll
+-a---          2023-10-31 10:59 AM          64672 Microsoft.Extensions.Options.dll
+-a---          2023-10-31 10:58 AM          43680 Microsoft.Extensions.Primitives.dll
+-a---          2024-11-18  8:37 AM         139824 Microsoft.Graph.Core.dll
+-a---          2024-12-05  4:19 AM       40942648 Microsoft.Graph.dll
+-a---          2024-06-06  6:09 PM        1005600 Microsoft.Identity.Client.dll
+-a---          2024-06-06  6:14 PM          66592 Microsoft.Identity.Client.Extensions.Msal.dll
+-a---          2024-11-01  7:45 PM          19512 Microsoft.IdentityModel.Abstractions.dll
+-a---          2024-11-01  7:46 PM         161824 Microsoft.IdentityModel.JsonWebTokens.dll
+-a---          2024-11-01  7:46 PM          36896 Microsoft.IdentityModel.Logging.dll
+-a---          2024-11-01  7:45 PM          41016 Microsoft.IdentityModel.Protocols.dll
+-a---          2024-11-01  7:46 PM         137248 Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+-a---          2024-11-01  7:46 PM         350240 Microsoft.IdentityModel.Tokens.dll
+-a---          2024-11-01  7:45 PM          40480 Microsoft.IdentityModel.Validators.dll
+-a---          2024-11-14  1:41 AM          98888 Microsoft.Kiota.Abstractions.dll
+-a---          2024-11-14  1:41 AM          22072 Microsoft.Kiota.Authentication.Azure.dll
+-a---          2024-11-14  1:40 AM         101944 Microsoft.Kiota.Http.HttpClientLibrary.dll
+-a---          2024-11-06  3:32 AM          35376 Microsoft.Kiota.Serialization.Form.dll
+-a---          2024-11-14  1:41 AM          70200 Microsoft.Kiota.Serialization.Json.dll
+-a---          2024-11-06  3:32 AM          20520 Microsoft.Kiota.Serialization.Multipart.dll
+-a---          2024-11-06  3:32 AM          27176 Microsoft.Kiota.Serialization.Text.dll
+-a---          2024-05-22  9:19 AM         137248 Microsoft.TestPlatform.CommunicationUtilities.dll
+-a---          2024-05-22  9:18 AM          97312 Microsoft.TestPlatform.CoreUtilities.dll
+-a---          2024-05-22  9:19 AM         315424 Microsoft.TestPlatform.CrossPlatEngine.dll
+-a---          2024-05-22  9:18 AM          53288 Microsoft.TestPlatform.PlatformAbstractions.dll
+-a---          2024-05-22  9:19 AM          67120 Microsoft.TestPlatform.Utilities.dll
+-a---          2024-03-12  5:23 PM          17440 Microsoft.VisualStudio.CodeCoverage.Shim.dll
+-a---          2024-05-22  9:19 AM         247840 Microsoft.VisualStudio.TestPlatform.Common.dll
+-a---          2024-05-22  9:19 AM         332832 Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
+-a---          2021-03-17  4:03 PM         695336 Newtonsoft.Json.dll
+-a---          2024-11-18 10:48 AM          34816 RBush.dll
+-a---          2024-06-01  2:19 AM         153088 Serilog.dll
+-a---          2023-10-03  1:58 AM           7680 Serilog.Enrichers.Environment.dll
+-a---          2024-06-14  5:03 AM           6656 Serilog.Enrichers.Process.dll
+-a---          2019-05-02  7:41 PM           6144 Serilog.Enrichers.Thread.dll
+-a---          2023-11-14  9:04 PM          29696 Serilog.Extensions.Hosting.dll
+-a---          2023-11-14  5:47 PM          29696 Serilog.Extensions.Logging.dll
+-a---          2023-11-09  1:54 AM          10240 Serilog.Formatting.Compact.dll
+-a---          2022-09-05  8:58 PM          35328 Serilog.Sinks.Console.dll
+-a---          2021-06-25  4:00 AM          31232 Serilog.Sinks.File.dll
+-a---          2023-08-11  8:04 AM        1135616 SixLabors.Fonts.dll
+-a---          2024-11-12  9:52 AM          23912 Std.UriTemplate.dll
+-a---          2024-09-17 12:20 PM         111128 System.ClientModel.dll
+-a---          2024-11-01  7:46 PM          90656 System.IdentityModel.Tokens.Jwt.dll
+-a---          2024-09-16  7:09 PM         142136 System.IO.Packaging.dll
+-a---          2021-10-22  7:47 PM          28264 System.Memory.Data.dll
+-a---          2019-11-15  3:37 AM          17784 System.Security.Cryptography.ProtectedData.dll
+-a---          2024-05-22  9:19 AM          48680 testhost.dll
+-a---          2024-05-22  9:19 AM         169512 testhost.exe
+-a---          2018-08-25  3:54 PM          21928 xunit.abstractions.dll
+-a---          2024-09-26 11:42 PM         185552 xunit.assert.dll
+-a---          2024-09-26 11:43 PM          70352 xunit.core.dll
+-a---          2024-09-26 11:43 PM         279760 xunit.execution.dotnet.dll
+-a---          2024-07-07  3:47 PM          84176 xunit.runner.reporters.netcoreapp10.dll
+-a---          2024-07-07  3:47 PM         255184 xunit.runner.utility.netcoreapp10.dll
+-a---          2024-07-07  4:35 PM         180944 xunit.runner.visualstudio.testadapter.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\cs
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16416 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20520 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23472 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\de
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16944 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\es
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          24000 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\fr
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21016 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\it
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20912 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\ja
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16920 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          17448 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          22048 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          21424 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          24608 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\ko
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16944 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21552 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20912 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\pl
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21552 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20912 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\pt-BR
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16416 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20912 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23984 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\ru
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          17440 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          17440 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          23088 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          22960 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          26048 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\runtimes
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                win
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\runtimes\win
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                lib
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\runtimes\win\lib
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                netstandard2.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\runtimes\win\lib\netstandard2.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2019-11-15  3:53 AM          25464 System.Security.Cryptography.ProtectedData.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\tr
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16928 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16936 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          21024 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          20400 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          23488 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\zh-Hans
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16424 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          20000 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          19888 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          22976 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\bin\Release\net8.0\zh-Hant
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2024-05-22  9:19 AM          16424 Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+-a---          2024-05-22  9:18 AM          16928 Microsoft.TestPlatform.CoreUtilities.resources.dll
+-a---          2024-05-22  9:19 AM          20504 Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+-a---          2024-05-22  9:19 AM          19888 Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+-a---          2024-05-22  9:19 AM          22960 Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  1:21 AM                Debug
+d----          2026-03-03  7:28 AM                Release
+-a---          2026-03-31  2:55 AM          12818 GenesysExtensionAudit.Infrastructure.Tests.csproj.nuget.dgspec.json
+-a---          2026-03-03  1:21 AM           2819 GenesysExtensionAudit.Infrastructure.Tests.csproj.nuget.g.props
+-a---          2026-03-08  3:16 PM           2271 GenesysExtensionAudit.Infrastructure.Tests.csproj.nuget.g.targets
+-a---          2026-03-31  2:55 AM         172497 project.assets.json
+-a---          2026-03-31  2:55 AM          10677 project.nuget.cache
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj\Debug
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  5:30 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj\Debug\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-18 12:37 PM                ref
+d----          2026-03-18 12:37 PM                refint
+-a---          2026-03-03  1:21 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  5:31 AM              0 GenesysE.90EC214B.Up2Date
+-a---          2026-03-31  5:30 AM           1111 GenesysExtensionAudit.Infrastructure.Tests.AssemblyInfo.cs
+-a---          2026-03-31  5:30 AM             66 GenesysExtensionAudit.Infrastructure.Tests.AssemblyInfoInputs.cache
+-a---          2026-03-31  2:55 AM          71965 GenesysExtensionAudit.Infrastructure.Tests.assets.cache
+-a---          2026-03-31  5:30 AM          41913 GenesysExtensionAudit.Infrastructure.Tests.csproj.AssemblyReference.ca
+                                                  che
+-a---          2026-03-31  5:30 AM             66 GenesysExtensionAudit.Infrastructure.Tests.csproj.CoreCompileInputs.ca
+                                                  che
+-a---          2026-03-31  3:02 AM          54750 GenesysExtensionAudit.Infrastructure.Tests.csproj.FileListAbsolute.txt
+-a---          2026-03-31  5:31 AM         141824 GenesysExtensionAudit.Infrastructure.Tests.dll
+-a---          2026-03-31  2:55 AM            781 GenesysExtensionAudit.Infrastructure.Tests.GeneratedMSBuildEditorConfi
+                                                  g.editorconfig
+-a---          2026-03-31  3:02 AM             66 GenesysExtensionAudit.Infrastructure.Tests.genruntimeconfig.cache
+-a---          2026-03-03  1:21 AM            295 GenesysExtensionAudit.Infrastructure.Tests.GlobalUsings.g.cs
+-a---          2026-03-31  5:31 AM          43040 GenesysExtensionAudit.Infrastructure.Tests.pdb
+-a---          2026-03-31  5:30 AM            190 GenesysExtensionAudit.Infrastructure.Tests.sourcelink.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj\Debug\net8.0\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:31 AM          38400 GenesysExtensionAudit.Infrastructure.Tests.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj\Debug\net8.0\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  5:31 AM          38400 GenesysExtensionAudit.Infrastructure.Tests.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj\Release
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  6:21 AM                net8.0
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj\Release\net8.0
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-03  7:29 AM                ref
+d----          2026-03-03  7:29 AM                refint
+-a---          2026-03-03  7:29 AM            198 .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+-a---          2026-03-31  6:21 AM              0 GenesysE.90EC214B.Up2Date
+-a---          2026-03-31  6:21 AM           1113 GenesysExtensionAudit.Infrastructure.Tests.AssemblyInfo.cs
+-a---          2026-03-31  6:21 AM             66 GenesysExtensionAudit.Infrastructure.Tests.AssemblyInfoInputs.cache
+-a---          2026-03-31  4:45 AM          71965 GenesysExtensionAudit.Infrastructure.Tests.assets.cache
+-a---          2026-03-31  6:21 AM          41917 GenesysExtensionAudit.Infrastructure.Tests.csproj.AssemblyReference.ca
+                                                  che
+-a---          2026-03-31  6:21 AM             66 GenesysExtensionAudit.Infrastructure.Tests.csproj.CoreCompileInputs.ca
+                                                  che
+-a---          2026-03-31  4:45 AM          55406 GenesysExtensionAudit.Infrastructure.Tests.csproj.FileListAbsolute.txt
+-a---          2026-03-31  6:21 AM         135168 GenesysExtensionAudit.Infrastructure.Tests.dll
+-a---          2026-03-31  4:45 AM            781 GenesysExtensionAudit.Infrastructure.Tests.GeneratedMSBuildEditorConfi
+                                                  g.editorconfig
+-a---          2026-03-31  4:45 AM             66 GenesysExtensionAudit.Infrastructure.Tests.genruntimeconfig.cache
+-a---          2026-03-03  7:28 AM            295 GenesysExtensionAudit.Infrastructure.Tests.GlobalUsings.g.cs
+-a---          2026-03-31  6:21 AM          38752 GenesysExtensionAudit.Infrastructure.Tests.pdb
+-a---          2026-03-31  6:21 AM            190 GenesysExtensionAudit.Infrastructure.Tests.sourcelink.json
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj\Release\net8.0\ref
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM          38400 GenesysExtensionAudit.Infrastructure.Tests.dll
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\tests\GenesysExtensionAudit.Infrastructure.Tests\obj\Release\net8.0\refint
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  6:21 AM          38400 GenesysExtensionAudit.Infrastructure.Tests.dll
+

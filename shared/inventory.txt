@@ -1,0 +1,28 @@
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\shared
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  7:09 AM                Genesys.BestPractices
+-a---          2026-03-31  7:12 AM              0 inventory.txt
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\shared\Genesys.BestPractices
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2026-03-31  7:09 AM                best-practices
+-a---          2026-03-31  7:00 AM           1394 Glossary.md
+-a---          2026-03-31  7:00 AM           1228 README.md
+-a---          2026-03-31  7:00 AM           6080 Roadmap.md
+
+    Directory: G:\Development\20_Staging\GenesysCloud\GenesysCloudAuditor\shared\Genesys.BestPractices\best-practices
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          2026-03-31  7:00 AM           7282 best-practices-map.json
+-a---          2026-03-31  7:00 AM           1213 best-practices-map.schema.json
+-a---          2026-03-31  7:00 AM          70911 best-practices.catalog.json
+-a---          2026-03-31  7:00 AM           5965 best-practices.schema.json
+-a---          2026-03-31  7:00 AM           3361 BestPractices.md
+-a---          2026-03-31  7:00 AM           1880 glossary.json
+

@@ -1,0 +1,1588 @@
+{
+  "version": "0.2.0",
+  "generated_on": "2026-03-31",
+  "catalog_name": "Genesys Cloud Best Practices Catalog",
+  "domains": [
+    "Queue",
+    "API",
+    "EdgeSite",
+    "Architect",
+    "Security",
+    "Telephony",
+    "DevOps"
+  ],
+  "catalog": [
+    {
+      "key": "queue.routing.methods_defined",
+      "domain": "Queue",
+      "subcategory": "Routing",
+      "control_family": "Routing Integrity",
+      "pillar": "Operations",
+      "report_category": "Queue Governance",
+      "title": "Use an intentional routing method",
+      "summary": "Each queue should use a routing method explicitly selected for its interaction type and operating model.",
+      "why_it_matters": "Routing method selection governs how interactions are assigned and materially affects fairness, skill matching, and service performance.",
+      "recommended_state": "Routing method is documented and intentionally selected rather than inherited or left unreviewed.",
+      "anti_pattern": "Queues use default or inherited routing without review.",
+      "severity": "High",
+      "auditability": "Config",
+      "tags": [
+        "queue",
+        "routing",
+        "acd"
+      ],
+      "object_types": [
+        "Queue"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes reference Standard ACD, Predictive, Preferred Agent, Bullseye, and Conditional Group routing.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Inspect queue configuration and verify routing method exists and is documented in approved operating standards.",
+      "required_inputs": [
+        "queue configuration export",
+        "queue inventory",
+        "governance metadata if available"
+      ],
+      "logic_hint": "Flag queues missing approved routing metadata or using deprecated/unapproved routing methods.",
+      "automatable": true,
+      "recommended_action_short": "Review each queue and explicitly confirm its routing method.",
+      "recommended_action_detailed": "Inventory all queues, compare configured routing methods to approved standards, and document the business rationale for each exception.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Routing changes can affect assignment behavior; review during a controlled change window.",
+      "evidence_examples": [
+        "Queue export showing routing method",
+        "Change ticket documenting rationale"
+      ],
+      "sample_bad_state": "Queue routing method is inherited or unknown.",
+      "sample_good_state": "Queue is documented as Bullseye routing for tiered skill escalation.",
+      "owner_role": "Genesys Platform Engineer",
+      "owner_team": "Contact Center Engineering",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Some legacy queues may be intentionally frozen pending migration.",
+      "exceptions": [
+        "Temporary exception during migration or decommissioning."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "queue.routing.scoring_change_when_empty",
+      "domain": "Queue",
+      "subcategory": "Routing",
+      "control_family": "Routing Integrity",
+      "pillar": "Operations",
+      "report_category": "Queue Governance",
+      "title": "Change scoring only when the queue is empty",
+      "summary": "Queue scoring methods should be set at creation time or changed only when no interactions are waiting.",
+      "why_it_matters": "Changing scoring during an active backlog can produce unexpected assignment order.",
+      "recommended_state": "Scoring changes occur only during no-backlog windows or controlled creation events.",
+      "anti_pattern": "Changing scoring while interactions are already waiting in queue.",
+      "severity": "High",
+      "auditability": "Config+Runtime",
+      "tags": [
+        "queue",
+        "routing",
+        "scoring",
+        "acd"
+      ],
+      "object_types": [
+        "Queue"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Source explicitly notes scoring changes should occur at creation or when queue has no waiting interactions.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Compare queue routing/scoring change timestamps to queue backlog intervals from metrics or audit logs.",
+      "required_inputs": [
+        "queue audit logs",
+        "queue metrics",
+        "queue config history"
+      ],
+      "logic_hint": "Flag changes where scoring update time overlaps periods with waiting interactions.",
+      "automatable": true,
+      "recommended_action_short": "Move routing scoring changes to empty-queue windows.",
+      "recommended_action_detailed": "Review scoring change history, identify overlap with active queue backlog, and reschedule future changes during maintenance or no-volume windows.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Reverting scoring may change assignment ordering; coordinate with operations.",
+      "evidence_examples": [
+        "Audit log entry for routing change",
+        "Queue metric showing active waiting count at same time"
+      ],
+      "sample_bad_state": "Scoring changed at 10:15 while 18 interactions were waiting.",
+      "sample_good_state": "Scoring changed during pre-open window with zero backlog.",
+      "owner_role": "Genesys Platform Engineer",
+      "owner_team": "Contact Center Engineering",
+      "review_cadence": "Monthly",
+      "false_positive_notes": "Historical backlog reconstruction may be approximate if metrics retention is incomplete.",
+      "exceptions": [
+        "Emergency change approved during live incident."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "queue.skills.use_when_routing_requires_it",
+      "domain": "Queue",
+      "subcategory": "Skills",
+      "control_family": "Routing Integrity",
+      "pillar": "Operations",
+      "report_category": "Queue Governance",
+      "title": "Use skills only where the routing model benefits from them",
+      "summary": "Skill tags and ratings should reflect real expertise and support the queue's routing strategy.",
+      "why_it_matters": "Inflated or stale skill models create routing noise and false precision.",
+      "recommended_state": "Skills are current, limited in scope, and tied to actual routing requirements.",
+      "anti_pattern": "Overuse of skills with weak governance or no operational effect.",
+      "severity": "Medium",
+      "auditability": "Config",
+      "tags": [
+        "queue",
+        "skills",
+        "routing"
+      ],
+      "object_types": [
+        "Queue",
+        "User"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes describe skill tags and ratings as inputs to some routing methods.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Review queue routing methods and compare configured skills to queue requirements and skill governance standards.",
+      "required_inputs": [
+        "queue config",
+        "user skill profiles",
+        "routing standards"
+      ],
+      "logic_hint": "Flag skills not referenced by any queue logic or with extreme sprawl.",
+      "automatable": true,
+      "recommended_action_short": "Trim unused or low-value skills.",
+      "recommended_action_detailed": "Map each configured skill to a routing use case, remove stale skill assignments, and normalize rating practices.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "Skill removal can affect staffing coverage; validate before changes.",
+      "evidence_examples": [
+        "Skill inventory report",
+        "Queue routing design documentation"
+      ],
+      "sample_bad_state": "Agents have dozens of skills with no routing dependence.",
+      "sample_good_state": "Only business-relevant skills are assigned and reviewed quarterly.",
+      "owner_role": "Workforce or Routing Administrator",
+      "owner_team": "Contact Center Operations",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Some queues intentionally keep rarely used specialty skills for surge or exception routing.",
+      "exceptions": [
+        "Regulatory or language coverage skills retained for contingency."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "queue.wrapup.division_aligned",
+      "domain": "Queue",
+      "subcategory": "WrapUp",
+      "control_family": "Reporting Quality",
+      "pillar": "Operations",
+      "report_category": "Queue Governance",
+      "title": "Align wrap-up codes to the queue division",
+      "summary": "Wrap-up codes assigned to a queue should belong to the same division where possible.",
+      "why_it_matters": "Division-aligned wrap-up codes improve report clarity and reduce ambiguous reporting.",
+      "recommended_state": "Queue wrap-up codes are division-consistent and intentionally curated.",
+      "anti_pattern": "Queues use mixed or unrelated divisional wrap-up codes.",
+      "severity": "Medium",
+      "auditability": "Config",
+      "tags": [
+        "queue",
+        "wrapup",
+        "division",
+        "reporting"
+      ],
+      "object_types": [
+        "Queue",
+        "WrapUpCode"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Source notes recommend adding divisional codes to queues for better reporting.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Compare queue division to associated wrap-up code divisions.",
+      "required_inputs": [
+        "queue metadata",
+        "wrap-up code metadata"
+      ],
+      "logic_hint": "Flag queues with cross-division wrap-up associations unless approved.",
+      "automatable": true,
+      "recommended_action_short": "Align wrap-up codes to the queue's division.",
+      "recommended_action_detailed": "Review all queue-to-wrap-up mappings, replace unrelated divisional codes, and document exceptions for shared service queues.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "Changing wrap-up catalogs affects reporting continuity; retain mapping history.",
+      "evidence_examples": [
+        "Queue wrap-up assignment export",
+        "Division metadata"
+      ],
+      "sample_bad_state": "Finance queue uses wrap-up codes from unrelated service divisions.",
+      "sample_good_state": "Queue wrap-up codes are owned by the same division as the queue.",
+      "owner_role": "Genesys Administrator",
+      "owner_team": "Reporting and Platform Operations",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Shared service queues may intentionally use cross-division catalogs.",
+      "exceptions": [
+        "Shared services with approved common wrap-up taxonomy."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "api.rate_limit.respect_429",
+      "domain": "API",
+      "subcategory": "RateLimit",
+      "control_family": "Integration Resilience",
+      "pillar": "Engineering",
+      "report_category": "API Governance",
+      "title": "Implement explicit rate-limit handling",
+      "summary": "Clients should inspect rate-limit responses and apply controlled backoff on throttling.",
+      "why_it_matters": "Ignoring rate-limit behavior increases failure rates and amplifies instability.",
+      "recommended_state": "Clients retry with bounded backoff and observability around throttling.",
+      "anti_pattern": "Immediate retries or no retry strategy after 429 responses.",
+      "severity": "High",
+      "auditability": "Code+Runtime",
+      "tags": [
+        "api",
+        "rate-limit",
+        "retry",
+        "429"
+      ],
+      "object_types": [
+        "OAuthClient",
+        "Integration"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes mention controlled backoff intervals such as 3, 9, and 27 seconds.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Inspect client code or integration behavior for 429 handling and retry telemetry.",
+      "required_inputs": [
+        "integration source code or policy",
+        "runtime logs",
+        "error metrics"
+      ],
+      "logic_hint": "Flag integrations that emit repeated 429s without exponential or policy-based backoff.",
+      "automatable": true,
+      "recommended_action_short": "Add bounded retry logic for 429 responses.",
+      "recommended_action_detailed": "Implement retry handling that inspects returned limit metadata, applies bounded backoff, and emits telemetry for sustained throttling.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Retry logic changes can alter throughput and request timing; test under load.",
+      "evidence_examples": [
+        "Client code snippet with retry handler",
+        "Log sample showing bounded backoff after 429"
+      ],
+      "sample_bad_state": "Client retries immediately on every 429.",
+      "sample_good_state": "Client backs off and logs limit type and retry decision.",
+      "owner_role": "Integration Engineer",
+      "owner_team": "Platform Engineering",
+      "review_cadence": "Per release",
+      "false_positive_notes": "Low-volume integrations may rarely hit limits, making runtime evidence sparse.",
+      "exceptions": [
+        "None for production integrations."
+      ],
+      "risk_acceptance_allowed": false,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "api.notifications.prefer_over_polling",
+      "domain": "API",
+      "subcategory": "AsyncState",
+      "control_family": "Integration Resilience",
+      "pillar": "Engineering",
+      "report_category": "API Governance",
+      "title": "Prefer notifications over polling for state changes",
+      "summary": "Use subscription or notification mechanisms for asynchronous state changes where supported.",
+      "why_it_matters": "Polling increases request volume and delays detection of changes.",
+      "recommended_state": "Async workflows use notifications first and polling only as a fallback.",
+      "anti_pattern": "Continuous polling for campaign or workflow state changes when notifications are available.",
+      "severity": "Medium",
+      "auditability": "Code+Runtime",
+      "tags": [
+        "api",
+        "notifications",
+        "polling"
+      ],
+      "object_types": [
+        "Integration"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes recommend notifications rather than polling for campaign stop-state changes.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Review integration design and runtime patterns for repeated state polling to endpoints that have event topics.",
+      "required_inputs": [
+        "integration design",
+        "code",
+        "request logs"
+      ],
+      "logic_hint": "Flag high-frequency polling when event subscription support exists.",
+      "automatable": true,
+      "recommended_action_short": "Replace polling with notifications where supported.",
+      "recommended_action_detailed": "Identify polled workflows, map them to available notification topics, subscribe to those topics, and retain minimal fallback polling only when necessary.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "Notification pipelines require connection reliability and reconnect handling.",
+      "evidence_examples": [
+        "Polling trace logs",
+        "Subscription design documentation"
+      ],
+      "sample_bad_state": "Integration polls every 5 seconds for stop-state changes.",
+      "sample_good_state": "Integration subscribes to events and polls only on reconnect recovery.",
+      "owner_role": "Integration Engineer",
+      "owner_team": "Platform Engineering",
+      "review_cadence": "Per release",
+      "false_positive_notes": "Fallback polling may be temporarily acceptable during migration.",
+      "exceptions": [
+        "Short-term compatibility bridge during eventing rollout."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "api.bulk.use_for_scale",
+      "domain": "API",
+      "subcategory": "Performance",
+      "control_family": "Integration Efficiency",
+      "pillar": "Engineering",
+      "report_category": "API Governance",
+      "title": "Use bulk endpoints for multi-record operations",
+      "summary": "Bulk endpoints should be preferred for large-scale operations where supported.",
+      "why_it_matters": "Bulk operations reduce request count and improve throughput.",
+      "recommended_state": "High-volume workflows use bulk APIs instead of repeated single-record operations.",
+      "anti_pattern": "Serial single-record calls at scale.",
+      "severity": "Medium",
+      "auditability": "Code+Runtime",
+      "tags": [
+        "api",
+        "bulk",
+        "performance"
+      ],
+      "object_types": [
+        "Integration"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes explicitly recommend bulk endpoints for multiple contacts.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Inspect high-volume workflows and compare endpoint usage to bulk-capable alternatives.",
+      "required_inputs": [
+        "integration code",
+        "request telemetry"
+      ],
+      "logic_hint": "Flag repeated object-by-object calls where a bulk equivalent exists.",
+      "automatable": true,
+      "recommended_action_short": "Use bulk APIs for high-volume workflows.",
+      "recommended_action_detailed": "Identify repetitive single-object loops, replace them with supported bulk requests, and validate paging and error handling for partial failures.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "Bulk operations may require different error handling and retry semantics.",
+      "evidence_examples": [
+        "Request count analysis",
+        "Code diff replacing loops with bulk calls"
+      ],
+      "sample_bad_state": "Thousands of sequential single-contact updates.",
+      "sample_good_state": "Batch operations use the supported bulk endpoint with error partitioning.",
+      "owner_role": "Integration Engineer",
+      "owner_team": "Platform Engineering",
+      "review_cadence": "Per release",
+      "false_positive_notes": "Some endpoints may not offer bulk equivalents.",
+      "exceptions": [
+        "Low-volume administrative scripts."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "api.oauth.minimum_scope",
+      "domain": "API",
+      "subcategory": "OAuth",
+      "control_family": "Access Governance",
+      "pillar": "Security",
+      "report_category": "Security Governance",
+      "title": "Request the minimum necessary OAuth scope",
+      "summary": "Applications should request only the scopes required for their function.",
+      "why_it_matters": "Excess scopes increase blast radius and violate least-privilege design.",
+      "recommended_state": "OAuth clients request only justified scopes and review them periodically.",
+      "anti_pattern": "Overbroad scopes granted for convenience.",
+      "severity": "High",
+      "auditability": "Config",
+      "tags": [
+        "oauth",
+        "scopes",
+        "least-privilege",
+        "api"
+      ],
+      "object_types": [
+        "OAuthClient"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research included OAuth scopes and least-privilege access themes.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Compare granted scopes against documented client purpose and endpoint usage.",
+      "required_inputs": [
+        "oauth client config",
+        "scope inventory",
+        "application purpose documentation"
+      ],
+      "logic_hint": "Flag clients with scopes not tied to documented use cases.",
+      "automatable": true,
+      "recommended_action_short": "Trim OAuth scopes to the minimum required.",
+      "recommended_action_detailed": "Review each OAuth client, map scopes to actual functionality, remove unused scope grants, and require approval for elevated scope changes.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Scope reductions can break clients; test application behavior before production rollout.",
+      "evidence_examples": [
+        "OAuth client export",
+        "Function-to-scope mapping document"
+      ],
+      "sample_bad_state": "Read/write admin scopes granted to a read-only reporting app.",
+      "sample_good_state": "Client uses only scoped read access required for reporting.",
+      "owner_role": "IAM Administrator",
+      "owner_team": "Security and Platform Engineering",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Some vendor apps request broad scopes pending roadmap reduction.",
+      "exceptions": [
+        "Temporarily approved vendor limitation with compensating controls."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "edge.redundancy.n_plus_1",
+      "domain": "EdgeSite",
+      "subcategory": "Redundancy",
+      "control_family": "Availability",
+      "pillar": "Reliability",
+      "report_category": "Telephony Resilience",
+      "title": "Design BYOC Premises Edge redundancy as N+1",
+      "summary": "Edge deployments should retain sufficient capacity if one active Edge fails.",
+      "why_it_matters": "N+1 design preserves call continuity during Edge failure or outage.",
+      "recommended_state": "Site design supports expected load with one active Edge unavailable.",
+      "anti_pattern": "No spare capacity for Edge failure.",
+      "severity": "High",
+      "auditability": "Config+Capacity",
+      "tags": [
+        "edge",
+        "redundancy",
+        "availability",
+        "byoc"
+      ],
+      "object_types": [
+        "Edge",
+        "Site"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes explicitly describe N+1 redundancy for BYOC Premises Edge.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Compare Edge count and call capacity to peak expected concurrency under single-failure conditions.",
+      "required_inputs": [
+        "edge inventory",
+        "capacity data",
+        "concurrency forecasts"
+      ],
+      "logic_hint": "Flag sites where remaining capacity after one Edge failure is below expected concurrent load.",
+      "automatable": true,
+      "recommended_action_short": "Add or resize Edge capacity to meet N+1.",
+      "recommended_action_detailed": "Model peak concurrency, subtract one active Edge from the design, and ensure the remaining capacity still meets the expected operating threshold.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Topology changes require planned telephony change windows.",
+      "evidence_examples": [
+        "Capacity spreadsheet",
+        "Site topology diagram"
+      ],
+      "sample_bad_state": "Two Edges are required for normal load with no spare margin.",
+      "sample_good_state": "Site remains within safe utilization after losing one Edge.",
+      "owner_role": "Telephony Architect",
+      "owner_team": "Voice Engineering",
+      "review_cadence": "Semiannual",
+      "false_positive_notes": "Small pilot sites may intentionally run without full redundancy.",
+      "exceptions": [
+        "Documented low-criticality pilot or lab site."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "edge.assignment.primary_secondary",
+      "domain": "EdgeSite",
+      "subcategory": "Redundancy",
+      "control_family": "Availability",
+      "pillar": "Reliability",
+      "report_category": "Telephony Resilience",
+      "title": "Ensure phones have primary and secondary Edge registration paths",
+      "summary": "Managed phones should be able to fail over between primary and secondary Edge assignments.",
+      "why_it_matters": "Single-Edge dependency increases the chance of local phone service interruption.",
+      "recommended_state": "Phone registration supports primary and secondary Edge resilience.",
+      "anti_pattern": "Phones depend effectively on one Edge path.",
+      "severity": "High",
+      "auditability": "Config",
+      "tags": [
+        "edge",
+        "phones",
+        "redundancy"
+      ],
+      "object_types": [
+        "Phone",
+        "Edge",
+        "Site"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes describe primary and secondary Edge assignments and rapid failover behavior.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Inspect phone and site redundancy configuration for primary and secondary registration paths.",
+      "required_inputs": [
+        "phone assignments",
+        "site config",
+        "edge assignments"
+      ],
+      "logic_hint": "Flag phones or sites lacking effective redundant Edge registration.",
+      "automatable": true,
+      "recommended_action_short": "Configure primary and secondary Edge paths.",
+      "recommended_action_detailed": "Review site-level Edge redundancy, ensure phone assignments participate correctly, and test failover behavior in a controlled manner.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Phone reassignment can briefly affect registration.",
+      "evidence_examples": [
+        "Phone assignment export",
+        "Failover test record"
+      ],
+      "sample_bad_state": "Phone group is pinned to a single Edge path.",
+      "sample_good_state": "Phones fail over to secondary Edge during primary outage testing.",
+      "owner_role": "Telephony Engineer",
+      "owner_team": "Voice Engineering",
+      "review_cadence": "Semiannual",
+      "false_positive_notes": "Some analog or legacy devices may not behave identically to managed phones.",
+      "exceptions": [
+        "Legacy endpoint class under migration plan."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "edge.compatibility.match_capacity_class",
+      "domain": "EdgeSite",
+      "subcategory": "Compatibility",
+      "control_family": "Availability",
+      "pillar": "Reliability",
+      "report_category": "Telephony Resilience",
+      "title": "Combine only compatible Edge capacity classes",
+      "summary": "Edge redundancy designs should use compatible Edge capacity classes.",
+      "why_it_matters": "Incompatible capacity mixes can undermine redundancy assumptions.",
+      "recommended_state": "Edges grouped for resilience are of compatible capacity class.",
+      "anti_pattern": "Mixed incompatible Edge sizes in one redundancy scheme.",
+      "severity": "High",
+      "auditability": "Config",
+      "tags": [
+        "edge",
+        "capacity",
+        "compatibility"
+      ],
+      "object_types": [
+        "Edge",
+        "Site"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes call out compatible hardware classes for redundancy.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Compare Edge model/capacity class across each site redundancy set.",
+      "required_inputs": [
+        "edge inventory",
+        "site topology"
+      ],
+      "logic_hint": "Flag unsupported or mismatched capacity-class combinations.",
+      "automatable": true,
+      "recommended_action_short": "Align redundant Edge hardware classes.",
+      "recommended_action_detailed": "Review site redundancy groups, replace or reclassify unsupported combinations, and update capacity planning assumptions.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Hardware or topology changes should be staged.",
+      "evidence_examples": [
+        "Edge hardware inventory",
+        "Redundancy matrix"
+      ],
+      "sample_bad_state": "A site mixes incompatible Edge classes in one failover group.",
+      "sample_good_state": "Redundant Edges are within the supported compatibility set.",
+      "owner_role": "Telephony Architect",
+      "owner_team": "Voice Engineering",
+      "review_cadence": "Semiannual",
+      "false_positive_notes": "Inventory naming can obscure true compatibility classes.",
+      "exceptions": [],
+      "risk_acceptance_allowed": false,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "edge.network.low_latency_low_jitter",
+      "domain": "EdgeSite",
+      "subcategory": "Network",
+      "control_family": "Availability",
+      "pillar": "Reliability",
+      "report_category": "Telephony Resilience",
+      "title": "Keep inter-Edge latency and jitter very low",
+      "summary": "Inter-Edge network quality should support reliable failover and voice stability.",
+      "why_it_matters": "High latency or jitter degrades failover behavior and voice experience.",
+      "recommended_state": "Inter-Edge latency remains under approved thresholds and jitter stays minimal.",
+      "anti_pattern": "Network quality between redundant Edges exceeds design targets.",
+      "severity": "High",
+      "auditability": "Runtime",
+      "tags": [
+        "edge",
+        "network",
+        "latency",
+        "jitter"
+      ],
+      "object_types": [
+        "Edge",
+        "Site",
+        "NetworkPath"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes mention sub-10ms latency and under-1ms jitter targets.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Measure network quality between Edge peers and compare against approved thresholds.",
+      "required_inputs": [
+        "network telemetry",
+        "site topology"
+      ],
+      "logic_hint": "Flag sites where latency or jitter breaches design limits.",
+      "automatable": true,
+      "recommended_action_short": "Reduce latency and jitter between redundant Edges.",
+      "recommended_action_detailed": "Investigate WAN path quality, QoS policy, and physical topology; re-route or optimize the path to restore design targets.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Network changes can affect other services; coordinate with network engineering.",
+      "evidence_examples": [
+        "Latency monitoring graph",
+        "Jitter test output"
+      ],
+      "sample_bad_state": "Inter-Edge latency averages 28ms with bursty jitter.",
+      "sample_good_state": "Inter-Edge path remains stable within approved thresholds.",
+      "owner_role": "Network Engineer",
+      "owner_team": "Network and Voice Engineering",
+      "review_cadence": "Monthly",
+      "false_positive_notes": "Short spikes may not indicate chronic design failure.",
+      "exceptions": [
+        "Temporary degradation during provider incident."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "architect.build_for_org_not_example_copy",
+      "domain": "Architect",
+      "subcategory": "Design",
+      "control_family": "Change Control",
+      "pillar": "Engineering",
+      "report_category": "Flow Governance",
+      "title": "Build flows for the organization, not by blindly adopting examples",
+      "summary": "Example flows should be references only; production flows should be tailored to the organization's routing needs.",
+      "why_it_matters": "Generic examples omit organization-specific controls, schedules, and routing expectations.",
+      "recommended_state": "Flows are organization-specific and documented.",
+      "anti_pattern": "Minimal edits to sample flows used in production.",
+      "severity": "Medium",
+      "auditability": "Design",
+      "tags": [
+        "architect",
+        "flows",
+        "design"
+      ],
+      "object_types": [
+        "Flow"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes recommend building your own flow rather than using example flows directly.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Review flow metadata and documentation for sample-derived content with missing local design artifacts.",
+      "required_inputs": [
+        "flow inventory",
+        "flow documentation",
+        "change history"
+      ],
+      "logic_hint": "Flag production flows lacking organization-specific ownership, naming, or schedule alignment.",
+      "automatable": true,
+      "recommended_action_short": "Replace sample-based flows with tailored production designs.",
+      "recommended_action_detailed": "Review all sample-derived flows, document business-specific requirements, and refactor them into maintained production artifacts.",
+      "remediation_priority": "P3",
+      "rollback_considerations": "Flow updates require validation and publish controls.",
+      "evidence_examples": [
+        "Flow export",
+        "Design note showing business-specific routing decisions"
+      ],
+      "sample_bad_state": "Production flow closely mirrors a sample without organization-specific controls.",
+      "sample_good_state": "Flow has documented purpose, schedules, error handling, and owner.",
+      "owner_role": "Architect Flow Developer",
+      "owner_team": "Contact Center Engineering",
+      "review_cadence": "Semiannual",
+      "false_positive_notes": "Some very simple utility flows may legitimately remain close to template patterns.",
+      "exceptions": [
+        "Lab or demo flows."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "architect.naming.unique_and_descriptive",
+      "domain": "Architect",
+      "subcategory": "Naming",
+      "control_family": "Maintainability",
+      "pillar": "Engineering",
+      "report_category": "Flow Governance",
+      "title": "Use distinct, descriptive names for flows, prompts, and states",
+      "summary": "Names should be stable, descriptive, and not duplicative within type constraints.",
+      "why_it_matters": "Clear naming improves maintenance, troubleshooting, and reporting.",
+      "recommended_state": "Naming conventions are documented and consistently applied.",
+      "anti_pattern": "Generic names such as Main, Test, or Copy 2 used in production artifacts.",
+      "severity": "Medium",
+      "auditability": "Config",
+      "tags": [
+        "architect",
+        "naming",
+        "prompts",
+        "flows"
+      ],
+      "object_types": [
+        "Flow",
+        "Prompt",
+        "State"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes emphasize distinctive labels and non-duplicative names within type constraints.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Inspect names against naming standards and duplicate-pattern heuristics.",
+      "required_inputs": [
+        "flow inventory",
+        "prompt inventory",
+        "naming standard"
+      ],
+      "logic_hint": "Flag generic or duplicate-like names in production objects.",
+      "automatable": true,
+      "recommended_action_short": "Apply clear naming conventions to Architect artifacts.",
+      "recommended_action_detailed": "Define a naming standard using service, purpose, environment, and lifecycle markers; rename ambiguous production artifacts to match it.",
+      "remediation_priority": "P3",
+      "rollback_considerations": "Renaming can affect references in related documentation or deployment scripts.",
+      "evidence_examples": [
+        "Flow inventory with duplicate-like names",
+        "Naming standard document"
+      ],
+      "sample_bad_state": "Multiple flows named Main or Test in production.",
+      "sample_good_state": "Names identify business unit, purpose, and environment clearly.",
+      "owner_role": "Architect Flow Developer",
+      "owner_team": "Contact Center Engineering",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Some shared utility prompts may use short names intentionally.",
+      "exceptions": [
+        "Sandbox-only artifacts."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "architect.schedule_groups.timezone_explicit",
+      "domain": "Architect",
+      "subcategory": "Schedules",
+      "control_family": "Routing Integrity",
+      "pillar": "Operations",
+      "report_category": "Flow Governance",
+      "title": "Make schedule groups timezone-explicit and routing-aware",
+      "summary": "Schedule groups should use explicit timezone handling and map cleanly to open, closed, holiday, and emergency routing.",
+      "why_it_matters": "Hidden timezone assumptions can send interactions to the wrong routing path.",
+      "recommended_state": "Schedules and schedule groups have explicit timezone ownership and clear routing outcomes.",
+      "anti_pattern": "Implicit or undocumented timezone assumptions in routing schedules.",
+      "severity": "High",
+      "auditability": "Config",
+      "tags": [
+        "architect",
+        "schedule-groups",
+        "timezone",
+        "routing"
+      ],
+      "object_types": [
+        "Schedule",
+        "ScheduleGroup",
+        "Flow"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes discuss schedules, schedule groups, time zones, and open/closed or emergency routing.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Inspect schedule groups for explicit timezone metadata and alignment with target routing outcomes.",
+      "required_inputs": [
+        "schedule group export",
+        "flow routing map"
+      ],
+      "logic_hint": "Flag groups with missing timezone documentation or mismatched route targets.",
+      "automatable": true,
+      "recommended_action_short": "Document and normalize schedule group timezones.",
+      "recommended_action_detailed": "Review all schedule groups, confirm explicit timezone ownership, verify holiday and emergency paths, and remove ambiguous route dependencies.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Schedule changes can affect live routing; coordinate change timing carefully.",
+      "evidence_examples": [
+        "Schedule group export",
+        "Call flow route map"
+      ],
+      "sample_bad_state": "A schedule group uses inherited assumptions and routes incorrectly during DST changes.",
+      "sample_good_state": "Schedule groups include explicit timezone control and verified route targets.",
+      "owner_role": "Architect Flow Developer",
+      "owner_team": "Contact Center Engineering",
+      "review_cadence": "Before seasonal time changes and quarterly",
+      "false_positive_notes": "Global follow-the-sun models may intentionally split logic across multiple schedule groups.",
+      "exceptions": [
+        "Documented regional override pattern."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "architect.validation_and_versioning_used",
+      "domain": "Architect",
+      "subcategory": "Lifecycle",
+      "control_family": "Change Control",
+      "pillar": "Engineering",
+      "report_category": "Flow Governance",
+      "title": "Use validation, versioning, and check-in/check-out discipline",
+      "summary": "Flow lifecycle controls should be part of routine change management.",
+      "why_it_matters": "Lifecycle discipline reduces drift and accidental production changes.",
+      "recommended_state": "Flows are validated, versioned, and changed through a controlled process.",
+      "anti_pattern": "Direct ad hoc edits to production flows without lifecycle controls.",
+      "severity": "High",
+      "auditability": "Config+Process",
+      "tags": [
+        "architect",
+        "versioning",
+        "validation",
+        "change-control"
+      ],
+      "object_types": [
+        "Flow"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes mention validation, versioning, and collaboration controls such as check in/check out.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Review change process evidence for validation and publish discipline.",
+      "required_inputs": [
+        "change history",
+        "flow metadata",
+        "release process"
+      ],
+      "logic_hint": "Flag flows changed without recorded validation or review evidence.",
+      "automatable": true,
+      "recommended_action_short": "Adopt controlled lifecycle management for Architect flows.",
+      "recommended_action_detailed": "Require validation before publish, preserve version history, and use documented promotion practices for production changes.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Lifecycle enforcement may slow emergency changes unless an exception path exists.",
+      "evidence_examples": [
+        "Publish history",
+        "Change ticket or review record"
+      ],
+      "sample_bad_state": "Production flow changed directly with no recorded review.",
+      "sample_good_state": "Flow change includes validation evidence and traceable publish history.",
+      "owner_role": "Architect Flow Lead",
+      "owner_team": "Contact Center Engineering",
+      "review_cadence": "Per release",
+      "false_positive_notes": "Legacy flows may lack older history even if current process is sound.",
+      "exceptions": [
+        "Emergency incident response with after-action review."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "security.least_privilege.default",
+      "domain": "Security",
+      "subcategory": "Roles",
+      "control_family": "Access Governance",
+      "pillar": "Security",
+      "report_category": "Security Governance",
+      "title": "Default to least privilege",
+      "summary": "Users and integrations should receive only the permissions required for their function.",
+      "why_it_matters": "Overprivileged access increases operational and security risk.",
+      "recommended_state": "Access grants are role-aligned and reviewed regularly.",
+      "anti_pattern": "Broad permissions granted for convenience or speed.",
+      "severity": "High",
+      "auditability": "Config",
+      "tags": [
+        "security",
+        "least-privilege",
+        "roles",
+        "permissions"
+      ],
+      "object_types": [
+        "Role",
+        "User",
+        "OAuthClient"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Least privilege is explicitly called out in the source synthesis.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Compare granted permissions to documented job or application function.",
+      "required_inputs": [
+        "role assignments",
+        "permission inventory",
+        "function mapping"
+      ],
+      "logic_hint": "Flag users or clients with permissions not justified by role or use case.",
+      "automatable": true,
+      "recommended_action_short": "Reduce access to the least required set.",
+      "recommended_action_detailed": "Review permission grants by role and application purpose, remove nonessential permissions, and require documented approval for elevated access.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Privilege reduction can interrupt unsupported workflows; validate use cases first.",
+      "evidence_examples": [
+        "Role assignment report",
+        "Access review record"
+      ],
+      "sample_bad_state": "Routine admins hold broad privileges unrelated to their duties.",
+      "sample_good_state": "Access grants match documented role responsibilities.",
+      "owner_role": "IAM Administrator",
+      "owner_team": "Security Administration",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Temporary project access may appear excessive if review data is missing.",
+      "exceptions": [
+        "Time-bound approved elevation with expiration."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "security.custom_roles.over_master_admin",
+      "domain": "Security",
+      "subcategory": "Roles",
+      "control_family": "Access Governance",
+      "pillar": "Security",
+      "report_category": "Security Governance",
+      "title": "Prefer custom roles over broad admin grants",
+      "summary": "Use custom roles instead of Master Admin when narrower access will satisfy the need.",
+      "why_it_matters": "Master Admin grants create unnecessary blast radius.",
+      "recommended_state": "Custom roles are used for bounded administrative tasks.",
+      "anti_pattern": "Master Admin is assigned for convenience.",
+      "severity": "High",
+      "auditability": "Config",
+      "tags": [
+        "security",
+        "roles",
+        "master-admin",
+        "least-privilege"
+      ],
+      "object_types": [
+        "Role",
+        "User"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Source synthesis explicitly contrasted custom roles with broad administrative grants.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Identify users with Master Admin and compare their functions to available custom-role alternatives.",
+      "required_inputs": [
+        "role assignment export",
+        "role catalog"
+      ],
+      "logic_hint": "Flag Master Admin holders outside the approved break-glass population.",
+      "automatable": true,
+      "recommended_action_short": "Replace broad admin grants with scoped custom roles.",
+      "recommended_action_detailed": "Review each Master Admin assignment, map actual tasks to granular permissions, create or refine custom roles, and reserve Master Admin for tightly controlled break-glass use.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Role substitution should be tested against administrative workflows.",
+      "evidence_examples": [
+        "Role assignment list",
+        "Break-glass policy"
+      ],
+      "sample_bad_state": "Several daily operators hold Master Admin for routine work.",
+      "sample_good_state": "Only documented emergency accounts retain broad admin rights.",
+      "owner_role": "IAM Administrator",
+      "owner_team": "Security Administration",
+      "review_cadence": "Monthly",
+      "false_positive_notes": "Inherited legacy assignments may remain until a role redesign is complete.",
+      "exceptions": [
+        "Approved emergency-only accounts."
+      ],
+      "risk_acceptance_allowed": false,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "security.role_sprawl.minimize",
+      "domain": "Security",
+      "subcategory": "Roles",
+      "control_family": "Access Governance",
+      "pillar": "Security",
+      "report_category": "Security Governance",
+      "title": "Minimize role sprawl",
+      "summary": "Keep the role catalog small, purposeful, and understandable.",
+      "why_it_matters": "Role sprawl makes access review difficult and obscures intent.",
+      "recommended_state": "Role catalog is curated and redundant roles are merged or retired.",
+      "anti_pattern": "Large numbers of near-duplicate roles with unclear ownership.",
+      "severity": "Medium",
+      "auditability": "Config",
+      "tags": [
+        "security",
+        "roles",
+        "governance"
+      ],
+      "object_types": [
+        "Role"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Role sprawl minimization was included in the source synthesis.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Analyze role catalog size, overlap, and assignment density.",
+      "required_inputs": [
+        "role catalog",
+        "permission matrix",
+        "assignment data"
+      ],
+      "logic_hint": "Flag low-use or overlapping roles for consolidation review.",
+      "automatable": true,
+      "recommended_action_short": "Consolidate redundant roles.",
+      "recommended_action_detailed": "Review role overlap, merge near-duplicates, assign ownership, and retire unused roles after validation.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "Role consolidation can affect downstream assumptions; validate assignments carefully.",
+      "evidence_examples": [
+        "Role overlap matrix",
+        "Unused role report"
+      ],
+      "sample_bad_state": "Dozens of roles differ by one or two permissions without clear purpose.",
+      "sample_good_state": "Role catalog is small, documented, and actively maintained.",
+      "owner_role": "IAM Administrator",
+      "owner_team": "Security Administration",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Some temporary transitional roles may be expected during redesign.",
+      "exceptions": [
+        "Time-bound transition roles."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "security.division_scope.enforced",
+      "domain": "Security",
+      "subcategory": "Divisions",
+      "control_family": "Access Governance",
+      "pillar": "Security",
+      "report_category": "Security Governance",
+      "title": "Use division scoping deliberately",
+      "summary": "Division access boundaries should mirror real administrative and operational boundaries.",
+      "why_it_matters": "Division scoping is a core containment mechanism in Genesys Cloud.",
+      "recommended_state": "Division grants are explicit, justified, and aligned to ownership.",
+      "anti_pattern": "Broad division access granted without a clear operational boundary.",
+      "severity": "High",
+      "auditability": "Config",
+      "tags": [
+        "security",
+        "division",
+        "scope"
+      ],
+      "object_types": [
+        "Division",
+        "Role",
+        "User"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Division-based control was highlighted in the source synthesis.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Compare division assignments to organizational ownership and job function.",
+      "required_inputs": [
+        "division assignments",
+        "org ownership model"
+      ],
+      "logic_hint": "Flag users or roles with division scope broader than their function requires.",
+      "automatable": true,
+      "recommended_action_short": "Reduce division access to the appropriate scope.",
+      "recommended_action_detailed": "Review division assignments against organizational ownership, remove excess scope, and document approved cross-division responsibilities.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Division changes can affect visibility and admin workflows.",
+      "evidence_examples": [
+        "Division assignment report",
+        "Org ownership matrix"
+      ],
+      "sample_bad_state": "Regional admins have global division access without business need.",
+      "sample_good_state": "Division scope matches actual administrative boundaries.",
+      "owner_role": "IAM Administrator",
+      "owner_team": "Security Administration",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Shared service administrators may require cross-division access.",
+      "exceptions": [
+        "Documented shared service function."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "telephony.resource_limits.monitor",
+      "domain": "Telephony",
+      "subcategory": "Capacity",
+      "control_family": "Capacity Management",
+      "pillar": "Reliability",
+      "report_category": "Telephony Hygiene",
+      "title": "Monitor resource utilization before limits become urgent",
+      "summary": "Track telephony object consumption and act before warning or critical thresholds.",
+      "why_it_matters": "Object-limit exhaustion creates avoidable deployment and operational blockers.",
+      "recommended_state": "Telephony limits are tracked and reviewed against safe thresholds.",
+      "anti_pattern": "Resource limits are checked only after failures or warnings.",
+      "severity": "High",
+      "auditability": "Runtime+Config",
+      "tags": [
+        "telephony",
+        "limits",
+        "capacity"
+      ],
+      "object_types": [
+        "Site",
+        "Trunk",
+        "Phone",
+        "Extension",
+        "ScheduleGroup"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes include explicit telephony object limits and warning bands.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Collect object counts and compare them to the approved warning and critical thresholds.",
+      "required_inputs": [
+        "telephony resource inventory",
+        "platform limit reference"
+      ],
+      "logic_hint": "Flag resources approaching threshold bands.",
+      "automatable": true,
+      "recommended_action_short": "Track and forecast telephony limit consumption.",
+      "recommended_action_detailed": "Inventory telephony objects, alert before threshold crossings, and plan capacity or cleanup before new deployments are blocked.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Cleanup actions can affect dependent objects; verify relationships before removal.",
+      "evidence_examples": [
+        "Limit dashboard",
+        "Object count trend chart"
+      ],
+      "sample_bad_state": "Extension assignments are near limit with no forecast or cleanup plan.",
+      "sample_good_state": "Capacity trends are monitored and reviewed proactively.",
+      "owner_role": "Telephony Administrator",
+      "owner_team": "Voice Engineering",
+      "review_cadence": "Monthly",
+      "false_positive_notes": "Short spikes due to staged migrations may be acceptable if planned.",
+      "exceptions": [
+        "Time-bound migration wave with approved capacity plan."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "telephony.did_extension.structured_assignment",
+      "domain": "Telephony",
+      "subcategory": "Addressing",
+      "control_family": "Telephony Hygiene",
+      "pillar": "Operations",
+      "report_category": "Telephony Hygiene",
+      "title": "Manage DID and extension assignments intentionally",
+      "summary": "Assign DIDs and extensions using controlled ranges and clear ownership.",
+      "why_it_matters": "Ad hoc assignment complicates support, growth, and troubleshooting.",
+      "recommended_state": "DID and extension ownership is tracked and assignment patterns are standardized.",
+      "anti_pattern": "Manual one-off addressing with weak ownership records.",
+      "severity": "Medium",
+      "auditability": "Config",
+      "tags": [
+        "telephony",
+        "did",
+        "extension",
+        "addressing"
+      ],
+      "object_types": [
+        "DID",
+        "Extension",
+        "User",
+        "Phone"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes cover single and ranged DID or extension assignment patterns.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Review DID and extension assignment inventories for gaps, collisions, or undocumented ownership.",
+      "required_inputs": [
+        "did inventory",
+        "extension inventory",
+        "ownership mapping"
+      ],
+      "logic_hint": "Flag unowned, inconsistent, or overlapping assignment patterns.",
+      "automatable": true,
+      "recommended_action_short": "Standardize DID and extension assignment practices.",
+      "recommended_action_detailed": "Reserve structured ranges, document owners, reconcile gaps and overlaps, and apply a standard assignment policy for new numbers.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "Address changes may affect user reachability and integrations.",
+      "evidence_examples": [
+        "Number inventory export",
+        "Ownership spreadsheet"
+      ],
+      "sample_bad_state": "DIDs are assigned ad hoc with missing owner records.",
+      "sample_good_state": "Number ranges are reserved and each assignment has an owner.",
+      "owner_role": "Telephony Administrator",
+      "owner_team": "Voice Engineering",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Legacy numbers may temporarily lack full metadata during cleanup.",
+      "exceptions": [
+        "Historical inventory cleanup backlog."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "telephony.group_ring.requires_addressing",
+      "domain": "Telephony",
+      "subcategory": "GroupRing",
+      "control_family": "Telephony Hygiene",
+      "pillar": "Operations",
+      "report_category": "Telephony Hygiene",
+      "title": "Ensure group ring users have required addressing",
+      "summary": "Users participating in group ring should have the DID or extension configuration required for alerting behavior.",
+      "why_it_matters": "Incomplete addressing can create missed or inconsistent group ring alerts.",
+      "recommended_state": "Group ring membership and user addressing are aligned.",
+      "anti_pattern": "Users are added to group ring without valid telephony addressing.",
+      "severity": "Medium",
+      "auditability": "Config",
+      "tags": [
+        "telephony",
+        "group-ring",
+        "did",
+        "extension"
+      ],
+      "object_types": [
+        "User",
+        "Group",
+        "DID",
+        "Extension"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes state group ring members must have DID or extension assignment for alerts.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Compare group ring memberships to user telephony addressing assignments.",
+      "required_inputs": [
+        "group ring membership",
+        "user telephony assignments"
+      ],
+      "logic_hint": "Flag users in group ring without the required addressability.",
+      "automatable": true,
+      "recommended_action_short": "Correct user addressing for group ring members.",
+      "recommended_action_detailed": "Review group ring membership, verify DID or extension requirements for each member, and fix missing assignments before relying on alerting behavior.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "Number assignments may affect other routing paths.",
+      "evidence_examples": [
+        "Group membership export",
+        "User telephony config"
+      ],
+      "sample_bad_state": "Group ring includes users with no assigned extension or DID.",
+      "sample_good_state": "Every group ring user is properly addressable for alerts.",
+      "owner_role": "Telephony Administrator",
+      "owner_team": "Voice Engineering",
+      "review_cadence": "Quarterly",
+      "false_positive_notes": "Behavior may vary by user station model or configuration state.",
+      "exceptions": [
+        "Temporarily staged users pending activation."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "devops.cx_as_code.prefer_for_repeatability",
+      "domain": "DevOps",
+      "subcategory": "CxAsCode",
+      "control_family": "Configuration Management",
+      "pillar": "Engineering",
+      "report_category": "Deployment Governance",
+      "title": "Prefer CX as Code for repeatable configuration management",
+      "summary": "Supported Genesys Cloud objects should be managed as code where repeatability matters.",
+      "why_it_matters": "Code-based management improves consistency, traceability, and promotion discipline.",
+      "recommended_state": "Repeatable configuration is represented in source-controlled artifacts.",
+      "anti_pattern": "Manual-only production changes with no reproducible source artifact.",
+      "severity": "Medium",
+      "auditability": "Process+Code",
+      "tags": [
+        "devops",
+        "cx-as-code",
+        "terraform",
+        "repeatability"
+      ],
+      "object_types": [
+        "Flow",
+        "Queue",
+        "Integration"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes and synthesis reference CX as Code and Terraform-based deployment practices.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Review deployment workflows to determine whether supported objects are represented as code and promoted through version control.",
+      "required_inputs": [
+        "repository",
+        "deployment process",
+        "object inventory"
+      ],
+      "logic_hint": "Flag critical supported objects changed only manually in production.",
+      "automatable": true,
+      "recommended_action_short": "Represent repeatable Genesys configuration as code.",
+      "recommended_action_detailed": "Inventory supported objects, move repeatable configuration into source-controlled artifacts, and establish promotion workflows for changes.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "Introducing IaC can expose undocumented manual drift that must be reconciled.",
+      "evidence_examples": [
+        "Terraform repository",
+        "Change history tied to code review"
+      ],
+      "sample_bad_state": "Critical production flows are modified manually with no code representation.",
+      "sample_good_state": "Changes are proposed in source control and promoted through a pipeline.",
+      "owner_role": "DevOps Engineer",
+      "owner_team": "Platform Engineering",
+      "review_cadence": "Per release and quarterly",
+      "false_positive_notes": "Not every Genesys object is equally suited to immediate code management.",
+      "exceptions": [
+        "Unsupported object classes pending roadmap alignment."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "devops.cicd.pipeline_for_promotion",
+      "domain": "DevOps",
+      "subcategory": "CI-CD",
+      "control_family": "Change Control",
+      "pillar": "Engineering",
+      "report_category": "Deployment Governance",
+      "title": "Use CI/CD for promotion and validation",
+      "summary": "Promotion between environments should be automated and validated where possible.",
+      "why_it_matters": "Automation reduces drift and manual deployment error.",
+      "recommended_state": "Changes move through validated CI/CD workflows before production.",
+      "anti_pattern": "Environment changes are manually re-created without validation.",
+      "severity": "High",
+      "auditability": "Process+Code",
+      "tags": [
+        "devops",
+        "ci/cd",
+        "promotion",
+        "validation"
+      ],
+      "object_types": [
+        "Pipeline",
+        "Repository",
+        "Flow"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes reference CI/CD pipeline blueprints for Genesys Cloud deployments.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Review whether environment promotion uses automated pipelines with validation checks.",
+      "required_inputs": [
+        "pipeline config",
+        "repository",
+        "deployment records"
+      ],
+      "logic_hint": "Flag manual promotion patterns for objects covered by supported automation.",
+      "automatable": true,
+      "recommended_action_short": "Adopt validated CI/CD promotion pipelines.",
+      "recommended_action_detailed": "Define environment promotion stages, include validation and review gates, and require pipeline execution for production deployment of managed artifacts.",
+      "remediation_priority": "P1",
+      "rollback_considerations": "Pipeline enforcement can require process changes and emergency exceptions.",
+      "evidence_examples": [
+        "Pipeline YAML",
+        "Deployment run history"
+      ],
+      "sample_bad_state": "Operators manually recreate production changes across orgs.",
+      "sample_good_state": "Production changes pass through tested promotion pipelines.",
+      "owner_role": "DevOps Engineer",
+      "owner_team": "Platform Engineering",
+      "review_cadence": "Per release",
+      "false_positive_notes": "Small teams may phase in pipelines gradually.",
+      "exceptions": [
+        "Time-bound manual process while pipeline is under implementation."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    },
+    {
+      "key": "devops.terraform_backed_changes",
+      "domain": "DevOps",
+      "subcategory": "Terraform",
+      "control_family": "Configuration Management",
+      "pillar": "Engineering",
+      "report_category": "Deployment Governance",
+      "title": "Use Terraform-backed workflows where supported",
+      "summary": "Architect and related supported objects should use Terraform-backed deployment where practical.",
+      "why_it_matters": "Terraform-backed workflows improve reviewability and rollback discipline.",
+      "recommended_state": "Supported objects use Terraform or equivalent managed deployment workflows.",
+      "anti_pattern": "Production changes are applied without reviewed declarative artifacts.",
+      "severity": "Medium",
+      "auditability": "Code+Process",
+      "tags": [
+        "devops",
+        "terraform",
+        "cx-as-code"
+      ],
+      "object_types": [
+        "Flow",
+        "Queue",
+        "ScheduleGroup"
+      ],
+      "source_basis": "uploaded_research",
+      "source_refs": [
+        "turn1file0"
+      ],
+      "source_notes": "Research notes mention Terraform-backed Architect deployment blueprints.",
+      "source_urls": [],
+      "last_verified": "2026-03-31",
+      "detection_strategy": "Review repositories and deployment workflows for declarative infrastructure artifacts covering supported objects.",
+      "required_inputs": [
+        "repository",
+        "deployment process",
+        "object inventory"
+      ],
+      "logic_hint": "Flag supported objects changed outside the managed Terraform path.",
+      "automatable": true,
+      "recommended_action_short": "Move supported deployments into Terraform-backed workflows.",
+      "recommended_action_detailed": "Inventory supported object types, define declarative artifacts, validate state alignment, and enforce reviewed pipeline-based deploys for those artifacts.",
+      "remediation_priority": "P2",
+      "rollback_considerations": "State reconciliation is needed before strict Terraform enforcement.",
+      "evidence_examples": [
+        "Terraform module",
+        "Plan/apply run record"
+      ],
+      "sample_bad_state": "Architect objects are updated manually with no plan or apply history.",
+      "sample_good_state": "Supported objects are promoted with reviewed declarative changes.",
+      "owner_role": "DevOps Engineer",
+      "owner_team": "Platform Engineering",
+      "review_cadence": "Per release",
+      "false_positive_notes": "Not all objects or teams will be ready for immediate full declarative management.",
+      "exceptions": [
+        "Interim manual process for unsupported resources."
+      ],
+      "risk_acceptance_allowed": true,
+      "status": "active",
+      "introduced_in_version": "0.2.0",
+      "review_status": "draft-reviewed"
+    }
+  ]
+}

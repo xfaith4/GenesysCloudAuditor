@@ -1,0 +1,56 @@
+{
+  "version": "0.2.0",
+  "generated_on": "2026-03-31",
+  "terms": [
+    {
+      "term": "Queue",
+      "domain": "Queue",
+      "definition": "An ACD object that holds and routes interactions to eligible agents."
+    },
+    {
+      "term": "Routing Method",
+      "domain": "Queue",
+      "definition": "The queue behavior that determines how interactions are evaluated and assigned."
+    },
+    {
+      "term": "Skill Rating",
+      "domain": "Queue",
+      "definition": "A proficiency value assigned to an agent skill for skill-based routing."
+    },
+    {
+      "term": "Wrap-Up Code",
+      "domain": "Queue",
+      "definition": "A disposition value used by agents to describe interaction outcome or purpose."
+    },
+    {
+      "term": "Edge",
+      "domain": "EdgeSite",
+      "definition": "A premises-based telephony component used for local media and connectivity in BYOC Premises designs."
+    },
+    {
+      "term": "Schedule Group",
+      "domain": "Architect",
+      "definition": "A collection of schedules, typically with timezone context, used to drive routing behavior such as open, closed, or holiday logic."
+    },
+    {
+      "term": "Division",
+      "domain": "Security",
+      "definition": "A Genesys Cloud scoping boundary used to control access and object visibility."
+    },
+    {
+      "term": "OAuth Scope",
+      "domain": "API",
+      "definition": "A permission grant requested by an OAuth client to access specific Genesys Cloud capabilities."
+    },
+    {
+      "term": "CX as Code",
+      "domain": "DevOps",
+      "definition": "A declarative approach to managing supported Genesys Cloud configuration as source-controlled artifacts."
+    },
+    {
+      "term": "N+1 Redundancy",
+      "domain": "EdgeSite",
+      "definition": "A design where the environment can sustain expected load even after one active capacity unit fails."
+    }
+  ]
+}

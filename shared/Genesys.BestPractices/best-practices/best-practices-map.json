@@ -1,0 +1,215 @@
+{
+  "version": "0.2.0",
+  "generated_on": "2026-03-31",
+  "mappings": [
+    {
+      "finding_type": "QueueRoutingMethodUndefined",
+      "best_practice_keys": [
+        "queue.routing.methods_defined"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Explicitly assign and document the routing method."
+    },
+    {
+      "finding_type": "QueueScoringChangedDuringBacklog",
+      "best_practice_keys": [
+        "queue.routing.scoring_change_when_empty"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Reschedule scoring changes to a no-backlog window."
+    },
+    {
+      "finding_type": "QueueSkillsPotentiallyStale",
+      "best_practice_keys": [
+        "queue.skills.use_when_routing_requires_it"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Review and trim skill assignments."
+    },
+    {
+      "finding_type": "QueueWrapUpCodesCrossDivision",
+      "best_practice_keys": [
+        "queue.wrapup.division_aligned"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Align queue wrap-up codes to the queue division."
+    },
+    {
+      "finding_type": "IntegrationRetryPolicyMissingOrWeak",
+      "best_practice_keys": [
+        "api.rate_limit.respect_429"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Implement bounded 429 retry handling."
+    },
+    {
+      "finding_type": "IntegrationUsesPollingForNotifiableState",
+      "best_practice_keys": [
+        "api.notifications.prefer_over_polling"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Use notifications rather than polling."
+    },
+    {
+      "finding_type": "IntegrationUsesSingleRecordCallsAtScale",
+      "best_practice_keys": [
+        "api.bulk.use_for_scale"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Replace repetitive single-record calls with bulk operations."
+    },
+    {
+      "finding_type": "OAuthClientScopeExceedsFunction",
+      "best_practice_keys": [
+        "api.oauth.minimum_scope",
+        "security.least_privilege.default"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Reduce OAuth scopes to the least required set."
+    },
+    {
+      "finding_type": "EdgeCapacityInsufficientForNPlus1",
+      "best_practice_keys": [
+        "edge.redundancy.n_plus_1"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Restore N+1 spare capacity."
+    },
+    {
+      "finding_type": "PhoneMissingSecondaryEdgePath",
+      "best_practice_keys": [
+        "edge.assignment.primary_secondary"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Ensure redundant Edge assignments are in place."
+    },
+    {
+      "finding_type": "EdgeCapacityClassMismatch",
+      "best_practice_keys": [
+        "edge.compatibility.match_capacity_class"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Use compatible Edge classes in the redundancy set."
+    },
+    {
+      "finding_type": "InterEdgeLatencyOrJitterExceedsTarget",
+      "best_practice_keys": [
+        "edge.network.low_latency_low_jitter"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Reduce latency and jitter between redundant Edges."
+    },
+    {
+      "finding_type": "FlowAppearsSampleDerivedWithoutLocalDesign",
+      "best_practice_keys": [
+        "architect.build_for_org_not_example_copy"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Refactor sample-derived flow into a maintained production design."
+    },
+    {
+      "finding_type": "ArchitectArtifactNamingWeak",
+      "best_practice_keys": [
+        "architect.naming.unique_and_descriptive"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Apply the naming standard to production artifacts."
+    },
+    {
+      "finding_type": "ScheduleGroupTimezoneAmbiguous",
+      "best_practice_keys": [
+        "architect.schedule_groups.timezone_explicit"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Make timezone ownership explicit and validate routing outcomes."
+    },
+    {
+      "finding_type": "FlowLifecycleDisciplineWeak",
+      "best_practice_keys": [
+        "architect.validation_and_versioning_used"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Require validation and controlled publish discipline."
+    },
+    {
+      "finding_type": "RoleAssignmentOverprivileged",
+      "best_practice_keys": [
+        "security.least_privilege.default"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Reduce privileges to align with function."
+    },
+    {
+      "finding_type": "MasterAdminAssignedForRoutineUse",
+      "best_practice_keys": [
+        "security.custom_roles.over_master_admin"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Replace Master Admin with scoped custom roles."
+    },
+    {
+      "finding_type": "RoleCatalogSprawl",
+      "best_practice_keys": [
+        "security.role_sprawl.minimize"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Consolidate redundant roles."
+    },
+    {
+      "finding_type": "DivisionScopeTooBroad",
+      "best_practice_keys": [
+        "security.division_scope.enforced"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Reduce division scope to match ownership."
+    },
+    {
+      "finding_type": "TelephonyLimitApproachingThreshold",
+      "best_practice_keys": [
+        "telephony.resource_limits.monitor"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Forecast and manage telephony capacity before thresholds are crossed."
+    },
+    {
+      "finding_type": "DidOrExtensionAssignmentInconsistent",
+      "best_practice_keys": [
+        "telephony.did_extension.structured_assignment"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Normalize DID and extension assignment ownership and ranges."
+    },
+    {
+      "finding_type": "GroupRingMemberNotAddressable",
+      "best_practice_keys": [
+        "telephony.group_ring.requires_addressing"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Assign required telephony addressing for group ring members."
+    },
+    {
+      "finding_type": "ManagedGenesysConfigNotRepresentedAsCode",
+      "best_practice_keys": [
+        "devops.cx_as_code.prefer_for_repeatability"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Represent repeatable configuration as code."
+    },
+    {
+      "finding_type": "PromotionProcessManualAndUnvalidated",
+      "best_practice_keys": [
+        "devops.cicd.pipeline_for_promotion"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Adopt automated CI/CD promotion with validation."
+    },
+    {
+      "finding_type": "SupportedObjectChangedOutsideTerraformPath",
+      "best_practice_keys": [
+        "devops.terraform_backed_changes"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Move supported changes into Terraform-backed workflows."
+    }
+  ]
+}

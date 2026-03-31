@@ -305,6 +305,89 @@ Results are exported to a dedicated `Hot_Spots` worksheet. Configurable via
 
 ---
 
+## 2.4 Rule-driven best-practice sentinel layer
+
+This phase formalizes the product as a **weekly best-practice sentinel** rather than a raw log exporter or generic observability tool.
+
+The intent is to scan selected Genesys Cloud API domains on a recurring cadence, compare the tenant state against well-documented expected patterns, and emit **operator-ready signals** with minimal additional interpretation work.
+
+### Sentinel principles
+
+- Rules must be backed by documented Genesys Cloud guidance or explicitly declared internal operating standards
+- Each signal must answer:
+  - what best practice or expected state was checked
+  - which API surfaces were used
+  - what contradicted the expected state
+  - whether the likely cause is tenant configuration, change activity, automation drift, or possible platform-side behavior
+- Audit logs should be analyzed inside the app, not merely exported for later human interpretation
+- Weekly scans should emphasize:
+  - smoke that may become fire
+  - drift from previously healthy baselines
+  - suspicious admin or automation changes
+  - platform behaviors that appear inconsistent with the documented model
+
+### Planned scope of work
+
+| Scope item                             | Priority | Description                                                                                           | Status |
+| -------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------- | ------ |
+| Rule registry and metadata model       | High     | Define a common structure for source-backed best-practice rules, rule IDs, versions, owner, and APIs | Planned |
+| Source/provenance tracking             | High     | Persist the documentation source or internal standard that justifies each rule                        | Planned |
+| Sentinel worksheet and summary rollup  | High     | Add a triage-first export showing only interpreted best-practice signals, not raw event dumps         | Planned |
+| Audit-log signaling engine             | High     | Convert raw audit logs into categorized signals such as risky change, unusual churn, role drift       | Planned |
+| Admin role change detection            | High     | Flag privileged role grants/removals, division scope changes, and admin access changes                | Planned |
+| Platform configuration change detector | High     | Detect significant queue, flow, IVR, site, edge, trunk, prompt, and telephony configuration changes  | Planned |
+| CX as Code change-awareness            | Medium   | Distinguish likely managed change windows from ad hoc admin changes when patterns suggest automation  | Planned |
+| Weekly drift sentinel                  | High     | Compare current findings and normalized state against prior weekly baselines                           | Planned |
+| Best-practice exception model          | Medium   | Allow intentional deviations to be recorded so recurring approved exceptions do not create noise      | Planned |
+| Signal severity and confidence model   | High     | Score signals by operational risk, blast radius, persistence, and alignment with documented guidance  | Planned |
+
+### Initial sentinel domains
+
+- edge / site topology expectations
+- failover posture and unexpected secondary-edge behavior
+- routing dependency hygiene
+- audit-log change correlation
+- historical drift against prior weekly scans
+- privileged admin / role changes
+- platform configuration changes in key monitored domains
+
+### Audit-log automation goals
+
+The audit-log path should evolve from "accessible raw events" to "interpreted operational signals."
+
+Planned audit-log signal families:
+
+- privileged role granted / removed
+- division scope broadened or narrowed
+- queue membership churn above normal threshold
+- flow publish burst or repeated rollback / republish pattern
+- site, edge, or trunk topology edits preceding telephony findings
+- DID / extension ownership changes preceding user telephony contradictions
+- suspicious volume of manual admin changes outside known change windows
+- recurring drift after previous remediation, suggesting automation conflict or platform sync lag
+
+### Expected outputs
+
+- a dedicated sentinel-oriented worksheet for interpreted signals
+- summary rollups that answer:
+  - what changed this week
+  - what now violates expected best practice
+  - what is newly risky versus chronic
+  - what likely needs admin review this week
+- rule metadata in exports so operators can trace each signal back to its best-practice basis
+- less dependence on manually reading raw audit logs except for deep investigation
+
+### Why this matters
+
+This keeps the auditor aligned to its original mission:
+
+- weekly scans of key APIs
+- fast detection of misconfiguration smoke before it becomes operational fire
+- better separation of tenant-side issues from suspicious platform behavior
+- less manual interpretation work for the monitoring team
+
+---
+
 # Phase 3 — Actionability and Escalation Intelligence
 
 This phase makes the tool genuinely operational.
@@ -667,6 +750,7 @@ This enables:
 | ------------------------- | ----------------------------------------------------------- |
 | Collector contract tests  | Ensure endpoint ingestion remains stable                    |
 | Correlation tests         | Validate cross-endpoint joins and contradiction logic       |
+| Rule provenance tests     | Ensure each sentinel rule maps to a documented source or approved internal standard |
 | Severity/confidence tests | Prevent noisy or inflated findings                          |
 | Snapshot diff tests       | Ensure historical change tracking is deterministic          |
 | Export validation tests   | Verify workbook/JSON/HTML output integrity                  |
@@ -678,20 +762,20 @@ This enables:
 
 ## Near-term priority
 
-1. Finish the remaining unimplemented Phase 1 correlation checks
-2. Add persistent contradiction tracking across runs
-3. Implement snapshot persistence and historical diffing
-4. Expand flow and queue dependency traversal
+1. Build the rule registry and source/provenance model for best-practice sentinel checks
+2. Add automated audit-log signal interpretation for change, churn, and admin-risk events
+3. Finish the remaining unimplemented Phase 1 correlation checks
+4. Expand weekly drift signaling across configuration, role, and topology domains
 5. Add timeline appendix generation for Care packets
-6. Promote summary sheets into a true triage-first workbook layout
+6. Promote sentinel rollups into a true triage-first workbook layout
 
 ## Mid-term priority
 
-1. Drift engine
-2. Finding lifecycle classification
-3. Suspect release window / regression chain builder
-4. Domain health scoring
-5. Cross-sheet evidence linking
+1. Best-practice exception management
+2. Suspect release window / regression chain builder
+3. Domain health scoring
+4. Cross-sheet evidence linking
+5. CX as Code / managed-change awareness
 
 ## Long-term priority
 
