@@ -41,6 +41,11 @@ public sealed class ScheduledAuditDefinition
     /// </summary>
     public bool PushToGitHub { get; set; }
 
+    /// <summary>
+    /// When true the runner will export normalized findings to Elastic using the configured ElasticExport settings.
+    /// </summary>
+    public bool PushToElasticSearch { get; set; }
+
     public bool HasAnyAuditSelected =>
         RunExtensionAudit || RunGroupAudit || RunQueueAudit || RunFlowAudit ||
         RunInactiveUserAudit || RunDidAudit || RunAuditLogs ||

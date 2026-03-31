@@ -227,6 +227,60 @@
                 </StackPanel>
             </GroupBox>
 
+            <GroupBox Header="Elastic Export" Padding="12" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock TextWrapping="Wrap" Foreground="#374151" Margin="0,0,0,12">
+                        Configure optional Elastic indexing for normalized findings and run summaries.
+                        The API token is never stored here and must be supplied through an environment variable on the machine that runs the export.
+                    </TextBlock>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="190" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="8" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Enabled By Default" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="0" Grid.Column="1">
+                            <CheckBox Content="Enable Elastic export by default for new runs"
+                                      IsChecked="{Binding ElasticExportEnabled}" />
+                            <TextBlock Text="Operators can still override this per run from the Run Audit or Schedule Audits tabs."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Endpoint URI" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="2" Grid.Column="1">
+                            <TextBox Text="{Binding ElasticEndpointUri, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Absolute Elastic endpoint URI, for example https://elastic.example.internal:9200."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Target Index" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="4" Grid.Column="1">
+                            <TextBox Text="{Binding ElasticIndexName, UpdateSourceTrigger=PropertyChanged}" Width="260" HorizontalAlignment="Left" />
+                            <TextBlock Text="Lowercase index name used for finding and run-summary documents."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Token Env Var Name" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="6" Grid.Column="1">
+                            <TextBox Text="{Binding ElasticTokenEnvironmentVariableName, UpdateSourceTrigger=PropertyChanged}" Width="280" HorizontalAlignment="Left" />
+                            <TextBlock Text="Environment variable name that contains the Elastic API token or full Authorization value."
+                                       Foreground="#6B7280" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
             <StackPanel Margin="0,0,0,0">
                 <Button Content="Save Settings"
                         Command="{Binding SaveCommand}"

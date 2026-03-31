@@ -2,8 +2,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using GenesysExtensionAudit.Infrastructure.Configuration;
 using GenesysExtensionAudit.Scheduling;
 using GenesysExtensionAudit.Services;
+using Microsoft.Extensions.Options;
 
 namespace GenesysExtensionAudit.ViewModels;
 
@@ -48,6 +50,7 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
     private bool _runOutboundEvents;
     private string _selectedAuditLogEntity = AllCatalogEntitiesOption;
     private bool _pushToGitHub;
+    private bool _pushToElasticSearch;
     private bool _isLoadingAuditLogEntities;
     private bool _isBusy;
     private string _statusMessage = "Ready.";
@@ -56,10 +59,12 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
 
     public ScheduleAuditViewModel(
         IScheduledAuditService scheduledAuditService,
-        IAuditLogCatalogCache auditLogCatalogCache)
+        IAuditLogCatalogCache auditLogCatalogCache,
+        IOptionsMonitor<ElasticExportOptions> elasticOptions)
     {
         _scheduledAuditService = scheduledAuditService ?? throw new ArgumentNullException(nameof(scheduledAuditService));
         _auditLogCatalogCache = auditLogCatalogCache ?? throw new ArgumentNullException(nameof(auditLogCatalogCache));
+        _pushToElasticSearch = elasticOptions?.CurrentValue.Enabled ?? false;
 
         _auditLogEntities.Add(AllCatalogEntitiesOption);
 
@@ -184,6 +189,11 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
     /// </summary>
     public bool PushToGitHub { get => _pushToGitHub; set => SetField(ref _pushToGitHub, value); }
 
+    /// <summary>
+    /// When true the scheduled runner will export normalized findings to Elastic after saving local artifacts.
+    /// </summary>
+    public bool PushToElasticSearch { get => _pushToElasticSearch; set => SetField(ref _pushToElasticSearch, value); }
+
     public ObservableCollection<string> AuditLogEntities => _auditLogEntities;
 
     public string SelectedAuditLogEntity
@@ -303,6 +313,7 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
                 OperationalEventLookbackDays = OperationalEventLookbackDays,
                 RunOutboundEvents = RunOutboundEvents,
                 PushToGitHub = PushToGitHub,
+                PushToElasticSearch = PushToElasticSearch,
                 AuditLogServiceName = string.Equals(SelectedAuditLogEntity, AllCatalogEntitiesOption, StringComparison.Ordinal)
                     ? null
                     : SelectedAuditLogEntity

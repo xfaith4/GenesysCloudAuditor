@@ -160,9 +160,17 @@
                             <CheckBox Content="Push to GitHub after each scheduled run"
                                       IsChecked="{Binding PushToGitHub}"
                                       Margin="0,0,0,4" />
+                            <CheckBox Content="Export normalized findings to Elastic after each scheduled run"
+                                      IsChecked="{Binding PushToElasticSearch}"
+                                      Margin="0,0,0,4" />
                             <TextBlock Text="When enabled the runner will push the Excel report to the GitHub repository configured in appsettings.json (GitHub:Token, Owner, Repository)."
                                        Foreground="#6B7280"
                                        FontSize="11"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="Elastic export uses the endpoint, index, and token environment variable configured in Settings. The token itself is never stored in the app or schedule profile."
+                                       Foreground="#6B7280"
+                                       FontSize="11"
+                                       Margin="0,4,0,0"
                                        TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>

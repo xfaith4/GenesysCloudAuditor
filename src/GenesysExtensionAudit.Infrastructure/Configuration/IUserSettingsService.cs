@@ -17,6 +17,12 @@ public interface IUserSettingsService
     /// <summary>Persists <paramref name="options"/> to the user settings file.</summary>
     void SaveGitHubSettings(GitHubOptions options);
 
+    /// <summary>Returns the current Elastic export options from the persisted file, or defaults if not yet saved.</summary>
+    ElasticExportOptions LoadElasticExportSettings();
+
+    /// <summary>Persists <paramref name="options"/> to the user settings file.</summary>
+    void SaveElasticExportSettings(ElasticExportOptions options);
+
     /// <summary>Returns the current Genesys region options from the persisted file, or defaults if not yet saved.</summary>
     Http.GenesysRegionOptions LoadGenesysSettings();
 

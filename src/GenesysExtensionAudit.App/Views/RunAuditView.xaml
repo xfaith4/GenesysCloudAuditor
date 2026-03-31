@@ -250,6 +250,10 @@
                               IsChecked="{Binding PushToGitHub}"
                               IsEnabled="{Binding IsGitHubConfigured}"
                               Margin="0,0,0,4" />
+                    <CheckBox Content="Export normalized findings to Elastic after saving"
+                              IsChecked="{Binding PushToElasticSearch}"
+                              IsEnabled="{Binding IsElasticConfigured}"
+                              Margin="0,0,0,4" />
                     <TextBlock Foreground="#6B7280" FontSize="11" TextWrapping="Wrap">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
@@ -261,6 +265,22 @@
                                     <DataTrigger Binding="{Binding IsGitHubConfigured}" Value="False">
                                         <Setter Property="Text"
                                                 Value="GitHub push is disabled. Go to the Settings tab to configure your repository and personal access token." />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Foreground="#6B7280" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsElasticConfigured}" Value="True">
+                                        <Setter Property="Text"
+                                                Value="Elastic export uses the endpoint, index, and token environment variable configured in Settings. The token itself is never stored in the app." />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsElasticConfigured}" Value="False">
+                                        <Setter Property="Text"
+                                                Value="Elastic export is disabled. Go to the Settings tab to configure the endpoint, target index, and token environment variable name." />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

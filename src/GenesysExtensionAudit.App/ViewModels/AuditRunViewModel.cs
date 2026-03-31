@@ -35,10 +35,12 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private readonly IExcelReportService _excelService;
     private readonly ICareEvidenceExportService _careEvidenceExportService;
     private readonly ICareEvidenceArtifactService _careEvidenceArtifactService;
+    private readonly IElasticAuditExportService _elasticAuditExportService;
     private readonly IAuditSnapshotService _snapshotService;
     private readonly IAuditLogCatalogCache _auditLogCatalogCache;
     private readonly IGitHubUploadService _gitHubUploadService;
     private readonly IOptionsMonitor<GitHubOptions> _gitHubOptions;
+    private readonly IOptionsMonitor<ElasticExportOptions> _elasticOptions;
     private readonly ObservableCollection<string> _auditLogEntities = [];
     private readonly ObservableCollection<string> _auditLogActions = [];
     private readonly ObservableCollection<string> _auditLogEntityTypes = [];
@@ -71,6 +73,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private string _selectedAuditLogSortOrder = "Descending";
     private string _selectedWorkbookExportMode = ConsolidatedExportMode;
     private bool _pushToGitHub;
+    private bool _pushToElasticSearch;
     private bool _isRunning;
     private int _progressPercent;
     private string _progressMessage = string.Empty;
@@ -85,22 +88,28 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         IExcelReportService excelService,
         ICareEvidenceExportService careEvidenceExportService,
         ICareEvidenceArtifactService careEvidenceArtifactService,
+        IElasticAuditExportService elasticAuditExportService,
         IAuditSnapshotService snapshotService,
         IAuditLogCatalogCache auditLogCatalogCache,
         IGitHubUploadService gitHubUploadService,
-        IOptionsMonitor<GitHubOptions> gitHubOptions)
+        IOptionsMonitor<GitHubOptions> gitHubOptions,
+        IOptionsMonitor<ElasticExportOptions> elasticOptions)
     {
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
         _careEvidenceExportService = careEvidenceExportService ?? throw new ArgumentNullException(nameof(careEvidenceExportService));
         _careEvidenceArtifactService = careEvidenceArtifactService ?? throw new ArgumentNullException(nameof(careEvidenceArtifactService));
+        _elasticAuditExportService = elasticAuditExportService ?? throw new ArgumentNullException(nameof(elasticAuditExportService));
         _snapshotService = snapshotService ?? throw new ArgumentNullException(nameof(snapshotService));
         _auditLogCatalogCache = auditLogCatalogCache ?? throw new ArgumentNullException(nameof(auditLogCatalogCache));
         _gitHubUploadService = gitHubUploadService ?? throw new ArgumentNullException(nameof(gitHubUploadService));
         _gitHubOptions = gitHubOptions ?? throw new ArgumentNullException(nameof(gitHubOptions));
+        _elasticOptions = elasticOptions ?? throw new ArgumentNullException(nameof(elasticOptions));
+        _pushToElasticSearch = _elasticOptions.CurrentValue.Enabled;
 
         // Refresh IsGitHubConfigured binding when settings change (e.g. after saving in Settings tab).
         _gitHubOptions.OnChange(_ => OnPropertyChanged(nameof(IsGitHubConfigured)));
+        _elasticOptions.OnChange(_ => OnPropertyChanged(nameof(IsElasticConfigured)));
 
         StartCommand = new RelayCommand(StartAsync, () => !IsRunning);
         CancelCommand = new RelayCommand(Cancel, () => IsRunning);
@@ -324,8 +333,15 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         set => SetField(ref _pushToGitHub, value);
     }
 
+    public bool PushToElasticSearch
+    {
+        get => _pushToElasticSearch;
+        set => SetField(ref _pushToElasticSearch, value);
+    }
+
     /// <summary>True when GitHub credentials are configured (appsettings.json or Settings tab).</summary>
     public bool IsGitHubConfigured => _gitHubOptions.CurrentValue.IsConfigured;
+    public bool IsElasticConfigured => _elasticOptions.CurrentValue.IsConfigured;
 
     public bool IsLoadingAuditLogEntities
     {
@@ -766,6 +782,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             StatusMessage = $"Saved {generatedFiles.Count} report(s) to {outputDirectory}";
 
             await TryPushToGitHubAsync(generatedPayloads, ct).ConfigureAwait(true);
+            await TryExportToElasticAsync(report, carePacket, snapshotComparison.Snapshot, ct).ConfigureAwait(true);
             await _snapshotService
                 .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDirectory, snapshotPrefix, ct)
                 .ConfigureAwait(true);
@@ -796,6 +813,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
                 (Path.GetFileName(careHtmlPathForWorkbook), careHtmlForWorkbook)
             ],
             ct).ConfigureAwait(true);
+        await TryExportToElasticAsync(report, carePacket, snapshotComparison.Snapshot, ct).ConfigureAwait(true);
         await _snapshotService
             .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDirectory, snapshotPrefix, ct)
             .ConfigureAwait(true);
@@ -962,6 +980,31 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         StatusMessage = files.Count == 1
             ? $"Saved and pushed to GitHub: {lastUrl}"
             : $"Saved locally and pushed {pushedCount} report(s) to GitHub.";
+    }
+
+    private async Task TryExportToElasticAsync(
+        AuditReportData report,
+        CareEvidencePacket carePacket,
+        AuditSnapshotPacket snapshot,
+        CancellationToken ct)
+    {
+        if (!PushToElasticSearch)
+            return;
+
+        var elasticResult = await _elasticAuditExportService
+            .ExportAsync(report, carePacket, snapshot, ct)
+            .ConfigureAwait(true);
+
+        if (elasticResult.Succeeded)
+        {
+            StatusMessage = $"{StatusMessage} Elastic: {elasticResult.DocumentsSucceeded}/{elasticResult.DocumentsAttempted} document(s) indexed.";
+            return;
+        }
+
+        ErrorMessage = string.IsNullOrWhiteSpace(elasticResult.ResponseDetails)
+            ? elasticResult.Message
+            : $"{elasticResult.Message} {elasticResult.ResponseDetails}";
+        StatusMessage = $"{StatusMessage} Elastic export failed.";
     }
 
     private void BuildLastRunSummary(AuditReportData report)

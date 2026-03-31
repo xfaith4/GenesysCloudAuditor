@@ -54,6 +54,33 @@ public sealed class UserSettingsService : IUserSettingsService
     }
 
     /// <inheritdoc/>
+    public ElasticExportOptions LoadElasticExportSettings()
+    {
+        if (!File.Exists(SettingsFilePath))
+            return new ElasticExportOptions();
+
+        try
+        {
+            var json = File.ReadAllText(SettingsFilePath);
+            var doc = JsonSerializer.Deserialize<UserSettingsFile>(json, JsonOpts);
+            return doc?.ElasticExport ?? new ElasticExportOptions();
+        }
+        catch
+        {
+            return new ElasticExportOptions();
+        }
+    }
+
+    /// <inheritdoc/>
+    public void SaveElasticExportSettings(ElasticExportOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var existing = LoadSettingsFile();
+        existing.ElasticExport = options;
+        SaveSettingsFile(existing);
+    }
+
+    /// <inheritdoc/>
     public GenesysRegionOptions LoadGenesysSettings()
     {
         if (!File.Exists(SettingsFilePath))
@@ -152,6 +179,9 @@ public sealed class UserSettingsService : IUserSettingsService
 
         [JsonPropertyName("GitHub")]
         public StoredGitHubOptions? GitHub { get; set; }
+
+        [JsonPropertyName("ElasticExport")]
+        public ElasticExportOptions? ElasticExport { get; set; }
     }
 
     private sealed class StoredGenesysOAuthOptions
@@ -290,6 +320,7 @@ public sealed class UserSettingsService : IUserSettingsService
         {
             Genesys = file.Genesys,
             GitHub = file.GitHub is null ? null : ToStoredGitHubOptions(ToRuntimeGitHubOptions(file.GitHub)),
-            GenesysOAuth = file.GenesysOAuth is null ? null : ToStoredGenesysOAuthOptions(ToRuntimeGenesysOAuthOptions(file.GenesysOAuth))
+            GenesysOAuth = file.GenesysOAuth is null ? null : ToStoredGenesysOAuthOptions(ToRuntimeGenesysOAuthOptions(file.GenesysOAuth)),
+            ElasticExport = file.ElasticExport
         };
 }

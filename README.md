@@ -72,6 +72,8 @@ The current application already provides a strong audit foundation.
 | Operational event export                 | `Operational_Events`     | Info     |
 | Outbound event export                    | `Outbound_Events`        | Info     |
 | Care evidence JSON packet                | `.care-evidence.json`    | Triage   |
+| Care evidence HTML summary               | `.care-summary.html`     | Triage   |
+| Elastic bulk export                      | Elastic index            | Triage   |
 
 ### Current delivery model
 
@@ -79,6 +81,8 @@ The current application already provides a strong audit foundation.
 - Headless runner for scheduled execution
 - Multi-sheet Excel workbook export
 - Parallel machine-readable Care evidence JSON export
+- Parallel human-readable Care evidence HTML export
+- Optional ElasticSearch bulk export for findings and run summaries
 - Optional scheduled task integration
 - Optional SharePoint upload in runner mode
 - Optional GitHub upload in runner mode

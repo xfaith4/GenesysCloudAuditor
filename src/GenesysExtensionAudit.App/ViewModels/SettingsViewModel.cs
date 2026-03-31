@@ -14,6 +14,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 {
     private readonly IUserSettingsService _userSettings;
     private readonly IOptionsMonitor<GitHubOptions> _gitHubMonitor;
+    private readonly IOptionsMonitor<ElasticExportOptions> _elasticMonitor;
     private readonly IOptionsMonitor<GenesysRegionOptions> _genesysMonitor;
     private readonly IOptionsMonitor<GenesysOAuthOptions> _oauthMonitor;
     private readonly IGenesysPkceAuthService _pkceAuthService;
@@ -35,6 +36,11 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private bool _createDraftPr;
     private string _prBranchPrefix = "audit/";
 
+    private bool _elasticExportEnabled;
+    private string _elasticEndpointUri = string.Empty;
+    private string _elasticIndexName = "genesys-audit-findings";
+    private string _elasticTokenEnvironmentVariableName = "GENESYS_AUDIT_ELASTIC_TOKEN";
+
     private string _statusMessage = string.Empty;
     private bool _hasError;
     private bool _isAuthenticatingPkce;
@@ -42,12 +48,14 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     public SettingsViewModel(
         IUserSettingsService userSettings,
         IOptionsMonitor<GitHubOptions> gitHubMonitor,
+        IOptionsMonitor<ElasticExportOptions> elasticMonitor,
         IOptionsMonitor<GenesysRegionOptions> genesysMonitor,
         IOptionsMonitor<GenesysOAuthOptions> oauthMonitor,
         IGenesysPkceAuthService pkceAuthService)
     {
         _userSettings = userSettings ?? throw new ArgumentNullException(nameof(userSettings));
         _gitHubMonitor = gitHubMonitor ?? throw new ArgumentNullException(nameof(gitHubMonitor));
+        _elasticMonitor = elasticMonitor ?? throw new ArgumentNullException(nameof(elasticMonitor));
         _genesysMonitor = genesysMonitor ?? throw new ArgumentNullException(nameof(genesysMonitor));
         _oauthMonitor = oauthMonitor ?? throw new ArgumentNullException(nameof(oauthMonitor));
         _pkceAuthService = pkceAuthService ?? throw new ArgumentNullException(nameof(pkceAuthService));
@@ -169,6 +177,30 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set => SetField(ref _prBranchPrefix, value);
     }
 
+    public bool ElasticExportEnabled
+    {
+        get => _elasticExportEnabled;
+        set => SetField(ref _elasticExportEnabled, value);
+    }
+
+    public string ElasticEndpointUri
+    {
+        get => _elasticEndpointUri;
+        set => SetField(ref _elasticEndpointUri, value);
+    }
+
+    public string ElasticIndexName
+    {
+        get => _elasticIndexName;
+        set => SetField(ref _elasticIndexName, value);
+    }
+
+    public string ElasticTokenEnvironmentVariableName
+    {
+        get => _elasticTokenEnvironmentVariableName;
+        set => SetField(ref _elasticTokenEnvironmentVariableName, value);
+    }
+
     // ── Status ────────────────────────────────────────────────────────────────
 
     public string StatusMessage
@@ -236,6 +268,24 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
                 PrBranchPrefix = string.IsNullOrWhiteSpace(PrBranchPrefix) ? "audit/" : PrBranchPrefix.Trim(),
                 CommitMessage = _gitHubMonitor.CurrentValue.CommitMessage
             });
+
+            var elasticOptions = new ElasticExportOptions
+            {
+                Enabled = ElasticExportEnabled,
+                EndpointUri = ElasticEndpointUri.Trim(),
+                IndexName = ElasticIndexName.Trim(),
+                TokenEnvironmentVariableName = ElasticTokenEnvironmentVariableName.Trim(),
+                IncludeRunSummaryDocument = _elasticMonitor.CurrentValue.IncludeRunSummaryDocument,
+                BulkBatchSize = _elasticMonitor.CurrentValue.BulkBatchSize
+            };
+
+            if ((ElasticExportEnabled || HasElasticConfigInput()) &&
+                !elasticOptions.TryValidate(out var elasticValidationError))
+            {
+                throw new InvalidOperationException(elasticValidationError);
+            }
+
+            _userSettings.SaveElasticExportSettings(elasticOptions);
 
             StatusMessage = "Settings saved. Changes take effect immediately.";
             OnPropertyChanged(nameof(IsConfigured));
@@ -337,6 +387,14 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         GitHubFolderPath = Coalesce(savedGitHub.FolderPath, fallbackGitHub.FolderPath, "audit-reports");
         CreateDraftPr = savedGitHub.CreateDraftPr || fallbackGitHub.CreateDraftPr;
         PrBranchPrefix = Coalesce(savedGitHub.PrBranchPrefix, fallbackGitHub.PrBranchPrefix, "audit/");
+
+        var savedElastic = _userSettings.LoadElasticExportSettings();
+        var fallbackElastic = _elasticMonitor.CurrentValue;
+
+        ElasticExportEnabled = savedElastic.Enabled || fallbackElastic.Enabled;
+        ElasticEndpointUri = Coalesce(savedElastic.EndpointUri, fallbackElastic.EndpointUri);
+        ElasticIndexName = Coalesce(savedElastic.IndexName, fallbackElastic.IndexName, "genesys-audit-findings");
+        ElasticTokenEnvironmentVariableName = Coalesce(savedElastic.TokenEnvironmentVariableName, fallbackElastic.TokenEnvironmentVariableName, "GENESYS_AUDIT_ELASTIC_TOKEN");
     }
 
     private static string NormalizeAuthMode(string? mode)
@@ -359,6 +417,9 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             if (!string.IsNullOrWhiteSpace(v)) return v!;
         return string.Empty;
     }
+
+    private bool HasElasticConfigInput()
+        => !string.IsNullOrWhiteSpace(ElasticEndpointUri);
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? name = null)
     {

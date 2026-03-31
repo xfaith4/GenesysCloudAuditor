@@ -603,6 +603,7 @@ public sealed record HistoricalDriftFinding(
 /// </summary>
 public sealed class AuditReportData
 {
+    public string RunId { get; init; } = Guid.NewGuid().ToString("N");
     public DateTimeOffset GeneratedAt { get; init; } = DateTimeOffset.Now;
     public DateTimeOffset RunStartedAtUtc { get; init; }
     public DateTimeOffset RunCompletedAtUtc { get; init; }

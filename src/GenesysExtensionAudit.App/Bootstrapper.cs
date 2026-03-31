@@ -60,6 +60,7 @@ public static class Bootstrapper
                 services.Configure<GenesysOAuthOptions>(ctx.Configuration.GetSection("GenesysOAuth"));
                 services.Configure<ScheduledAuditOptions>(ctx.Configuration.GetSection("Scheduling"));
                 services.Configure<GitHubOptions>(ctx.Configuration.GetSection("GitHub"));
+                services.Configure<ElasticExportOptions>(ctx.Configuration.GetSection("ElasticExport"));
 
                 // User settings persistence
                 services.AddSingleton<IUserSettingsService, UserSettingsService>();
@@ -173,6 +174,7 @@ public static class Bootstrapper
                 services.AddSingleton<IExcelReportService, ExcelReportService>();
                 services.AddSingleton<ICareEvidenceExportService, CareEvidenceExportService>();
                 services.AddSingleton<ICareEvidenceArtifactService, CareEvidenceArtifactService>();
+                services.AddHttpClient<IElasticAuditExportService, ElasticAuditExportService>();
                 services.AddSingleton<IAuditSnapshotService, AuditSnapshotService>();
                 services.AddHttpClient<IGitHubUploadService, GitHubUploadService>();
                 services.AddSingleton<IScheduledAuditService, ScheduledAuditService>();

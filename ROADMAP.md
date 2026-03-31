@@ -571,6 +571,20 @@ This capability is strictly an **output/integration feature** and must not repla
 | Rule/version metadata in documents   | Medium   | Include rule ID/version and run metadata for downstream filtering           |
 | Optional run-summary document        | Medium   | Write one summary document per run in addition to per-finding documents     |
 
+### Current implementation status
+
+The current repo now includes the core Phase 5.4 export path:
+
+- Shared `ElasticExport` configuration in appsettings and desktop user settings
+- Per-run Elastic export toggles in the desktop run flow and scheduled profile flow
+- Environment-variable token loading with no token persistence in UI settings
+- NDJSON bulk indexing of normalized finding documents
+- Optional run-summary document per audit run
+- Export status reporting with document counts and operator-facing failure messages
+- Infrastructure tests covering missing-token validation and bulk-payload shaping
+
+Remaining gaps in this block are connection-test UX, stronger retry/idempotency semantics, and broader rule metadata/versioning depth.
+
 ### UI requirements
 
 - Add UI fields for:

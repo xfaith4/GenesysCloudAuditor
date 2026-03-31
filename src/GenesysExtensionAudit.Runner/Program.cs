@@ -74,6 +74,7 @@ static async Task<int> RunAsync(string[] args)
                 services.Configure<ExportOptions>(ctx.Configuration.GetSection("Export"));
                 services.Configure<SharePointOptions>(ctx.Configuration.GetSection("SharePoint"));
                 services.Configure<GitHubOptions>(ctx.Configuration.GetSection("GitHub"));
+                services.Configure<ElasticExportOptions>(ctx.Configuration.GetSection("ElasticExport"));
                 services.AddSingleton<IUserSettingsService, UserSettingsService>();
 
                 // ── Core domain services ──────────────────────────────────────
@@ -185,6 +186,7 @@ static async Task<int> RunAsync(string[] args)
                 services.AddSingleton<IAuditSnapshotService, AuditSnapshotService>();
                 services.AddSingleton<IFileUploadService, SharePointUploadService>();
                 services.AddHttpClient<IGitHubUploadService, GitHubUploadService>();
+                services.AddHttpClient<IElasticAuditExportService, ElasticAuditExportService>();
             })
             .Build();
 
@@ -199,6 +201,8 @@ static async Task<int> RunAsync(string[] args)
         var exportOpts = host.Services.GetRequiredService<IOptions<ExportOptions>>().Value;
         var spOpts = host.Services.GetRequiredService<IOptions<SharePointOptions>>().Value;
         var githubOpts = host.Services.GetRequiredService<IOptions<GitHubOptions>>().Value;
+        var elasticOpts = host.Services.GetRequiredService<IOptions<ElasticExportOptions>>().Value;
+        var elasticExportService = host.Services.GetRequiredService<IElasticAuditExportService>();
 
         logger.LogInformation(
             "GenesysExtensionAudit Runner starting. Region={Region} DryRun={DryRun} ScheduleProfile={ScheduleProfile}",
@@ -295,6 +299,39 @@ static async Task<int> RunAsync(string[] args)
         logger.LogInformation(
             "Audit snapshot JSON saved: {FilePath} ({Findings} active findings)",
             snapshotPath, snapshotComparison.Snapshot.FindingCount);
+
+        var pushToElastic = !dryRun &&
+            (loadedProfile is null ? elasticOpts.Enabled : loadedProfile.PushToElasticSearch);
+
+        if (dryRun)
+        {
+            logger.LogInformation("--dry-run: Elastic export skipped.");
+        }
+        else if (pushToElastic)
+        {
+            var elasticResult = await elasticExportService
+                .ExportAsync(report, carePacket, snapshotComparison.Snapshot, cts.Token)
+                .ConfigureAwait(false);
+
+            if (elasticResult.Succeeded)
+            {
+                logger.LogInformation(
+                    "Elastic export complete. Attempted={Attempted} Indexed={Succeeded}",
+                    elasticResult.DocumentsAttempted,
+                    elasticResult.DocumentsSucceeded);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Elastic export did not complete successfully. {Message} {Details}",
+                    elasticResult.Message,
+                    string.IsNullOrWhiteSpace(elasticResult.ResponseDetails) ? string.Empty : elasticResult.ResponseDetails);
+            }
+        }
+        else
+        {
+            logger.LogInformation("Elastic export disabled for this run.");
+        }
 
         // ── Upload to SharePoint ──────────────────────────────────────────────
         if (dryRun)

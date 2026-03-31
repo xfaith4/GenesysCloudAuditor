@@ -160,6 +160,25 @@ Enable or disable event-heavy collectors and optional audit paths.
 
 Set this to a writable folder that exists or can be created by the app.
 
+#### `ElasticExport:*`
+
+If you want post-run indexing into ElasticSearch, configure:
+
+- `ElasticExport:Enabled`
+- `ElasticExport:EndpointUri`
+- `ElasticExport:IndexName`
+- `ElasticExport:TokenEnvironmentVariableName`
+
+The API token is not stored in the app settings or desktop UI. Set the configured environment variable before running the desktop app or runner.
+
+Example PowerShell session:
+
+```powershell
+$env:GENESYS_AUDIT_ELASTIC_TOKEN = "YOUR_ELASTIC_API_KEY"
+```
+
+If your Elastic deployment expects a full authorization header value instead of a bare API key, set the environment variable to `ApiKey <value>` or `Bearer <value>`.
+
 ---
 
 ## 5. Build the Solution
@@ -247,6 +266,10 @@ Typical outputs may include:
 - operational event sheets
 - outbound event sheets
 - summary-oriented sheets if implemented
+- `.care-evidence.json`
+- `.care-summary.html`
+
+If Elastic export is enabled, the same run will also submit normalized finding documents and an optional run-summary document to the configured index.
 
 ### What to validate after a run
 
