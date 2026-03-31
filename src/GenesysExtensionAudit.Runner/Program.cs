@@ -237,14 +237,17 @@ static async Task<int> RunAsync(string[] args)
         var snapshotComparison = snapshotService.Compare(report, previousSnapshot.Snapshot);
         report.FindingLifecycleFindings = snapshotComparison.LifecycleFindings;
         report.FindingLifecycleWasComputed = true;
+        report.HistoricalDriftFindings = snapshotComparison.HistoricalDriftFindings;
+        report.HistoricalDriftWasComputed = snapshotComparison.HistoricalDriftWasComputed;
         report.PreviousSnapshotGeneratedAtUtc = previousSnapshot.Snapshot?.GeneratedUtc;
         report.PreviousSnapshotPath = previousSnapshot.Path;
 
         logger.LogInformation(
-            "Finding lifecycle classified. PreviousSnapshot={PreviousSnapshot} NewOrRecurrent={ActiveCount} LifecycleEntries={LifecycleCount}",
+            "Historical comparison complete. PreviousSnapshot={PreviousSnapshot} ActiveFindings={ActiveCount} LifecycleEntries={LifecycleCount} DriftEntries={DriftCount}",
             previousSnapshot.Path ?? "(none)",
             snapshotComparison.Snapshot.FindingCount,
-            snapshotComparison.LifecycleFindings.Count);
+            snapshotComparison.LifecycleFindings.Count,
+            snapshotComparison.HistoricalDriftFindings.Count);
 
         // ── Build care evidence packet ────────────────────────────────────────
         logger.LogInformation("Building Genesys Care evidence packet...");

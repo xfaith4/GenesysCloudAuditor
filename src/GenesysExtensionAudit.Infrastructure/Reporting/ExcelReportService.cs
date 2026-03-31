@@ -30,6 +30,7 @@ public sealed class ExcelWorkbookScopeOptions
     public bool IncludeFlappingDetection { get; init; } = true;
     public bool IncludeHotSpot { get; init; } = true;
     public bool IncludeFindingLifecycle { get; init; } = true;
+    public bool IncludeHistoricalDrift { get; init; } = true;
 }
 
 /// <summary>
@@ -135,6 +136,9 @@ public sealed class ExcelReportService : IExcelReportService
         if (scopeOptions.IncludeFindingLifecycle && report.FindingLifecycleWasComputed)
             WriteFindingLifecycleSheet(wb, report);
 
+        if (scopeOptions.IncludeHistoricalDrift && report.HistoricalDriftWasComputed)
+            WriteHistoricalDriftSheet(wb, report);
+
         using var ms = new MemoryStream();
         wb.SaveAs(ms);
         return Task.FromResult(ms.ToArray());
@@ -172,6 +176,7 @@ public sealed class ExcelReportService : IExcelReportService
             ("Site_Topology", "Site–Edge–Trunk Topology", report.Options.RunSiteTopologyAudit, report.SiteTopologyFindings.Count, "Critical", "Sites with no active edges, offline edges, orphaned edge–site bindings, or trunks that are down/out-of-service"),
             ("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
             ("Finding_Lifecycle", "Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
+            ("Historical_Drift", "Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count, "High", "Material telephony, routing, and topology relationship changes compared to the previous saved snapshot"),
         };
 
         var totalFindings = rows.Where(r => r.Item3).Sum(r => r.Item4);
@@ -1322,6 +1327,57 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 11);
+    }
+
+    private static void WriteHistoricalDriftSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Historical_Drift");
+        var findings = report.HistoricalDriftFindings;
+
+        string[] headers =
+        [
+            "Change Type", "Domain", "Relationship Type", "Object Type", "Object Name", "Object ID",
+            "Previous Value", "Current Value", "Severity", "Issue", "Recommended Action", "Relationship Key"
+        ];
+        WriteSheetHeader(ws, "Historical Drift — Relationship Changes Since Previous Snapshot", report, findings.Count, headers);
+
+        int row = 4;
+        foreach (var f in findings)
+        {
+            ws.Cell(row, 1).Value = f.ChangeType;
+            ws.Cell(row, 2).Value = f.Domain;
+            ws.Cell(row, 3).Value = f.RelationshipType;
+            ws.Cell(row, 4).Value = f.ObjectType;
+            ws.Cell(row, 5).Value = f.ObjectName;
+            ws.Cell(row, 6).Value = f.ObjectId;
+            ws.Cell(row, 7).Value = f.PreviousValue;
+            ws.Cell(row, 8).Value = f.CurrentValue;
+            ws.Cell(row, 9).Value = f.Severity.ToString();
+            ws.Cell(row, 10).Value = f.Issue;
+            ws.Cell(row, 11).Value = f.RecommendedAction;
+            ws.Cell(row, 12).Value = f.RelationshipKey;
+
+            ws.Cell(row, 1).Style.Fill.BackgroundColor = f.ChangeType switch
+            {
+                HistoricalDriftChangeType.Changed => SeverityCritical,
+                HistoricalDriftChangeType.Added => SeverityWarning,
+                HistoricalDriftChangeType.Removed => SeverityInfo,
+                _ => XLColor.NoColor
+            };
+
+            var severityCell = ws.Cell(row, 9);
+            if (f.Severity is FindingSeverity.Critical or FindingSeverity.High)
+                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
+            else if (f.Severity == FindingSeverity.Medium)
+                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
+            else
+                severityCell.Style.Fill.BackgroundColor = SeverityInfo;
+
+            ApplyAltRow(ws, row, 12);
+            row++;
+        }
+
+        AdjustColumns(ws, 12);
     }
 
     private static IXLWorksheet WriteSheetHeader(

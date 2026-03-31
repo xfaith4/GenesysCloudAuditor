@@ -170,6 +170,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<ChangeAdjacencyFinding> changeAdjacencyFindings = [];
         IReadOnlyList<FlappingFinding> flappingDetectionFindings = [];
         IReadOnlyList<HotSpotFinding> hotSpotFindings = [];
+        IReadOnlyList<AuditRelationshipSnapshot> relationshipSnapshots = [];
 
         if (needsUsers)
         {
@@ -506,6 +507,16 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             _logger.LogInformation("Prompt hygiene check complete. Findings={Count}", promptHygieneFindings.Count);
         }
 
+        relationshipSnapshots = BuildRelationshipSnapshots(
+            options,
+            userDtos,
+            extDtos,
+            didDtos,
+            ivrDtos,
+            siteDtos,
+            edgeDtos,
+            trunkDtos);
+
         Report(progress, 92, "Composing report...");
 
         var partialReport = new AuditReportData
@@ -532,7 +543,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             LicenseOverProvisioningFindings = licenseOverProvisioningFindings,
             RoleGroupOverlapFindings = roleGroupOverlapFindings,
             SiteTopologyFindings = siteTopologyFindings,
-            PromptHygieneFindings = promptHygieneFindings
+            PromptHygieneFindings = promptHygieneFindings,
+            RelationshipSnapshots = relationshipSnapshots
         };
 
         // Phase 2.1 — Change adjacency marker (requires audit logs + at least one other finding)
@@ -585,6 +597,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 RoleGroupOverlapFindings = partialReport.RoleGroupOverlapFindings,
                 SiteTopologyFindings = partialReport.SiteTopologyFindings,
                 PromptHygieneFindings = partialReport.PromptHygieneFindings,
+                RelationshipSnapshots = partialReport.RelationshipSnapshots,
                 ChangeAdjacencyFindings = changeAdjacencyFindings,
                 FlappingDetectionFindings = flappingDetectionFindings
             };
@@ -662,7 +675,8 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             PromptHygieneFindings = promptHygieneFindings,
             ChangeAdjacencyFindings = changeAdjacencyFindings,
             FlappingDetectionFindings = flappingDetectionFindings,
-            HotSpotFindings = hotSpotFindings
+            HotSpotFindings = hotSpotFindings,
+            RelationshipSnapshots = relationshipSnapshots
         };
     }
 
@@ -1139,6 +1153,230 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<TrunkDto> trunks)
         => new SiteTopologyAnalyzer().Analyze(sites, edges, trunks);
 
+    private static IReadOnlyList<AuditRelationshipSnapshot> BuildRelationshipSnapshots(
+        AuditRunOptions options,
+        IReadOnlyList<GenesysUserDto> users,
+        IReadOnlyList<EdgeExtensionEntityDto> extensions,
+        IReadOnlyList<DidDto> dids,
+        IReadOnlyList<IvrDto> ivrs,
+        IReadOnlyList<SiteDto> sites,
+        IReadOnlyList<EdgeDto> edges,
+        IReadOnlyList<TrunkDto> trunks)
+    {
+        var snapshots = new List<AuditRelationshipSnapshot>();
+
+        if (options.RunUserTelephonyAudit)
+            snapshots.AddRange(CaptureTelephonyRelationshipSnapshots(users, extensions, dids));
+
+        if (options.RunFlowDependencyAudit)
+            snapshots.AddRange(CaptureRoutingRelationshipSnapshots(ivrs));
+
+        if (options.RunSiteTopologyAudit)
+            snapshots.AddRange(CaptureTopologyRelationshipSnapshots(sites, edges, trunks));
+
+        return snapshots
+            .OrderBy(s => s.Domain, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(s => s.ObjectName ?? s.ObjectId ?? s.RelationshipKey, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(s => s.RelationshipKey, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static IReadOnlyList<AuditRelationshipSnapshot> CaptureTelephonyRelationshipSnapshots(
+        IReadOnlyList<GenesysUserDto> users,
+        IReadOnlyList<EdgeExtensionEntityDto> extensions,
+        IReadOnlyList<DidDto> dids)
+    {
+        var snapshots = new List<AuditRelationshipSnapshot>();
+        var didsByUserId = dids
+            .Where(d => d.Id is not null
+                && string.Equals(d.Owner?.Type, "USER", StringComparison.OrdinalIgnoreCase)
+                && d.Owner?.Id is not null)
+            .GroupBy(d => d.Owner!.Id!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
+        foreach (var user in users.Where(u => u.Id is not null))
+        {
+            var profileExtension = ExtractWorkPhoneExtension(user);
+            didsByUserId.TryGetValue(user.Id!, out var ownedDids);
+            var locationIds = (user.Locations ?? [])
+                .Where(l => l.Id is not null)
+                .Select(l => l.Id!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var locationDisplay = (user.Locations ?? [])
+                .Select(l => FormatNameId(l.Name, l.Id))
+                .Where(x => !string.IsNullOrWhiteSpace(x) && x != "(none)")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var didNumbersCanonical = ownedDids is not null
+                ? ownedDids
+                    .Select(d => NormalizePhoneNumber(d.PhoneNumber ?? string.Empty) ?? NormalizeSnapshotValue(d.PhoneNumber))
+                    .Where(x => !string.IsNullOrWhiteSpace(x) && x != "-")
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                    .ToList()
+                : [];
+
+            var didNumbersDisplay = ownedDids is not null
+                ? ownedDids
+                    .Select(d => d.PhoneNumber)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => x!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                    .ToList()
+                : [];
+
+            snapshots.Add(new AuditRelationshipSnapshot(
+                Domain: "Telephony Ownership",
+                RelationshipType: "UserTelephonyBinding",
+                RelationshipKey: $"telephony-user|{user.Id}",
+                ObjectType: "User",
+                ObjectId: user.Id,
+                ObjectName: user.Name,
+                NormalizedValue: $"profileExt={NormalizeSnapshotValue(profileExtension)};station={NormalizeSnapshotValue(user.Station?.Id)};dids={JoinCanonical(didNumbersCanonical)};locations={JoinCanonical(locationIds)}",
+                DisplayValue: $"Profile Extension={DisplayValue(profileExtension)}; Station={FormatNameId(user.Station?.Name, user.Station?.Id)}; DIDs={JoinDisplay(didNumbersDisplay)}; Locations={JoinDisplay(locationDisplay)}"));
+        }
+
+        foreach (var extension in extensions.Where(e => e.Id is not null))
+        {
+            snapshots.Add(new AuditRelationshipSnapshot(
+                Domain: "Telephony Ownership",
+                RelationshipType: "ExtensionAssignment",
+                RelationshipKey: $"telephony-extension|{extension.Id}",
+                ObjectType: "Extension",
+                ObjectId: extension.Id,
+                ObjectName: extension.Extension,
+                NormalizedValue: $"extension={NormalizeSnapshotValue(extension.Extension)};assignedTo={NormalizeSnapshotValue(extension.AssignedTo?.Type)}:{NormalizeSnapshotValue(extension.AssignedTo?.Id)}",
+                DisplayValue: $"Extension={DisplayValue(extension.Extension)}; Assigned To={FormatOwner(extension.AssignedTo?.Type, extension.AssignedTo?.Id)}"));
+        }
+
+        foreach (var did in dids.Where(d => d.Id is not null))
+        {
+            var normalizedNumber = NormalizePhoneNumber(did.PhoneNumber ?? string.Empty) ?? NormalizeSnapshotValue(did.PhoneNumber);
+            snapshots.Add(new AuditRelationshipSnapshot(
+                Domain: "Telephony Ownership",
+                RelationshipType: "DidOwnership",
+                RelationshipKey: $"telephony-did|{did.Id}",
+                ObjectType: "Did",
+                ObjectId: did.Id,
+                ObjectName: did.PhoneNumber,
+                NormalizedValue: $"number={NormalizeSnapshotValue(normalizedNumber)};owner={NormalizeSnapshotValue(did.Owner?.Type)}:{NormalizeSnapshotValue(did.Owner?.Id)};pool={NormalizeSnapshotValue(did.DidPool?.Id)}",
+                DisplayValue: $"Number={DisplayValue(did.PhoneNumber)}; Owner={FormatOwner(did.Owner?.Type, did.Owner?.Id)}; Pool={DisplayValue(did.DidPool?.Id)}"));
+        }
+
+        return snapshots;
+    }
+
+    private static IReadOnlyList<AuditRelationshipSnapshot> CaptureRoutingRelationshipSnapshots(IReadOnlyList<IvrDto> ivrs)
+        => ivrs
+            .Where(ivr => ivr.Id is not null)
+            .Select(ivr =>
+            {
+                var normalizedDnis = (ivr.Dnis ?? [])
+                    .Select(d => NormalizePhoneNumber(d) ?? NormalizeSnapshotValue(d))
+                    .Where(x => !string.IsNullOrWhiteSpace(x) && x != "-")
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var displayDnis = (ivr.Dnis ?? [])
+                    .Where(d => !string.IsNullOrWhiteSpace(d))
+                    .Select(d => d!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                return new AuditRelationshipSnapshot(
+                    Domain: "Routing Bindings",
+                    RelationshipType: "IvrRoutingBinding",
+                    RelationshipKey: $"routing-ivr|{ivr.Id}",
+                    ObjectType: "IVR",
+                    ObjectId: ivr.Id,
+                    ObjectName: ivr.Name,
+                    NormalizedValue: $"dnis={JoinCanonical(normalizedDnis)};schedule={NormalizeSnapshotValue(ivr.ScheduleGroup?.Id)};open={NormalizeSnapshotValue(ivr.OpenHoursFlow?.Id)};closed={NormalizeSnapshotValue(ivr.ClosedHoursFlow?.Id)};holiday={NormalizeSnapshotValue(ivr.HolidayHoursFlow?.Id)}",
+                    DisplayValue: $"DNIS={JoinDisplay(displayDnis)}; Schedule Group={FormatNameId(ivr.ScheduleGroup?.Name, ivr.ScheduleGroup?.Id)}; Open={FormatNameId(ivr.OpenHoursFlow?.Name, ivr.OpenHoursFlow?.Id)}; Closed={FormatNameId(ivr.ClosedHoursFlow?.Name, ivr.ClosedHoursFlow?.Id)}; Holiday={FormatNameId(ivr.HolidayHoursFlow?.Name, ivr.HolidayHoursFlow?.Id)}");
+            })
+            .ToList();
+
+    private static IReadOnlyList<AuditRelationshipSnapshot> CaptureTopologyRelationshipSnapshots(
+        IReadOnlyList<SiteDto> sites,
+        IReadOnlyList<EdgeDto> edges,
+        IReadOnlyList<TrunkDto> trunks)
+    {
+        var snapshots = new List<AuditRelationshipSnapshot>();
+
+        foreach (var site in sites.Where(s => s.Id is not null))
+        {
+            var primaryEdgeIds = (site.PrimaryEdges ?? [])
+                .Where(e => e.Id is not null)
+                .Select(e => e.Id!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var secondaryEdgeIds = (site.SecondaryEdges ?? [])
+                .Where(e => e.Id is not null)
+                .Select(e => e.Id!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var primaryDisplay = (site.PrimaryEdges ?? [])
+                .Select(e => FormatNameId(e.Name, e.Id))
+                .Where(x => !string.IsNullOrWhiteSpace(x) && x != "(none)")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var secondaryDisplay = (site.SecondaryEdges ?? [])
+                .Select(e => FormatNameId(e.Name, e.Id))
+                .Where(x => !string.IsNullOrWhiteSpace(x) && x != "(none)")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            snapshots.Add(new AuditRelationshipSnapshot(
+                Domain: "Topology Relationships",
+                RelationshipType: "SiteEdgeMembership",
+                RelationshipKey: $"topology-site|{site.Id}",
+                ObjectType: "Site",
+                ObjectId: site.Id,
+                ObjectName: site.Name,
+                NormalizedValue: $"location={NormalizeSnapshotValue(site.Location?.Id)};primary={JoinCanonical(primaryEdgeIds)};secondary={JoinCanonical(secondaryEdgeIds)}",
+                DisplayValue: $"Location={FormatNameId(site.Location?.Name, site.Location?.Id)}; Primary Edges={JoinDisplay(primaryDisplay)}; Secondary Edges={JoinDisplay(secondaryDisplay)}"));
+        }
+
+        foreach (var edge in edges.Where(e => e.Id is not null))
+        {
+            snapshots.Add(new AuditRelationshipSnapshot(
+                Domain: "Topology Relationships",
+                RelationshipType: "EdgeSiteBinding",
+                RelationshipKey: $"topology-edge|{edge.Id}",
+                ObjectType: "Edge",
+                ObjectId: edge.Id,
+                ObjectName: edge.Name,
+                NormalizedValue: $"site={NormalizeSnapshotValue(edge.Site?.Id)};online={NormalizeSnapshotValue(edge.OnlineStatus)};status={NormalizeSnapshotValue(edge.StatusCode)}",
+                DisplayValue: $"Site={FormatNameId(edge.Site?.Name, edge.Site?.Id)}; Online={DisplayValue(edge.OnlineStatus)}; Status={DisplayValue(edge.StatusCode)}"));
+        }
+
+        foreach (var trunk in trunks.Where(t => t.Id is not null))
+        {
+            snapshots.Add(new AuditRelationshipSnapshot(
+                Domain: "Topology Relationships",
+                RelationshipType: "TrunkEdgeBinding",
+                RelationshipKey: $"topology-trunk|{trunk.Id}",
+                ObjectType: "Trunk",
+                ObjectId: trunk.Id,
+                ObjectName: trunk.Name,
+                NormalizedValue: $"edge={NormalizeSnapshotValue(trunk.Edge?.Id)};state={NormalizeSnapshotValue(trunk.TrunkState)};inService={NormalizeSnapshotValue(trunk.InService?.ToString())};enabled={NormalizeSnapshotValue(trunk.Enabled?.ToString())}",
+                DisplayValue: $"Edge={FormatNameId(trunk.Edge?.Name, trunk.Edge?.Id)}; State={DisplayValue(trunk.TrunkState)}; In Service={DisplayBool(trunk.InService)}; Enabled={DisplayBool(trunk.Enabled)}"));
+        }
+
+        return snapshots;
+    }
+
     // ─── Phase 1.2 — User telephony integrity ────────────────────────────────
 
     /// <summary>
@@ -1478,6 +1716,57 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 yield return ci;
         }
     }
+
+    private static string NormalizeSnapshotValue(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? "-" : raw.Trim();
+
+    private static string DisplayValue(string? raw)
+        => string.IsNullOrWhiteSpace(raw) ? "(none)" : raw.Trim();
+
+    private static string JoinCanonical(IEnumerable<string> values)
+    {
+        var list = values
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(v => v, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return list.Count == 0 ? "-" : string.Join("|", list);
+    }
+
+    private static string JoinDisplay(IEnumerable<string> values)
+    {
+        var list = values
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(v => v, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return list.Count == 0 ? "(none)" : string.Join(", ", list);
+    }
+
+    private static string FormatNameId(string? name, string? id)
+    {
+        var trimmedName = name?.Trim();
+        var trimmedId = id?.Trim();
+        if (!string.IsNullOrWhiteSpace(trimmedName) && !string.IsNullOrWhiteSpace(trimmedId))
+            return $"{trimmedName} ({trimmedId})";
+        if (!string.IsNullOrWhiteSpace(trimmedName))
+            return trimmedName;
+        if (!string.IsNullOrWhiteSpace(trimmedId))
+            return trimmedId;
+        return "(none)";
+    }
+
+    private static string FormatOwner(string? ownerType, string? ownerId)
+    {
+        var type = string.IsNullOrWhiteSpace(ownerType) ? "Unassigned" : ownerType.Trim().ToUpperInvariant();
+        var id = string.IsNullOrWhiteSpace(ownerId) ? null : ownerId.Trim();
+        return id is null ? type : $"{type}:{id}";
+    }
+
+    private static string DisplayBool(bool? value)
+        => value.HasValue ? (value.Value ? "True" : "False") : "(unknown)";
 
     private static string? NormalizePhoneNumber(string raw)
     {

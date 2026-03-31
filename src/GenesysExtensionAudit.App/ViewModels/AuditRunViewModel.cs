@@ -718,6 +718,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         var snapshotComparison = _snapshotService.Compare(report, previousSnapshot.Snapshot);
         report.FindingLifecycleFindings = snapshotComparison.LifecycleFindings;
         report.FindingLifecycleWasComputed = true;
+        report.HistoricalDriftFindings = snapshotComparison.HistoricalDriftFindings;
+        report.HistoricalDriftWasComputed = snapshotComparison.HistoricalDriftWasComputed;
         report.PreviousSnapshotGeneratedAtUtc = previousSnapshot.Snapshot?.GeneratedUtc;
         report.PreviousSnapshotPath = previousSnapshot.Path;
 
@@ -802,7 +804,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeExtensions = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -812,7 +815,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeGroups = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -822,7 +826,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeQueues = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -832,7 +837,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeFlows = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -842,7 +848,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeInactiveUsers = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -852,7 +859,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeDids = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -862,7 +870,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeAuditLogs = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -872,7 +881,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeOperationalEvents = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -882,7 +892,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeOutboundEvents = true,
-                IncludeFindingLifecycle = false
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
             }));
         }
 
@@ -942,7 +953,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             ("Audit Logs", report.Options.RunAuditLogs, report.AuditLogFindings.Count),
             ("Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count),
             ("OutboundEvents", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count),
-            ("Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count)
+            ("Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count),
+            ("Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count)
         };
 
         foreach (var item in runFlags)

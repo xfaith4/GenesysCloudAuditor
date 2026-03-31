@@ -183,6 +183,16 @@ public static class FindingLifecycleStatus
     public const string Resolved = "Resolved";
 }
 
+/// <summary>
+/// Change types emitted by historical drift comparison.
+/// </summary>
+public static class HistoricalDriftChangeType
+{
+    public const string Added = "Added";
+    public const string Changed = "Changed";
+    public const string Removed = "Removed";
+}
+
 // ─── Findings ───────────────────────────────────────────────────────────────
 
 public sealed record GroupFinding(
@@ -555,6 +565,37 @@ public sealed record FindingLifecycleFinding(
     DateTimeOffset LastSeenUtc,
     int ObservationCount);
 
+/// <summary>
+/// A normalized relationship captured for historical comparison across audit runs.
+/// </summary>
+public sealed record AuditRelationshipSnapshot(
+    string Domain,
+    string RelationshipType,
+    string RelationshipKey,
+    string ObjectType,
+    string? ObjectId,
+    string? ObjectName,
+    string NormalizedValue,
+    string DisplayValue);
+
+/// <summary>
+/// A material relationship change detected between the current run and the previous saved snapshot.
+/// </summary>
+public sealed record HistoricalDriftFinding(
+    /// <summary>One of the <see cref="HistoricalDriftChangeType"/> constants.</summary>
+    string ChangeType,
+    string Domain,
+    string RelationshipType,
+    string RelationshipKey,
+    string ObjectType,
+    string? ObjectId,
+    string? ObjectName,
+    string? PreviousValue,
+    string? CurrentValue,
+    string Issue,
+    FindingSeverity Severity,
+    string RecommendedAction);
+
 // ─── Combined report ─────────────────────────────────────────────────────────
 
 /// <summary>
@@ -616,4 +657,9 @@ public sealed class AuditReportData
     public DateTimeOffset? PreviousSnapshotGeneratedAtUtc { get; set; }
     public string? PreviousSnapshotPath { get; set; }
     public IReadOnlyList<FindingLifecycleFinding> FindingLifecycleFindings { get; set; } = [];
+
+    // Phase 4.2 — Normalized relationship baselines + drift detection
+    public IReadOnlyList<AuditRelationshipSnapshot> RelationshipSnapshots { get; init; } = [];
+    public bool HistoricalDriftWasComputed { get; set; }
+    public IReadOnlyList<HistoricalDriftFinding> HistoricalDriftFindings { get; set; } = [];
 }
