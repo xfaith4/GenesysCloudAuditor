@@ -10,6 +10,93 @@ namespace GenesysExtensionAudit.Infrastructure.Tests;
 public sealed class ExcelReportServiceSummaryTests
 {
     [Fact]
+    public async Task GenerateAsync_EdgePerformanceSheet_WritesPerEdgeDistributionRows()
+    {
+        var report = new AuditReportData
+        {
+            GeneratedAt = new DateTimeOffset(2026, 04, 06, 10, 00, 00, TimeSpan.Zero),
+            OrgRegion = "us-east-1",
+            Options = new AuditRunOptions
+            {
+                RunSiteTopologyAudit = true,
+                RunOperationalEventLogs = true,
+                OperationalEventLookbackDays = 2
+            },
+            EdgePerformanceObservations =
+            [
+                new EdgePerformanceObservation(
+                    SiteId: "site-1",
+                    SiteName: "Main Site",
+                    EdgeId: "edge-1",
+                    EdgeName: "Edge Alpha",
+                    EdgeRole: "Primary",
+                    OnlineStatus: "ONLINE",
+                    ExpectedToCarryLoad: true,
+                    FindingCode: EdgePerformanceCode.LoadImbalance,
+                    StatusLabel: "Overloaded",
+                    IsAnomalous: true,
+                    Severity: FindingSeverity.Medium,
+                    ObservedConversationCount: 160,
+                    SiteObservedConversationCount: 220,
+                    ExpectedEdgeCount: 2,
+                    ObservedSharePercent: 72.7,
+                    ExpectedSharePercent: 50,
+                    ShareDeltaPercent: 22.7,
+                    OperationalEventCount: 240,
+                    ErrorEventCount: 9,
+                    ErrorRatePercent: 3.8,
+                    LastEventUtc: new DateTimeOffset(2026, 04, 06, 09, 55, 00, TimeSpan.Zero),
+                    Issue: "Edge Alpha is carrying materially more observed traffic than expected.",
+                    RecommendedAction: "Review edge and trunk affinity.")
+            ]
+        };
+
+        var bytes = await new ExcelReportService().GenerateAsync(
+            report,
+            CancellationToken.None,
+            scopeOptions: new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = false,
+                IncludeExtensions = false,
+                IncludeGroups = false,
+                IncludeQueues = false,
+                IncludeFlows = false,
+                IncludeInactiveUsers = false,
+                IncludeDids = false,
+                IncludeAuditLogs = false,
+                IncludeOperationalEvents = false,
+                IncludeOutboundEvents = false,
+                IncludeStaleLicenses = false,
+                IncludeLicenseOverProvisioning = false,
+                IncludeRoleGroupOverlap = false,
+                IncludeSiteTopology = false,
+                IncludeEdgePerformance = true,
+                IncludePromptHygiene = false,
+                IncludeChangeAdjacency = false,
+                IncludeFlappingDetection = false,
+                IncludeHotSpot = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            });
+
+        using var stream = new MemoryStream(bytes);
+        using var workbook = new XLWorkbook(stream);
+
+        var sheet = workbook.Worksheet("Edge_Performance");
+        Assert.NotNull(sheet);
+
+        var values = sheet.CellsUsed()
+            .Select(cell => cell.GetString())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToList();
+
+        AssertContains(values, "Edge Performance & Distribution");
+        AssertContains(values, "Edge Alpha");
+        AssertContains(values, "Overloaded");
+        AssertContains(values, "Review edge and trunk affinity.");
+    }
+
+    [Fact]
     public async Task GenerateAsync_SummarySheet_IncludesExecutiveDashboardSections()
     {
         var report = new AuditReportData
@@ -56,6 +143,33 @@ public sealed class ExcelReportServiceSummaryTests
                     Severity: FindingSeverity.Critical,
                     Category: FindingCategory.EscalateToGenesysCare,
                     RecommendedAction: "Escalate persistent edge outage.")
+            ],
+            EdgePerformanceObservations =
+            [
+                new EdgePerformanceObservation(
+                    SiteId: "site-1",
+                    SiteName: "Primary Site",
+                    EdgeId: "edge-2",
+                    EdgeName: "Edge Beta",
+                    EdgeRole: "Primary",
+                    OnlineStatus: "ONLINE",
+                    ExpectedToCarryLoad: true,
+                    FindingCode: EdgePerformanceCode.NoObservedTraffic,
+                    StatusLabel: "No Observed Traffic",
+                    IsAnomalous: true,
+                    Severity: FindingSeverity.High,
+                    ObservedConversationCount: 0,
+                    SiteObservedConversationCount: 220,
+                    ExpectedEdgeCount: 2,
+                    ObservedSharePercent: 0,
+                    ExpectedSharePercent: 50,
+                    ShareDeltaPercent: -50,
+                    OperationalEventCount: 0,
+                    ErrorEventCount: 0,
+                    ErrorRatePercent: 0,
+                    LastEventUtc: null,
+                    Issue: "Edge Beta is online but has no observed conversations while peer edges carry traffic.",
+                    RecommendedAction: "Review load distribution and edge membership.")
             ],
             HotSpotFindings =
             [
@@ -187,6 +301,7 @@ public sealed class ExcelReportServiceSummaryTests
         AssertContains(summaryValues, "Platform defect suspected");
         AssertContains(summaryValues, "Audit Inventory");
         AssertContains(summaryValues, "Historical Drift");
+        AssertContains(summaryValues, "Edge Performance & Distribution");
 
         var explainabilityValues = workbook
             .Worksheet("Relationship_Explainability")
@@ -218,6 +333,7 @@ public sealed class ExcelReportServiceSummaryTests
         IncludeLicenseOverProvisioning = false,
         IncludeRoleGroupOverlap = false,
         IncludeSiteTopology = false,
+        IncludeEdgePerformance = false,
         IncludePromptHygiene = false,
         IncludeChangeAdjacency = false,
         IncludeFlappingDetection = false,

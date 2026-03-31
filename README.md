@@ -63,6 +63,7 @@ The current application already provides a strong audit foundation.
 | Queue serviceability                     | `Queue_Serviceability`   | High     |
 | IVR flow dependency                      | `IVR_Flow_Bindings`      | Critical |
 | Site / edge / trunk topology integrity   | `Site_Topology`          | Critical |
+| Edge performance and load distribution   | `Edge_Performance`       | High     |
 | Prompt hygiene                           | `Prompt_Hygiene`         | Warning  |
 | Change adjacency correlation             | `Change_Adjacency`       | Info     |
 | Flapping / instability detection         | `Flapping_Detection`     | Info     |
@@ -123,6 +124,7 @@ Key roadmap themes include:
 - edge / site / trunk topology integrity checks
 - change-to-symptom timeline correlation
 - flapping / instability detection
+- per-edge operational load distribution
 - support-readiness scoring and Genesys Care evidence export
 - historical drift analysis
 

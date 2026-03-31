@@ -1029,6 +1029,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             ("DIDs", report.Options.RunDidAudit, report.DidFindings.Count),
             ("Audit Logs", report.Options.RunAuditLogs, report.AuditLogFindings.Count),
             ("Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count),
+            ("Edge Performance", report.Options.RunSiteTopologyAudit && report.Options.RunOperationalEventLogs, report.EdgePerformanceObservations.Count(o => o.IsAnomalous)),
             ("OutboundEvents", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count),
             ("Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count),
             ("Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count)

@@ -71,6 +71,9 @@ public sealed class HotSpotAnalyzer
         foreach (var f in report.SiteTopologyFindings)
             Register(f.ObjectId, f.ObjectName, f.ObjectType, "Site Topology");
 
+        foreach (var f in report.EdgePerformanceObservations.Where(f => f.IsAnomalous))
+            Register(f.EdgeId, f.EdgeName, "Edge", "Edge Performance");
+
         foreach (var f in report.GroupFindings)
             Register(f.GroupId, f.GroupName, "Group", "Group Hygiene");
 

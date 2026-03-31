@@ -262,6 +262,7 @@ Typical outputs may include:
 - DID mismatch sheets
 - queue and group hygiene sheets
 - stale flow sheets
+- edge topology and edge performance sheets
 - audit log export sheets
 - operational event sheets
 - outbound event sheets

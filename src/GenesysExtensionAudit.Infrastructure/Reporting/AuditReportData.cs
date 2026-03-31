@@ -124,6 +124,35 @@ public static class SiteTopologyCode
     public const string TrunkDown = "TRUNK_DOWN";
 }
 
+// ─── Finding codes for EdgePerformanceObservation (Phase 1.5 extension) ─────
+
+/// <summary>
+/// Identifies which edge-performance heuristic was applied to a per-edge observation row.
+/// </summary>
+public static class EdgePerformanceCode
+{
+    /// <summary>Observed conversation share is within the expected range for the edge cohort.</summary>
+    public const string Balanced = "EDGE_DISTRIBUTION_BALANCED";
+
+    /// <summary>The edge is online but no observed conversations were matched to it while peers carried traffic.</summary>
+    public const string NoObservedTraffic = "EDGE_NO_OBSERVED_TRAFFIC";
+
+    /// <summary>The edge is carrying materially more or less observed conversation load than expected.</summary>
+    public const string LoadImbalance = "EDGE_LOAD_IMBALANCE";
+
+    /// <summary>A standby/secondary edge is carrying observed traffic while primary edges remain online.</summary>
+    public const string SecondaryCarryingTraffic = "EDGE_SECONDARY_CARRYING_TRAFFIC";
+
+    /// <summary>The edge has a materially elevated rate of error-coded operational events.</summary>
+    public const string ElevatedErrorRate = "EDGE_ERROR_RATE_ELEVATED";
+
+    /// <summary>The current run did not capture enough observed traffic to make a distribution judgement.</summary>
+    public const string InsufficientData = "EDGE_DISTRIBUTION_INSUFFICIENT_DATA";
+
+    /// <summary>The edge is not online, so distribution analysis is informational only in this view.</summary>
+    public const string Unavailable = "EDGE_UNAVAILABLE";
+}
+
 // ─── Finding codes for FlappingFinding (Phase 2.2) ───────────────────────────
 
 /// <summary>
@@ -277,6 +306,36 @@ public sealed record OperationalEventFinding(
     string? PreviousValue,
     string? ErrorCode,
     string? ConversationId);
+
+/// <summary>
+/// Per-edge operational load observation derived from matched operational events.
+/// This is a hybrid metrics/finding row: every analyzed edge receives a row, but only
+/// rows where <see cref="IsAnomalous"/> is true should be treated as active findings.
+/// </summary>
+public sealed record EdgePerformanceObservation(
+    string? SiteId,
+    string? SiteName,
+    string EdgeId,
+    string? EdgeName,
+    string EdgeRole,
+    string? OnlineStatus,
+    bool ExpectedToCarryLoad,
+    string FindingCode,
+    string StatusLabel,
+    bool IsAnomalous,
+    FindingSeverity Severity,
+    int ObservedConversationCount,
+    int SiteObservedConversationCount,
+    int ExpectedEdgeCount,
+    double ObservedSharePercent,
+    double ExpectedSharePercent,
+    double ShareDeltaPercent,
+    int OperationalEventCount,
+    int ErrorEventCount,
+    double ErrorRatePercent,
+    DateTimeOffset? LastEventUtc,
+    string Issue,
+    string RecommendedAction);
 
 public sealed record OutboundEventFinding(
     DateTimeOffset? TimestampUtc,
@@ -635,6 +694,9 @@ public sealed class AuditReportData
 
     // Phase 1.5 — Site–edge–trunk topology integrity
     public IReadOnlyList<SiteTopologyFinding> SiteTopologyFindings { get; init; } = [];
+
+    // Phase 1.5 extension — per-edge operational load and distribution
+    public IReadOnlyList<EdgePerformanceObservation> EdgePerformanceObservations { get; init; } = [];
 
     // Phase 1.3 — Queue serviceability (member active-state cross-reference)
     public IReadOnlyList<QueueServiceabilityFinding> QueueServiceabilityFindings { get; init; } = [];

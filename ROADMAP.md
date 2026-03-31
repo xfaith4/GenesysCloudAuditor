@@ -67,6 +67,7 @@ The current product already provides an effective foundation for the roadmap:
 | Queue serviceability audit                     | Implemented (partial Phase 1.3 scope) |
 | IVR flow dependency audit                      | Implemented (partial Phase 1.4 scope) |
 | Site / edge / trunk topology audit             | Implemented (partial Phase 1.5 scope) |
+| Edge performance / distribution audit          | Implemented (Phase 1.5 extension) |
 | Architect prompt hygiene audit                 | Implemented   |
 | Change adjacency correlation                   | Implemented   |
 | Flapping / instability detection               | Implemented   |
@@ -224,10 +225,12 @@ Correlate:
 | ------------------------------ | -------- | -------------------------------------------------------------------------- | ------ |
 | Trunk–edge assignment orphan   | Medium   | Edge references trunk/site state that no longer reconciles                 | **Implemented** |
 | Site–edge mismatch             | High     | Site relationship differs across authoritative edge/site resources         | **Implemented** |
+| Edge load distribution skew    | High     | Online edges within the same site carry materially imbalanced observed conversation load | **Implemented** |
+| Secondary edge unexpected load | Medium   | Standby/secondary edges carry live traffic while primary edges remain online | **Implemented** |
 | Station topology contradiction | Medium   | Station/site/location relationships appear internally inconsistent         | Planned |
 | DID inventory orphan           | Medium   | DID ranges exist in inventory but do not reconcile to active service paths | Planned |
 
-The current `SiteTopologyAnalyzer` already detects orphaned edge-to-site bindings, offline edges, sites with no active edges, trunks hosted on offline edges, trunks out of service, and trunks reporting down/unknown state.
+The current topology/performance layer detects orphaned edge-to-site bindings, offline edges, sites with no active edges, trunks hosted on offline edges, trunks out of service, trunks reporting down/unknown state, and per-edge operational load imbalance derived from matched operational events.
 
 ---
 

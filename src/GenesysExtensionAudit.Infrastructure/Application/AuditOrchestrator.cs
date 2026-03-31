@@ -165,6 +165,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<EdgeDto> edgeDtos = [];
         IReadOnlyList<TrunkDto> trunkDtos = [];
         IReadOnlyList<SiteTopologyFinding> siteTopologyFindings = [];
+        IReadOnlyList<EdgePerformanceObservation> edgePerformanceObservations = [];
         IReadOnlyList<PromptDto> promptDtos = [];
         IReadOnlyList<PromptHygieneFinding> promptHygieneFindings = [];
         IReadOnlyList<ChangeAdjacencyFinding> changeAdjacencyFindings = [];
@@ -499,10 +500,20 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             _logger.LogInformation("Site topology check complete. Findings={Count}", siteTopologyFindings.Count);
         }
 
+        if (options.RunSiteTopologyAudit && options.RunOperationalEventLogs && edgeDtos.Count > 0)
+        {
+            Report(progress, 90, "Analyzing edge performance and conversation distribution...");
+            edgePerformanceObservations = new EdgePerformanceAnalyzer().Analyze(siteDtos, edgeDtos, operationalEventFindings);
+            _logger.LogInformation(
+                "Edge performance analysis complete. EdgesAnalyzed={EdgesAnalyzed} Anomalies={Anomalies}",
+                edgePerformanceObservations.Count,
+                edgePerformanceObservations.Count(observation => observation.IsAnomalous));
+        }
+
         // Phase 2 — Architect Prompt Hygiene
         if (options.RunPromptHygieneAudit && promptDtos.Count > 0)
         {
-            Report(progress, 90, "Analyzing architect prompt hygiene...");
+            Report(progress, 91, "Analyzing architect prompt hygiene...");
             promptHygieneFindings = AnalyzePromptHygiene(promptDtos);
             _logger.LogInformation("Prompt hygiene check complete. Findings={Count}", promptHygieneFindings.Count);
         }
@@ -543,6 +554,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             LicenseOverProvisioningFindings = licenseOverProvisioningFindings,
             RoleGroupOverlapFindings = roleGroupOverlapFindings,
             SiteTopologyFindings = siteTopologyFindings,
+            EdgePerformanceObservations = edgePerformanceObservations,
             PromptHygieneFindings = promptHygieneFindings,
             RelationshipSnapshots = relationshipSnapshots
         };
@@ -596,6 +608,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 LicenseOverProvisioningFindings = partialReport.LicenseOverProvisioningFindings,
                 RoleGroupOverlapFindings = partialReport.RoleGroupOverlapFindings,
                 SiteTopologyFindings = partialReport.SiteTopologyFindings,
+                EdgePerformanceObservations = partialReport.EdgePerformanceObservations,
                 PromptHygieneFindings = partialReport.PromptHygieneFindings,
                 RelationshipSnapshots = partialReport.RelationshipSnapshots,
                 ChangeAdjacencyFindings = changeAdjacencyFindings,
@@ -625,6 +638,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             + licenseOverProvisioningFindings.Count
             + roleGroupOverlapFindings.Count
             + siteTopologyFindings.Count
+            + edgePerformanceObservations.Count(observation => observation.IsAnomalous)
             + promptHygieneFindings.Count
             + changeAdjacencyFindings.Count
             + flappingDetectionFindings.Count
@@ -634,13 +648,14 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} StaleTokenUsers={StaleTokenUsers} NoLocationUsers={NoLocationUsers} DIDs={DIDs} " +
             "UserTelephonyIntegrity={UserTelephonyIntegrity} QueueServiceability={QueueServiceability} IvrFlowBindings={IvrFlowBindings} " +
             "OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents} " +
-            "StaleLicenses={StaleLicenses} LicenseOverProvisioning={LicenseOverProvisioning} RoleGroupOverlap={RoleGroupOverlap} SiteTopology={SiteTopology} PromptHygiene={PromptHygiene} ChangeAdjacency={ChangeAdjacency} " +
+            "StaleLicenses={StaleLicenses} LicenseOverProvisioning={LicenseOverProvisioning} RoleGroupOverlap={RoleGroupOverlap} SiteTopology={SiteTopology} EdgePerformance={EdgePerformance} PromptHygiene={PromptHygiene} ChangeAdjacency={ChangeAdjacency} " +
             "FlappingDetection={FlappingDetection} HotSpot={HotSpot}",
             totalFindings, groupFindings.Count, queueFindings.Count,
             flowFindings.Count, inactiveUserFindings.Count, noLocationUserFindings.Count, didFindings.Count,
             userTelephonyIntegrityFindings.Count, queueServiceabilityFindings.Count, ivrFlowBindingFindings.Count,
             operationalEventFindings.Count, outboundEventFindings.Count,
             staleLicenseFindings.Count, licenseOverProvisioningFindings.Count, roleGroupOverlapFindings.Count, siteTopologyFindings.Count,
+            edgePerformanceObservations.Count(observation => observation.IsAnomalous),
             promptHygieneFindings.Count, changeAdjacencyFindings.Count,
             flappingDetectionFindings.Count, hotSpotFindings.Count);
 
@@ -672,6 +687,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             LicenseOverProvisioningFindings = licenseOverProvisioningFindings,
             RoleGroupOverlapFindings = roleGroupOverlapFindings,
             SiteTopologyFindings = siteTopologyFindings,
+            EdgePerformanceObservations = edgePerformanceObservations,
             PromptHygieneFindings = promptHygieneFindings,
             ChangeAdjacencyFindings = changeAdjacencyFindings,
             FlappingDetectionFindings = flappingDetectionFindings,

@@ -25,6 +25,7 @@ public sealed class ExcelWorkbookScopeOptions
     public bool IncludeLicenseOverProvisioning { get; init; } = true;
     public bool IncludeRoleGroupOverlap { get; init; } = true;
     public bool IncludeSiteTopology { get; init; } = true;
+    public bool IncludeEdgePerformance { get; init; } = true;
     public bool IncludePromptHygiene { get; init; } = true;
     public bool IncludeChangeAdjacency { get; init; } = true;
     public bool IncludeFlappingDetection { get; init; } = true;
@@ -167,6 +168,9 @@ public sealed class ExcelReportService : IExcelReportService
 
         if (scopeOptions.IncludeSiteTopology)
             WriteSiteTopologySheet(wb, report);
+
+        if (scopeOptions.IncludeEdgePerformance && report.Options.RunSiteTopologyAudit && report.Options.RunOperationalEventLogs)
+            WriteEdgePerformanceSheet(wb, report);
 
         if (scopeOptions.IncludePromptHygiene)
             WritePromptHygieneSheet(wb, report);
@@ -433,6 +437,7 @@ public sealed class ExcelReportService : IExcelReportService
             new("License_Over_Provisioning", "License Over-Provisioning", report.Options.RunLicenseOverProvisioningAudit, report.LicenseOverProvisioningFindings.Count, "Warning", "Users on CX3/WEM/Outbound tier with no recent login — consider downgrading tier"),
             new("Role_Group_Overlap", "Role & Group Overlap", report.Options.RunRoleGroupOverlapAudit, report.RoleGroupOverlapFindings.Count, "Warning", "Direct role assignments that are already covered by a group-inherited role in the same division"),
             new("Site_Topology", "Site–Edge–Trunk Topology", report.Options.RunSiteTopologyAudit, report.SiteTopologyFindings.Count, "Critical", "Sites with no active edges, offline edges, orphaned edge–site bindings, or trunks that are down/out-of-service"),
+            new("Edge_Performance", "Edge Performance & Distribution", report.Options.RunSiteTopologyAudit && report.Options.RunOperationalEventLogs, report.EdgePerformanceObservations.Count(o => o.IsAnomalous), "High", "Per-edge conversation distribution heuristics derived from operational events and site topology"),
             new("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
             new("Finding_Lifecycle", "Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
             new("Historical_Drift", "Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count, "High", "Material telephony, routing, and topology relationship changes compared to the previous saved snapshot"),
@@ -488,6 +493,7 @@ public sealed class ExcelReportService : IExcelReportService
                 ("DID mismatches", report.DidFindings.Count, FindingSeverity.Medium),
                 ("User telephony", report.UserTelephonyIntegrityFindings.Count, HighestSeverity(report.UserTelephonyIntegrityFindings.Select(f => f.Severity), FindingSeverity.High)),
                 ("Site topology", report.SiteTopologyFindings.Count, HighestSeverity(report.SiteTopologyFindings.Select(f => f.Severity), FindingSeverity.High)),
+                ("Edge performance", report.EdgePerformanceObservations.Count(f => f.IsAnomalous), HighestSeverity(report.EdgePerformanceObservations.Where(f => f.IsAnomalous).Select(f => f.Severity), FindingSeverity.High)),
                 ("Historical drift", report.HistoricalDriftFindings.Count(f => f.Domain is "Telephony Ownership" or "Topology Relationships"), FindingSeverity.High)),
 
             BuildDomainHealthRow(
@@ -579,6 +585,7 @@ public sealed class ExcelReportService : IExcelReportService
         summary.Add(report.QueueServiceabilityFindings.Select(f => f.Severity));
         summary.Add(report.IvrFlowBindingFindings.Select(f => f.Severity));
         summary.Add(report.SiteTopologyFindings.Select(f => f.Severity));
+        summary.Add(report.EdgePerformanceObservations.Where(f => f.IsAnomalous).Select(f => f.Severity));
         summary.Add(report.PromptHygieneFindings.Select(f => f.Severity));
         summary.Add(report.ChangeAdjacencyFindings.Select(f => f.Severity));
         summary.Add(report.FlappingDetectionFindings.Select(f => f.Severity));
@@ -1605,6 +1612,65 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 13);
+    }
+
+    private static void WriteEdgePerformanceSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Edge_Performance");
+        var observations = report.EdgePerformanceObservations;
+
+        string[] headers =
+        [
+            "Site Name", "Site ID", "Edge Name", "Edge ID", "Role", "Online Status",
+            "Observed Conversations", "Site Conversations", "Observed Share %", "Expected Share %",
+            "Share Delta %", "Operational Events", "Error Events", "Error Rate %",
+            "Last Event (UTC)", "Status", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(
+            ws,
+            $"Edge Performance & Distribution (operational events from last {report.Options.OperationalEventLookbackDays} day(s))",
+            report,
+            observations.Count(observation => observation.IsAnomalous),
+            headers);
+
+        var row = 4;
+        foreach (var observation in observations)
+        {
+            WriteRow(
+                ws,
+                row,
+                observation.SiteName,
+                observation.SiteId,
+                observation.EdgeName,
+                observation.EdgeId,
+                observation.EdgeRole,
+                observation.OnlineStatus,
+                observation.ObservedConversationCount,
+                observation.SiteObservedConversationCount,
+                observation.ObservedSharePercent / 100d,
+                observation.ExpectedSharePercent / 100d,
+                observation.ShareDeltaPercent / 100d,
+                observation.OperationalEventCount,
+                observation.ErrorEventCount,
+                observation.ErrorRatePercent / 100d,
+                observation.LastEventUtc?.ToString("yyyy-MM-dd HH:mm:ss"),
+                observation.StatusLabel,
+                observation.Issue,
+                observation.RecommendedAction);
+
+            ws.Cell(row, 9).Style.NumberFormat.Format = "0.0%";
+            ws.Cell(row, 10).Style.NumberFormat.Format = "0.0%";
+            ws.Cell(row, 11).Style.NumberFormat.Format = "+0.0%;-0.0%;0.0%";
+            ws.Cell(row, 14).Style.NumberFormat.Format = "0.0%";
+
+            if (observation.IsAnomalous)
+                ApplySeverityFill(ws.Cell(row, 16), observation.Severity);
+
+            ApplyAltRow(ws, row, headers.Length);
+            row++;
+        }
+
+        AdjustColumns(ws, headers.Length);
     }
 
     // ─── Change Adjacency (Phase 2.1) ───────────────────────────────────────
