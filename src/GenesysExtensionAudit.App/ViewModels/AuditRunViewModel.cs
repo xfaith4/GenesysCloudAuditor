@@ -34,6 +34,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private readonly IAuditOrchestrator _orchestrator;
     private readonly IExcelReportService _excelService;
     private readonly ICareEvidenceExportService _careEvidenceExportService;
+    private readonly ICareEvidenceArtifactService _careEvidenceArtifactService;
     private readonly IAuditSnapshotService _snapshotService;
     private readonly IAuditLogCatalogCache _auditLogCatalogCache;
     private readonly IGitHubUploadService _gitHubUploadService;
@@ -83,6 +84,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         IAuditOrchestrator orchestrator,
         IExcelReportService excelService,
         ICareEvidenceExportService careEvidenceExportService,
+        ICareEvidenceArtifactService careEvidenceArtifactService,
         IAuditSnapshotService snapshotService,
         IAuditLogCatalogCache auditLogCatalogCache,
         IGitHubUploadService gitHubUploadService,
@@ -91,6 +93,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
         _careEvidenceExportService = careEvidenceExportService ?? throw new ArgumentNullException(nameof(careEvidenceExportService));
+        _careEvidenceArtifactService = careEvidenceArtifactService ?? throw new ArgumentNullException(nameof(careEvidenceArtifactService));
         _snapshotService = snapshotService ?? throw new ArgumentNullException(nameof(snapshotService));
         _auditLogCatalogCache = auditLogCatalogCache ?? throw new ArgumentNullException(nameof(auditLogCatalogCache));
         _gitHubUploadService = gitHubUploadService ?? throw new ArgumentNullException(nameof(gitHubUploadService));
@@ -745,6 +748,19 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
                 generatedPayloads.Add((Path.GetFileName(fullPath), xlsx));
             }
 
+            var artifactBaseName = $"{datePrefix}_GenesysCloudAudit_Artifacts";
+            var careJsonPath = GetNextAvailableFilePath(outputDirectory, $"{artifactBaseName}.care-evidence.json");
+            var careJson = _careEvidenceArtifactService.BuildJson(carePacket);
+            await File.WriteAllBytesAsync(careJsonPath, careJson, ct).ConfigureAwait(true);
+            generatedFiles.Add(careJsonPath);
+            generatedPayloads.Add((Path.GetFileName(careJsonPath), careJson));
+
+            var careHtmlPath = GetNextAvailableFilePath(outputDirectory, $"{artifactBaseName}.care-summary.html");
+            var careHtml = _careEvidenceArtifactService.BuildHtml(report, carePacket);
+            await File.WriteAllBytesAsync(careHtmlPath, careHtml, ct).ConfigureAwait(true);
+            generatedFiles.Add(careHtmlPath);
+            generatedPayloads.Add((Path.GetFileName(careHtmlPath), careHtml));
+
             LastExportPath = outputDirectory;
             OnPropertyChanged(nameof(HasExport));
             StatusMessage = $"Saved {generatedFiles.Count} report(s) to {outputDirectory}";
@@ -761,11 +777,25 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         var consolidatedPath = GetNextAvailableFilePath(outputDirectory, consolidatedBaseName);
         await File.WriteAllBytesAsync(consolidatedPath, consolidatedXlsx, ct).ConfigureAwait(true);
 
+        var careJsonPathForWorkbook = Path.ChangeExtension(consolidatedPath, ".care-evidence.json");
+        var careJsonForWorkbook = _careEvidenceArtifactService.BuildJson(carePacket);
+        await File.WriteAllBytesAsync(careJsonPathForWorkbook, careJsonForWorkbook, ct).ConfigureAwait(true);
+
+        var careHtmlPathForWorkbook = Path.ChangeExtension(consolidatedPath, ".care-summary.html");
+        var careHtmlForWorkbook = _careEvidenceArtifactService.BuildHtml(report, carePacket);
+        await File.WriteAllBytesAsync(careHtmlPathForWorkbook, careHtmlForWorkbook, ct).ConfigureAwait(true);
+
         LastExportPath = consolidatedPath;
         OnPropertyChanged(nameof(HasExport));
         StatusMessage = $"Saved: {Path.GetFileName(consolidatedPath)}";
 
-        await TryPushToGitHubAsync([(Path.GetFileName(consolidatedPath), consolidatedXlsx)], ct).ConfigureAwait(true);
+        await TryPushToGitHubAsync(
+            [
+                (Path.GetFileName(consolidatedPath), consolidatedXlsx),
+                (Path.GetFileName(careJsonPathForWorkbook), careJsonForWorkbook),
+                (Path.GetFileName(careHtmlPathForWorkbook), careHtmlForWorkbook)
+            ],
+            ct).ConfigureAwait(true);
         await _snapshotService
             .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDirectory, snapshotPrefix, ct)
             .ConfigureAwait(true);

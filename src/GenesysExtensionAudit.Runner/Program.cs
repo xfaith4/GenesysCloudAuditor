@@ -181,6 +181,7 @@ static async Task<int> RunAsync(string[] args)
                 services.AddSingleton<IAuditOrchestrator, AuditOrchestrator>();
                 services.AddSingleton<IExcelReportService, ExcelReportService>();
                 services.AddSingleton<ICareEvidenceExportService, CareEvidenceExportService>();
+                services.AddSingleton<ICareEvidenceArtifactService, CareEvidenceArtifactService>();
                 services.AddSingleton<IAuditSnapshotService, AuditSnapshotService>();
                 services.AddSingleton<IFileUploadService, SharePointUploadService>();
                 services.AddHttpClient<IGitHubUploadService, GitHubUploadService>();
@@ -191,6 +192,7 @@ static async Task<int> RunAsync(string[] args)
         var orchestrator = host.Services.GetRequiredService<IAuditOrchestrator>();
         var excelService = host.Services.GetRequiredService<IExcelReportService>();
         var careService = host.Services.GetRequiredService<ICareEvidenceExportService>();
+        var careArtifactService = host.Services.GetRequiredService<ICareEvidenceArtifactService>();
         var snapshotService = host.Services.GetRequiredService<IAuditSnapshotService>();
         var genesysOpts = host.Services.GetRequiredService<IOptions<GenesysRegionOptions>>().Value;
         var auditOpts = host.Services.GetRequiredService<IOptions<AuditOptions>>().Value;
@@ -272,15 +274,19 @@ static async Task<int> RunAsync(string[] args)
         // ── Write care evidence JSON ──────────────────────────────────────────
         var careJsonFileName = Path.ChangeExtension(fileName, ".care-evidence.json");
         var careJsonPath = Path.Combine(outputDir, careJsonFileName);
-        var careJson = JsonSerializer.Serialize(carePacket, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-        await File.WriteAllTextAsync(careJsonPath, careJson, cts.Token);
+        var careJson = careArtifactService.BuildJson(carePacket);
+        await File.WriteAllBytesAsync(careJsonPath, careJson, cts.Token);
         logger.LogInformation(
             "Care evidence JSON saved: {FilePath} ({Candidates} escalation candidates)",
             careJsonPath, carePacket.Summary.EscalationCandidateCount);
+
+        var careHtmlFileName = Path.ChangeExtension(fileName, ".care-summary.html");
+        var careHtmlPath = Path.Combine(outputDir, careHtmlFileName);
+        var careHtml = careArtifactService.BuildHtml(report, carePacket);
+        await File.WriteAllBytesAsync(careHtmlPath, careHtml, cts.Token);
+        logger.LogInformation(
+            "Care summary HTML saved: {FilePath} ({Bytes:N0} bytes)",
+            careHtmlPath, careHtml.Length);
 
         // ── Write historical snapshot JSON ───────────────────────────────────
         var snapshotPath = await snapshotService
