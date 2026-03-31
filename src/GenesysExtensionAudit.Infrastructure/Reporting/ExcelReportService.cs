@@ -109,7 +109,10 @@ public sealed class ExcelReportService : IExcelReportService
         // Care Case Summary is always written first (after overview summary) when a packet is provided.
         // Intentionally not gated by scope options — escalation candidates should always be visible.
         if (carePacket is not null)
+        {
             WriteCareCaseSummarySheet(wb, report, carePacket);
+            WriteRelationshipExplainabilitySheet(wb, report, carePacket);
+        }
 
         if (scopeOptions.IncludeExtensions)
         {
@@ -194,8 +197,10 @@ public sealed class ExcelReportService : IExcelReportService
     {
         var ws = wb.Worksheets.Add("Summary");
 
-        var auditRows = BuildSummaryAuditRows(report).ToList();
-        var totalFindings = auditRows.Where(r => r.Performed).Sum(r => r.Count);
+        var auditRows = BuildSummaryAuditRows(report, carePacket).ToList();
+        var totalFindings = auditRows
+            .Where(r => r.Performed && r.Sheet is not "Care_Case_Summary" and not "Relationship_Explainability")
+            .Sum(r => r.Count);
         var duration = report.RunCompletedAtUtc > report.RunStartedAtUtc
             ? report.RunCompletedAtUtc - report.RunStartedAtUtc
             : TimeSpan.Zero;
@@ -403,11 +408,11 @@ public sealed class ExcelReportService : IExcelReportService
         AdjustColumns(ws, 8, minWidth: 10, maxWidth: 80);
     }
 
-    private static IReadOnlyList<SummaryAuditRow> BuildSummaryAuditRows(AuditReportData report)
+    private static IReadOnlyList<SummaryAuditRow> BuildSummaryAuditRows(AuditReportData report, CareEvidencePacket? carePacket)
     {
         var er = report.ExtensionReport;
-        return
-        [
+        var rows = new List<SummaryAuditRow>
+        {
             new("Ext_Duplicates_Profile", "Extension Duplicates (Profile)", report.Options.RunExtensionAudit, er.DuplicateProfileExtensions.Count, "Critical", "Multiple users share the same work-phone extension"),
             new("Ext_Ownership_Mismatch", "Extension Ownership Mismatches", report.Options.RunExtensionAudit, er.ExtensionAssignedToWrongEntity.Count, "Critical", "Extension on user profile is assigned to a different entity in the telephony system (platform bug)"),
             new("Ext_Assign_vs_Profile", "Extension Assignment vs Profile Mismatches", report.Options.RunExtensionAudit, er.ProfileExtensionsNotAssigned.Count + er.AssignedExtensionsMissingFromProfiles.Count, "Warning", "Extensions in assignments not on profiles, or on profiles not in assignments"),
@@ -431,7 +436,15 @@ public sealed class ExcelReportService : IExcelReportService
             new("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
             new("Finding_Lifecycle", "Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
             new("Historical_Drift", "Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count, "High", "Material telephony, routing, and topology relationship changes compared to the previous saved snapshot"),
-        ];
+        };
+
+        if (carePacket is not null)
+        {
+            rows.Add(new SummaryAuditRow("Care_Case_Summary", "Care Case Summary", true, carePacket.EscalationCandidates.Count, "High", "Escalation candidates with support readiness, blast radius, and case narrative detail"));
+            rows.Add(new SummaryAuditRow("Relationship_Explainability", "Relationship and Dependency Views", true, carePacket.EscalationCandidates.Count, "High", "Dependency chain, evidence chain, impact explanation, and recent change context for escalation candidates"));
+        }
+
+        return rows;
     }
 
     private static IReadOnlyList<SummaryMetric> BuildTriageMetrics(
@@ -1185,6 +1198,56 @@ public sealed class ExcelReportService : IExcelReportService
             ws.Column(col).Style.Alignment.WrapText = true;
 
         ws.Row(3).Style.Alignment.WrapText = false;
+    }
+
+    private static void WriteRelationshipExplainabilitySheet(IXLWorkbook wb, AuditReportData report, CareEvidencePacket packet)
+    {
+        var ws = wb.Worksheets.Add("Relationship_Explainability");
+        var candidates = packet.EscalationCandidates;
+
+        string[] headers =
+        [
+            "Domain", "Finding Code", "Support Readiness", "Affected Object", "Dependency Chain",
+            "Evidence Chain", "Why This Matters", "Recent Change Context", "Related Objects",
+            "API Surfaces", "Workbook Sheet"
+        ];
+        WriteSheetHeader(ws, "Relationship and Dependency Views — Explainability Chain", report, candidates.Count, headers);
+
+        var row = 4;
+        foreach (var candidate in candidates)
+        {
+            ws.Cell(row, 1).Value = candidate.Domain;
+            ws.Cell(row, 2).Value = candidate.FindingCode;
+            ws.Cell(row, 3).Value = candidate.SupportReadiness;
+            ws.Cell(row, 4).Value = candidate.AffectedObjectName ?? candidate.AffectedObjectId;
+            ws.Cell(row, 5).Value = candidate.DependencyChain;
+            ws.Cell(row, 6).Value = string.Join(" | ", candidate.EvidenceChain);
+            ws.Cell(row, 7).Value = candidate.WhyThisMatters;
+            ws.Cell(row, 8).Value = candidate.RecentChangeContext ?? "No recent correlated admin change was found in the active audit-log window.";
+            ws.Cell(row, 9).Value = candidate.RelatedObjectNames.Count > 0
+                ? string.Join(", ", candidate.RelatedObjectNames)
+                : string.Join(", ", candidate.RelatedObjectIds);
+            ws.Cell(row, 10).Value = string.Join("; ", candidate.ApiSurfaces);
+            ws.Cell(row, 11).Value = candidate.WorkbookSheet;
+
+            ws.Cell(row, 3).Style.Fill.BackgroundColor = candidate.SupportReadiness switch
+            {
+                "Ready" => SeverityCritical,
+                "NeedsReview" => SeverityWarning,
+                _ => SeverityInfo
+            };
+
+            ApplyAltRow(ws, row, headers.Length);
+            row++;
+        }
+
+        if (candidates.Count == 0)
+        {
+            ws.Cell(row, 1).Value = "No escalation candidates were available to render relationship or evidence chains.";
+            ws.Range(row, 1, row, headers.Length).Merge();
+        }
+
+        AdjustColumns(ws, headers.Length);
     }
 
     // ─── IVR Flow Bindings (Phase 1.4) ──────────────────────────────────────

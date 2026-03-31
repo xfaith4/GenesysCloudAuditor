@@ -139,7 +139,15 @@ public sealed class ExcelReportServiceSummaryTests
                     AffectedObjectId = "edge-1",
                     AffectedObjectName = "Edge Alpha",
                     AffectedObjectType = "Edge",
+                    DependencyChain = "Site Primary Site -> Edge Edge Alpha -> Hosted Telephony Resources",
                     ApiSurfaces = ["/api/v2/telephony/providers/edges"],
+                    EvidenceChain =
+                    [
+                        "GET /api/v2/telephony/providers/edges/sites returned the site inventory.",
+                        "GET /api/v2/telephony/providers/edges returned the edge status.",
+                        "Comparison result: Edge Alpha is offline while queues and trunks still reference it."
+                    ],
+                    WhyThisMatters = "Anything hosted on the offline edge can degrade at once, turning a single infrastructure issue into a wider calling outage.",
                     RecentChangeContext = "No matching administrative change in the last 24 hours.",
                     QualificationNotes = ["Persistent outage", "Cross-API corroboration"],
                     EvidenceSummary = "Edge Alpha is offline while queues and trunks still reference it.",
@@ -160,6 +168,7 @@ public sealed class ExcelReportServiceSummaryTests
         using var workbook = new XLWorkbook(stream);
 
         Assert.NotNull(workbook.Worksheet("Summary"));
+        Assert.NotNull(workbook.Worksheet("Relationship_Explainability"));
 
         var summaryValues = workbook
             .Worksheet("Summary")
@@ -178,6 +187,19 @@ public sealed class ExcelReportServiceSummaryTests
         AssertContains(summaryValues, "Platform defect suspected");
         AssertContains(summaryValues, "Audit Inventory");
         AssertContains(summaryValues, "Historical Drift");
+
+        var explainabilityValues = workbook
+            .Worksheet("Relationship_Explainability")
+            .CellsUsed()
+            .Select(cell => cell.GetString())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToList();
+
+        AssertContains(explainabilityValues, "Dependency Chain");
+        AssertContains(explainabilityValues, "Evidence Chain");
+        AssertContains(explainabilityValues, "Why This Matters");
+        AssertContains(explainabilityValues, "Hosted Telephony Resources");
+        AssertContains(explainabilityValues, "Comparison result");
     }
 
     private static ExcelWorkbookScopeOptions SummaryOnlyScope() => new()

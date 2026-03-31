@@ -90,6 +90,9 @@ public sealed class CareEvidenceExportServiceTests
         Assert.Equal("Ready", candidate.SupportReadiness);
         Assert.True(candidate.SupportReadinessScore >= 70);
         Assert.Equal("Telephony Engineering", candidate.SuspectedOwner);
+        Assert.Contains("Site", candidate.DependencyChain, StringComparison.Ordinal);
+        Assert.Contains(candidate.EvidenceChain, step => step.Contains("GET /api/v2/telephony/providers/edges/sites", StringComparison.Ordinal));
+        Assert.Contains("offline edge", candidate.WhyThisMatters, StringComparison.OrdinalIgnoreCase);
         Assert.True(string.Join(" ", candidate.QualificationNotes).Contains("API surfaces", StringComparison.OrdinalIgnoreCase));
         Assert.Equal(1, packet.Summary.ReadyForCareCount);
         Assert.Equal(0, packet.Summary.NeedsReviewCount);

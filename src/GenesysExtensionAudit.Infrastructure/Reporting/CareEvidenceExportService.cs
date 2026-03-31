@@ -61,8 +61,11 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
                     AffectedObjectType = "IVR",
                     RelatedObjectIds = relatedIds,
                     RelatedObjectNames = relatedNames,
+                    DependencyChain = BuildIvrDependencyChain(f),
                     ApiSurfaces = ["GET /api/v2/architect/ivrs", "GET /api/v2/flows"],
+                    EvidenceChain = BuildIvrEvidenceChain(f),
                     EvidenceSummary = f.Issue,
+                    WhyThisMatters = BuildIvrWhyThisMatters(f),
                     SuggestedCaseText = BuildIvrCaseText(f),
                     RecommendedAction = f.RecommendedAction,
                     WorkbookSheet = "IVR_Flow_Bindings"
@@ -80,6 +83,19 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
         {
             if (!IsEscalationCandidate(f.Severity, f.Category)) continue;
 
+            var relatedIds = new List<string>();
+            var relatedNames = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(f.StationId))
+            {
+                relatedIds.Add(f.StationId);
+                if (!string.IsNullOrWhiteSpace(f.StationName))
+                    relatedNames.Add(f.StationName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(f.RelatedDidNumber))
+                relatedNames.Add(f.RelatedDidNumber);
+
             candidates.Add(QualifyCandidate(
                 report,
                 new CareEscalationCandidate
@@ -91,10 +107,13 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
                     AffectedObjectId = f.UserId,
                     AffectedObjectName = f.UserName ?? f.Email,
                     AffectedObjectType = "User",
-                    RelatedObjectIds = [],
-                    RelatedObjectNames = [],
+                    RelatedObjectIds = relatedIds,
+                    RelatedObjectNames = relatedNames,
+                    DependencyChain = BuildUserTelephonyDependencyChain(f),
                     ApiSurfaces = ["GET /api/v2/users", "GET /api/v2/telephony/providers/edges/extensions", "GET /api/v2/telephony/providers/edges/dids"],
+                    EvidenceChain = BuildUserTelephonyEvidenceChain(f),
                     EvidenceSummary = f.Issue,
+                    WhyThisMatters = BuildUserTelephonyWhyThisMatters(f),
                     SuggestedCaseText = BuildUserTelephonyCaseText(f),
                     RecommendedAction = f.RecommendedAction,
                     WorkbookSheet = "User_Telephony_Integrity"
@@ -125,8 +144,11 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
                     AffectedObjectType = "Queue",
                     RelatedObjectIds = [],
                     RelatedObjectNames = [],
+                    DependencyChain = BuildQueueDependencyChain(f),
                     ApiSurfaces = ["GET /api/v2/routing/queues", "GET /api/v2/routing/queues/{id}/members", "GET /api/v2/users"],
+                    EvidenceChain = BuildQueueEvidenceChain(f),
                     EvidenceSummary = f.Issue,
+                    WhyThisMatters = BuildQueueWhyThisMatters(f),
                     SuggestedCaseText = BuildQueueCaseText(f),
                     RecommendedAction = f.RecommendedAction,
                     WorkbookSheet = "Queue_Serviceability"
@@ -176,13 +198,16 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
                     AffectedObjectType = f.ObjectType,
                     RelatedObjectIds = relatedIds,
                     RelatedObjectNames = relatedNames,
+                    DependencyChain = BuildSiteTopologyDependencyChain(f),
                     ApiSurfaces =
                     [
                         "GET /api/v2/telephony/providers/edges/sites",
                         "GET /api/v2/telephony/providers/edges",
                         "GET /api/v2/telephony/providers/edges/trunks"
                     ],
+                    EvidenceChain = BuildSiteTopologyEvidenceChain(f),
                     EvidenceSummary = f.Issue,
+                    WhyThisMatters = BuildSiteTopologyWhyThisMatters(f),
                     SuggestedCaseText = BuildSiteTopologyCaseText(f),
                     RecommendedAction = f.RecommendedAction,
                     WorkbookSheet = "Site_Topology"
@@ -253,6 +278,7 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
         string blastRadius)
     {
         var qualificationNotes = new List<string>();
+        var evidenceChain = seed.EvidenceChain.ToList();
 
         if (!string.IsNullOrWhiteSpace(seed.AffectedObjectId))
             qualificationNotes.Add("Primary object ID is present for support case correlation.");
@@ -263,17 +289,32 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
         if (seed.RelatedObjectIds.Count > 0)
             qualificationNotes.Add("Related object IDs are available for evidence chaining.");
 
+        AppendRelationshipSnapshotEvidence(report, seed, evidenceChain);
+
         var recentChangeContext = BuildRecentChangeContext(report, seed);
         if (recentChangeContext is null)
             qualificationNotes.Add("No recent correlated admin change was found in the audit-log window.");
         else
+        {
             qualificationNotes.Add("Recent admin change activity remains a plausible local cause.");
+            evidenceChain.Add("Change adjacency analysis found recent administrative activity touching the affected object chain.");
+        }
 
         if (MatchesHotSpot(report, seed))
+        {
             qualificationNotes.Add("Object also appears in the hot-spot ranking, increasing blast-radius confidence.");
+            evidenceChain.Add("Hot-spot analysis shows the object participates in multiple active finding domains.");
+        }
 
         if (MatchesFlapping(report, seed))
+        {
             qualificationNotes.Add("Audit logs show repeated churn for the same object, suggesting persistence or instability.");
+            evidenceChain.Add("Flapping detection found repeated state changes for the same object within the audit window.");
+        }
+
+        var matchingDriftCount = CountHistoricalDriftMatches(report, seed);
+        if (matchingDriftCount > 0)
+            evidenceChain.Add($"Historical snapshot comparison detected {matchingDriftCount} related drift change(s) for this object chain.");
 
         qualificationNotes.Add(category switch
         {
@@ -317,7 +358,10 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
             AffectedObjectType = seed.AffectedObjectType,
             RelatedObjectIds = seed.RelatedObjectIds,
             RelatedObjectNames = seed.RelatedObjectNames,
+            DependencyChain = seed.DependencyChain,
             ApiSurfaces = seed.ApiSurfaces,
+            EvidenceChain = evidenceChain,
+            WhyThisMatters = seed.WhyThisMatters,
             RecentChangeContext = recentChangeContext,
             QualificationNotes = qualificationNotes,
             EvidenceSummary = seed.EvidenceSummary,
@@ -436,6 +480,24 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
     private static bool MatchesFlapping(AuditReportData report, CareEscalationCandidate candidate)
         => report.FlappingDetectionFindings.Any(f => CandidateMatches(candidate, f.AffectedObjectId, f.AffectedObjectName));
 
+    private static int CountHistoricalDriftMatches(AuditReportData report, CareEscalationCandidate candidate)
+        => report.HistoricalDriftFindings.Count(f => CandidateMatches(candidate, f.ObjectId, f.ObjectName));
+
+    private static void AppendRelationshipSnapshotEvidence(
+        AuditReportData report,
+        CareEscalationCandidate candidate,
+        List<string> evidenceChain)
+    {
+        var snapshot = report.RelationshipSnapshots.FirstOrDefault(s =>
+            !string.IsNullOrWhiteSpace(s.ObjectId) &&
+            string.Equals(s.ObjectId, candidate.AffectedObjectId, StringComparison.OrdinalIgnoreCase));
+
+        if (snapshot is null)
+            return;
+
+        evidenceChain.Add($"Normalized relationship snapshot ({snapshot.RelationshipType}) shows {snapshot.DisplayValue}.");
+    }
+
     private static bool CandidateMatches(CareEscalationCandidate candidate, string? objectId, string? objectName)
     {
         if (!string.IsNullOrWhiteSpace(objectId))
@@ -458,6 +520,97 @@ public sealed class CareEvidenceExportService : ICareEvidenceExportService
 
         return false;
     }
+
+    private static string BuildIvrDependencyChain(IvrFlowBindingFinding f)
+    {
+        var dnis = f.Dnis.Count > 0 ? string.Join(", ", f.Dnis) : "(no DNIS)";
+        var flow = f.BoundFlowName ?? f.BoundFlowId ?? "(missing flow)";
+        return $"DNIS {dnis} -> IVR {f.IvrName ?? f.IvrId} -> {f.BindingSlot} binding -> Flow {flow}";
+    }
+
+    private static IReadOnlyList<string> BuildIvrEvidenceChain(IvrFlowBindingFinding f)
+        =>
+        [
+            "GET /api/v2/architect/ivrs returned the live IVR binding, DNIS, and schedule data.",
+            "GET /api/v2/flows was compared against the referenced flow ID and publish state.",
+            $"Comparison result: {f.Issue}"
+        ];
+
+    private static string BuildIvrWhyThisMatters(IvrFlowBindingFinding f)
+        => f.FindingCode switch
+        {
+            IvrBindingCode.FlowNotFound => "Inbound callers can be sent into a broken routing path because the IVR references a flow that is no longer present.",
+            IvrBindingCode.FlowIsDraft => "Live telephony traffic can reach a draft-only flow target, which is not executable for production callers.",
+            IvrBindingCode.NoOpenHoursFlow => "Calls arriving during open hours have no valid downstream destination and will fail or dead-end.",
+            IvrBindingCode.NoScheduleGroup => "The IVR cannot choose the correct time-of-day route, so caller treatment becomes unreliable.",
+            _ => "The inbound routing chain is brittle and can fail for live callers."
+        };
+
+    private static string BuildUserTelephonyDependencyChain(UserTelephonyIntegrityFinding f)
+    {
+        var extension = f.ProfileExtensionRaw ?? "(no profile extension)";
+        var station = f.StationName ?? f.StationId ?? "(no station)";
+        var did = f.RelatedDidNumber ?? "(no related DID)";
+        return $"User {f.UserName ?? f.Email ?? f.UserId} -> Profile Extension {extension} -> Station {station} -> DID {did}";
+    }
+
+    private static IReadOnlyList<string> BuildUserTelephonyEvidenceChain(UserTelephonyIntegrityFinding f)
+        =>
+        [
+            "GET /api/v2/users returned the user profile extension, station assignment, and identity metadata.",
+            "GET /api/v2/telephony/providers/edges/extensions returned telephony assignment ownership for the extension.",
+            "GET /api/v2/telephony/providers/edges/dids returned DID ownership records for comparison.",
+            $"Comparison result: {f.Issue}"
+        ];
+
+    private static string BuildUserTelephonyWhyThisMatters(UserTelephonyIntegrityFinding f)
+        => "A user can appear telephony-enabled while calls, caller ID, or ownership-driven routing behave incorrectly because profile, station, and DID identities do not agree.";
+
+    private static string BuildQueueDependencyChain(QueueServiceabilityFinding f)
+        => $"Queue {f.QueueName ?? f.QueueId} -> Queue Members ({f.MembersChecked} checked) -> User Inventory / Active State";
+
+    private static IReadOnlyList<string> BuildQueueEvidenceChain(QueueServiceabilityFinding f)
+        =>
+        [
+            "GET /api/v2/routing/queues returned the queue inventory and member counts.",
+            "GET /api/v2/routing/queues/{id}/members returned the sampled membership roster.",
+            "GET /api/v2/users was compared against each member to determine active, inactive, or unresolvable state.",
+            $"Comparison result: {f.Issue}"
+        ];
+
+    private static string BuildQueueWhyThisMatters(QueueServiceabilityFinding f)
+        => "The queue can still look configured in Genesys Cloud while routed work has no serviceable agents behind it, leading to avoidable delay or abandonment.";
+
+    private static string BuildSiteTopologyDependencyChain(SiteTopologyFinding f)
+        => f.FindingCode switch
+        {
+            SiteTopologyCode.SiteNoActiveEdges => $"Site {f.SiteName ?? f.SiteId ?? f.ObjectName ?? f.ObjectId} -> Edge Fleet -> Active Telephony Path",
+            SiteTopologyCode.EdgeOrphanedSite => $"Site {f.SiteName ?? f.SiteId ?? "(missing site)"} -> Edge {f.ObjectName ?? f.EdgeName ?? f.ObjectId} -> Hosted Telephony Resources",
+            SiteTopologyCode.EdgeOffline => $"Site {f.SiteName ?? f.SiteId ?? "unknown"} -> Edge {f.ObjectName ?? f.EdgeName ?? f.ObjectId} -> Hosted Telephony Resources",
+            SiteTopologyCode.TrunkEdgeOffline or SiteTopologyCode.TrunkOutOfService or SiteTopologyCode.TrunkDown
+                => $"Site {f.SiteName ?? f.SiteId ?? "unknown"} -> Edge {f.EdgeName ?? f.EdgeId ?? "unknown"} -> Trunk {f.ObjectName ?? f.ObjectId}",
+            _ => $"Telephony Topology -> {f.ObjectType} {f.ObjectName ?? f.ObjectId}"
+        };
+
+    private static IReadOnlyList<string> BuildSiteTopologyEvidenceChain(SiteTopologyFinding f)
+        =>
+        [
+            "GET /api/v2/telephony/providers/edges/sites returned the site inventory and edge membership.",
+            "GET /api/v2/telephony/providers/edges returned edge online and status state.",
+            "GET /api/v2/telephony/providers/edges/trunks was compared for host-edge and trunk service state.",
+            $"Comparison result: {f.Issue}"
+        ];
+
+    private static string BuildSiteTopologyWhyThisMatters(SiteTopologyFinding f)
+        => f.FindingCode switch
+        {
+            SiteTopologyCode.SiteNoActiveEdges => "A site without active edges has no viable telephony path, so calling can fail broadly for everything anchored there.",
+            SiteTopologyCode.EdgeOrphanedSite => "An orphaned edge-to-site relationship indicates the topology model is inconsistent and can strand dependent telephony resources.",
+            SiteTopologyCode.EdgeOffline => "Anything hosted on the offline edge can degrade at once, turning a single infrastructure issue into a wider calling outage.",
+            SiteTopologyCode.TrunkEdgeOffline or SiteTopologyCode.TrunkOutOfService or SiteTopologyCode.TrunkDown
+                => "Carrier or edge path failure at the trunk layer can break inbound or outbound calling even when higher-level routing still looks configured.",
+            _ => "Topology contradictions can break live telephony paths in ways that are not obvious from a single inventory view."
+        };
 
     // ─── Case text builders ───────────────────────────────────────────────────
 

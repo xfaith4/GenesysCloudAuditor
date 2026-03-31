@@ -116,9 +116,21 @@ public sealed class CareEscalationCandidate
     [JsonPropertyName("relatedObjectNames")]
     public IReadOnlyList<string> RelatedObjectNames { get; init; } = [];
 
+    /// <summary>Human-readable relationship chain showing how the affected object connects to downstream impact.</summary>
+    [JsonPropertyName("dependencyChain")]
+    public string DependencyChain { get; init; } = string.Empty;
+
     /// <summary>Which Genesys Cloud API endpoints were involved in detecting this finding.</summary>
     [JsonPropertyName("apiSurfaces")]
     public IReadOnlyList<string> ApiSurfaces { get; init; } = [];
+
+    /// <summary>Ordered evidence steps showing which comparisons produced the conclusion.</summary>
+    [JsonPropertyName("evidenceChain")]
+    public IReadOnlyList<string> EvidenceChain { get; init; } = [];
+
+    /// <summary>Plain-language explanation of the operational risk or business impact.</summary>
+    [JsonPropertyName("whyThisMatters")]
+    public string WhyThisMatters { get; init; } = string.Empty;
 
     [JsonPropertyName("recentChangeContext")]
     public string? RecentChangeContext { get; init; }
