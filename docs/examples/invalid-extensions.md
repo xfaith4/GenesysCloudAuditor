@@ -24,12 +24,12 @@
 
 | Source | RawValue | NormalizationStatus | NormalizationNotes | EntityId | EntityName | EntityState |
 |---|---|---|---|---|---|---|
-| `Profile` | `+1 (555) 867-5309` | `TooLong` | Value appears to be a full PSTN number, not a short extension. After normalization: `15558675309` (11 digits, exceeds MaxLength=10). | `c3d4e5f6-aaaa-4abc-8020-111111111111` | Patricia Gould | active |
-| `Profile` | `ext` | `Empty` | After stripping the "ext" prefix and removing separators, the remaining value is empty. | `d4e5f6a7-bbbb-4bcd-8021-222222222222` | Robert Yuen | active |
-| `Profile` | ` ` | `WhitespaceOnly` | Value contains only whitespace characters. | `e5f6a7b8-cccc-4cde-8022-333333333333` | Hannah Okafor | inactive |
-| `Profile` | `N/A` | `NonDigitOnly` | After normalization, no digit characters remain. | `f6a7b8c9-dddd-4def-8023-444444444444` | Thomas Brewer | active |
+| `Profile` | `+1 (212) 555-0101` | `TooLong` | Value appears to be a full PSTN number, not a short extension. After normalization: `12125550101` (11 digits, exceeds MaxLength=10). | `c3d4e5f6-aaaa-4abc-8020-111111111111` | Profile User 01 | active |
+| `Profile` | `ext` | `Empty` | After stripping the "ext" prefix and removing separators, the remaining value is empty. | `d4e5f6a7-bbbb-4bcd-8021-222222222222` | Profile User 02 | active |
+| `Profile` | ` ` | `WhitespaceOnly` | Value contains only whitespace characters. | `e5f6a7b8-cccc-4cde-8022-333333333333` | Profile User 03 | inactive |
+| `Profile` | `N/A` | `NonDigitOnly` | After normalization, no digit characters remain. | `f6a7b8c9-dddd-4def-8023-444444444444` | Profile User 04 | active |
 | `Assignment` | `ab` | `TooShort` | Normalized value `AB` has length 2 but MinLength is configured for digits-only mode; no digits found. | `assign-20001` | (station assignment) | — |
-| `Profile` | `12345678901234` | `TooLong` | Normalized value has 14 digits, exceeds MaxLength=10. | `a7b8c9d0-eeee-4efg-8024-555555555555` | Cynthia Nakamura | active |
+| `Profile` | `12345678901234` | `TooLong` | Normalized value has 14 digits, exceeds MaxLength=10. | `a7b8c9d0-eeee-4efg-8024-555555555555` | Profile User 05 | active |
 
 ---
 

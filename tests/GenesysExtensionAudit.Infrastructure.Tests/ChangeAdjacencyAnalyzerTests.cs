@@ -18,7 +18,7 @@ public sealed class ChangeAdjacencyAnalyzerTests
         string? entityName = null,
         string? entityType = "Queue",
         string? action = "UPDATE",
-        string? userName = "admin@example.com",
+        string? userName = "audit-bot@example.invalid",
         DateTimeOffset? timestamp = null)
         => new(
             AuditId: Guid.NewGuid().ToString(),
@@ -208,7 +208,7 @@ public sealed class ChangeAdjacencyAnalyzerTests
             ServiceName: "routing",
             Action: "UPDATE",
             UserName: "admin",
-            UserEmail: "admin@example.com",
+            UserEmail: "audit-bot@example.invalid",
             EntityType: "Queue",
             EntityName: "ServiceDesk",
             UserId: null,
@@ -312,14 +312,14 @@ public sealed class ChangeAdjacencyAnalyzerTests
     public void ChangeAdjacency_PopulatesChangedByFromUserName()
     {
         var queueId = "q-1";
-        var log = AuditLog(queueId, userName: "alice@example.com");
+        var log = AuditLog(queueId, userName: "queue-owner-01@example.invalid");
         var report = ReportWith(queueFindings: [QueueFinding(queueId, "Queue1")]);
         var index = ActiveFindingIndex.Build(report);
 
         var findings = new ChangeAdjacencyAnalyzer().Analyze([log], index);
 
         Assert.Single(findings);
-        Assert.Equal("alice@example.com", findings[0].ChangedBy);
+        Assert.Equal("queue-owner-01@example.invalid", findings[0].ChangedBy);
     }
 
     [Fact]

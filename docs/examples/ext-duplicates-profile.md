@@ -24,11 +24,11 @@
 
 | ExtensionKey | RawExtension | UserId | UserName | Email | UserState | DuplicateGroupSize |
 |---|---|---|---|---|---|---|
-| `1042` | `1042` | `a3f1d2c0-1111-4abc-8001-000000000001` | Alice Nguyen | alice.nguyen@example.com | active | 2 |
-| `1042` | `ext. 1042` | `b7e3c5d1-2222-4def-8002-000000000002` | Brian Kowalski | brian.kowalski@example.com | active | 2 |
-| `2315` | `2315` | `c1a4b6e2-3333-4fab-8003-000000000003` | Carmen Reyes | carmen.reyes@example.com | 3 |
-| `2315` | `2315` | `d4f7a8b3-4444-4cde-8004-000000000004` | David Osei | david.osei@example.com | active | 3 |
-| `2315` | `x2315` | `e8b2c3f4-5555-4bca-8005-000000000005` | Emily Hartmann | emily.hartmann@example.com | inactive | 3 |
+| `1042` | `1042` | `a3f1d2c0-1111-4abc-8001-000000000001` | Duplicate User 1042-A | duplicate-user-1042-a@example.invalid | active | 2 |
+| `1042` | `ext. 1042` | `b7e3c5d1-2222-4def-8002-000000000002` | Duplicate User 1042-B | duplicate-user-1042-b@example.invalid | active | 2 |
+| `2315` | `2315` | `c1a4b6e2-3333-4fab-8003-000000000003` | Duplicate User 2315-A | duplicate-user-2315-a@example.invalid | active | 3 |
+| `2315` | `2315` | `d4f7a8b3-4444-4cde-8004-000000000004` | Duplicate User 2315-B | duplicate-user-2315-b@example.invalid | active | 3 |
+| `2315` | `x2315` | `e8b2c3f4-5555-4bca-8005-000000000005` | Duplicate User 2315-C | duplicate-user-2315-c@example.invalid | inactive | 3 |
 
 ---
 

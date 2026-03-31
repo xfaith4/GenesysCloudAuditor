@@ -28,10 +28,10 @@
 
 | UserId | UserName | Email | UserState | Title | Department | Division | HasExtension | Extension | HasAdminRole | LastLoginDate |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `b3c4d5e6-1111-4abc-9060-aaaaaaaaaaaa` | Greg Patel | greg.patel@example.com | inactive | Contact Center Agent | Operations | Home | true | `2047` | false | 2023-10-14 |
-| `c4d5e6f7-2222-4bcd-9061-bbbbbbbbbbbb` | Samantha Wu | samantha.wu@example.com | inactive | Team Lead | Operations | Home | false | — | false | 2024-02-01 |
-| `d5e6f7a8-3333-4cde-9062-cccccccccccc` | Former Admin | former.admin@example.com | inactive | IT Administrator | IT | Home | false | — | true | 2022-08-19 |
-| `e6f7a8b9-4444-4def-9063-dddddddddddd` | Linda Marsh | linda.marsh@example.com | inactive | QA Analyst | Quality | East | true | `3301` | false | 2024-06-30 |
+| `b3c4d5e6-1111-4abc-9060-aaaaaaaaaaaa` | Inactive User 2047 | inactive-user-2047@example.invalid | inactive | Contact Center Agent | Operations | Home | true | `2047` | false | 2023-10-14 |
+| `c4d5e6f7-2222-4bcd-9061-bbbbbbbbbbbb` | Inactive Lead 01 | inactive-lead-01@example.invalid | inactive | Team Lead | Operations | Home | false | — | false | 2024-02-01 |
+| `d5e6f7a8-3333-4cde-9062-cccccccccccc` | Dormant Admin | dormant-admin@example.invalid | inactive | IT Administrator | IT | Home | false | — | true | 2022-08-19 |
+| `e6f7a8b9-4444-4def-9063-dddddddddddd` | Inactive QA 3301 | inactive-qa-3301@example.invalid | inactive | QA Analyst | Quality | East | true | `3301` | false | 2024-06-30 |
 
 ---
 
@@ -39,7 +39,7 @@
 
 ### Inactive User with Extension (`HasExtension=true`)
 
-**Greg Patel** and **Linda Marsh** are inactive but still have extensions set on their profiles. This creates two risks:
+**Inactive User 2047** and **Inactive QA 3301** are inactive but still have extensions set on their profiles. This creates two risks:
 
 1. If the extension has been recycled to a new user, the old inactive profile may cause a `Ext_Duplicates_Profile` or `Ext_Ownership_Mismatch` finding.
 2. The extension occupies a slot in the telephony namespace that could confuse routing queries.
@@ -48,7 +48,7 @@
 
 ### Inactive User with Admin Role (`HasAdminRole=true`)
 
-**Former Admin** has an administrative role but the account has been inactive since 2022. This is a security concern — dormant admin accounts should have their roles removed immediately.
+**Dormant Admin** has an administrative role but the account has been inactive since 2022. This is a security concern — dormant admin accounts should have their roles removed immediately.
 
 **Action:** Revoke administrative roles from inactive accounts. This finding also appears in the planned **Security Audit** checks.
 

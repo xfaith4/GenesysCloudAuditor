@@ -27,8 +27,8 @@
 
 | ExtensionKey | RawExtension | Source | UserId | UserName | UserEmail | UserState | AssignmentId | AssignedToEntityId | AssignedToEntityType |
 |---|---|---|---|---|---|---|---|---|---|
-| `5500` | `5500` | `ProfileOnly` | `d1e2f3a4-1111-4abc-8010-aaaaaaaaaaaa` | Laura Chen | laura.chen@example.com | active | — | — | — |
-| `5501` | `5501` | `ProfileOnly` | `e2f3a4b5-2222-4bcd-8011-bbbbbbbbbbbb` | Mark Jimenez | mark.jimenez@example.com | inactive | — | — | — |
+| `5500` | `5500` | `ProfileOnly` | `d1e2f3a4-1111-4abc-8010-aaaaaaaaaaaa` | Profile User 5500 | profile-user-5500@example.invalid | active | — | — | — |
+| `5501` | `5501` | `ProfileOnly` | `e2f3a4b5-2222-4bcd-8011-bbbbbbbbbbbb` | Profile User 5501 | profile-user-5501@example.invalid | inactive | — | — | — |
 | `6100` | `6100` | `AssignmentOnly` | — | — | — | — | `assign-10001` | `f4a5b6c7-3333-4cde-8012-cccccccccccc` | user |
 | `6201` | `6201` | `AssignmentOnly` | — | — | — | — | `assign-10002` | `a5b6c7d8-4444-4def-8013-dddddddddddd` | station |
 
@@ -38,7 +38,7 @@
 
 ### ProfileOnly Rows
 
-Extension `5500` (Laura Chen) and `5501` (Mark Jimenez) appear on user profiles but have no corresponding entry in the telephony assignment system.
+Extension `5500` (Profile User 5500) and `5501` (Profile User 5501) appear on user profiles but have no corresponding entry in the telephony assignment system.
 
 **Common causes:**
 - The extension was deleted from telephony but the user profile was not updated.

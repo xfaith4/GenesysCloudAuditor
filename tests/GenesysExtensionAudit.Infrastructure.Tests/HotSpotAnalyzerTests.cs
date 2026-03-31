@@ -52,7 +52,7 @@ public sealed class HotSpotAnalyzerTests
         => new(
             UserId: userId,
             UserName: userName,
-            Email: $"{userName}@example.com",
+            Email: $"{userName}@example.invalid",
             State: "inactive",
             TokenLastIssuedDate: DateTimeOffset.UtcNow.AddDays(-120),
             DaysSinceLogin: 120,
@@ -62,7 +62,7 @@ public sealed class HotSpotAnalyzerTests
         => new(
             UserId: userId,
             UserName: userName,
-            Email: $"{userName}@example.com",
+            Email: $"{userName}@example.invalid",
             State: "active",
             AssignedLicenses: ["PureCloud 3"],
             TokenLastIssuedDate: DateTimeOffset.UtcNow.AddDays(-90),
@@ -93,7 +93,7 @@ public sealed class HotSpotAnalyzerTests
             AffectedObjectName: objectName,
             ChangeTimestamp: DateTimeOffset.UtcNow.AddMinutes(-30),
             ChangeAction: "UPDATE",
-            ChangedBy: "admin@example.com",
+            ChangedBy: "audit-bot@example.invalid",
             ChangeCount: 1,
             RelatedFindingType: "Queue Serviceability",
             Issue: "Change preceded finding",
@@ -174,7 +174,7 @@ public sealed class HotSpotAnalyzerTests
                 new LicenseOverProvisioningFinding(
                     UserId: userId,
                     UserName: "alice",
-                    Email: "alice@example.com",
+                    Email: "alice@example.invalid",
                     State: "active",
                     AllAssignedLicenses: ["PureCloud 3"],
                     OverProvisionedLicenses: ["PureCloud 3"],
@@ -209,7 +209,7 @@ public sealed class HotSpotAnalyzerTests
             StaleLicenseFindings = [StaleLicenseFinding(userId, "bob")],
             LicenseOverProvisioningFindings =
             [
-                new LicenseOverProvisioningFinding(userId, "bob", "bob@example.com", "active",
+                new LicenseOverProvisioningFinding(userId, "bob", "bob@example.invalid", "active",
                     ["PureCloud 3"], ["PureCloud 3"], null, null, "Over-provisioned", "Downgrade license.")
             ],
             QueueServiceabilityFindings = [QueueServiceabilityFinding(queueId, "Main")],

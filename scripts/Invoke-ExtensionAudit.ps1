@@ -37,10 +37,10 @@
     When specified, also reports telephony extensions that have no matching user profile.
 
 .EXAMPLE
-    .\Invoke-ExtensionAudit.ps1 -ClientId "abc123" -ClientSecret "secret" -Region "usw2.pure.cloud"
+    .\Invoke-ExtensionAudit.ps1 -ClientId "<client-id>" -ClientSecret "<client-secret>" -Region "usw2.pure.cloud"
 
 .EXAMPLE
-    .\Invoke-ExtensionAudit.ps1 -ClientId "abc123" -ClientSecret "secret" -OutputPath "C:\Reports"
+    .\Invoke-ExtensionAudit.ps1 -ClientId "<client-id>" -ClientSecret "<client-secret>" -OutputPath "C:\Reports"
 #>
 [CmdletBinding()]
 param(

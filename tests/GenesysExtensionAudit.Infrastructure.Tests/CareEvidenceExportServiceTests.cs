@@ -63,7 +63,7 @@ public sealed class CareEvidenceExportServiceTests
             AffectedObjectName: objectName,
             ChangeTimestamp: RunCompletedUtc.AddMinutes(-5),
             ChangeAction: "UPDATE",
-            ChangedBy: "admin@example.com",
+            ChangedBy: "audit-bot@example.invalid",
             ChangeCount: 1,
             RelatedFindingType: relatedFindingType,
             Issue: "Recent change preceded finding",

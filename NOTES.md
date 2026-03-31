@@ -21,6 +21,13 @@ Use this file before publishing external docs or customer-facing release notes.
 - Add screenshots for `Run Audit`, `Schedule Audits`, and report output once UI stabilizes.
 - Add a contributor documentation standard (`docs/style-guide.md`) if the repository grows.
 
+## Privacy Guardrails
+
+- Documentation and tests must use synthetic, non-personal placeholders only.
+- Use `example.invalid` for email examples and reserved `555`-range numbers for PSTN examples.
+- Do not commit customer names, tenant-specific identifiers, PHI, PII, live API tokens, or real secrets.
+- If a sample needs a human-readable actor, prefer role-based labels such as `Inactive User 01` or `Profile Owner 01`.
+
 ## Review Cadence
 
 - Review this file before each tagged release.

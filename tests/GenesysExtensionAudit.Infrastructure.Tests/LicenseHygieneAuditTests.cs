@@ -19,7 +19,7 @@ public sealed class LicenseHygieneAuditTests
         string? name = null,
         string state = "active",
         DateTimeOffset? tokenLastIssued = null)
-        => new(id, name ?? $"User {id}", "user@example.com", state, tokenLastIssued);
+        => new(id, name ?? $"Synthetic User {id}", $"synthetic-{id}@example.invalid", state, tokenLastIssued);
 
     private static LicenseHygieneAnalyzer.LicenseAssignment License(
         string userId,
@@ -325,14 +325,14 @@ public sealed class LicenseHygieneAuditTests
 
         var lookup = new Dictionary<string, (string? Name, string? Email, string? State)>(StringComparer.OrdinalIgnoreCase)
         {
-            ["u1"] = ("Alice Smith", "alice@example.com", "active")
+            ["u1"] = ("Synthetic User U1", "synthetic-u1@example.invalid", "active")
         };
 
         var findings = new LicenseHygieneAnalyzer().AnalyzeRoleGroupOverlap(subjects, lookup);
 
         Assert.Single(findings);
-        Assert.Equal("Alice Smith", findings[0].UserName);
-        Assert.Equal("alice@example.com", findings[0].Email);
+        Assert.Equal("Synthetic User U1", findings[0].UserName);
+        Assert.Equal("synthetic-u1@example.invalid", findings[0].Email);
         Assert.Equal("active", findings[0].UserState);
     }
 
