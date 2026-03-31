@@ -28,6 +28,17 @@ public sealed class ScheduledAuditProfile
     public bool RunOperationalEventLogs { get; set; } = false;
     public int OperationalEventLookbackDays { get; set; } = 7;
     public bool RunOutboundEvents { get; set; } = false;
+    public bool RunUserTelephonyAudit { get; set; } = true;
+    public bool RunQueueServiceabilityAudit { get; set; } = true;
+    public bool RunFlowDependencyAudit { get; set; } = true;
+    public bool RunSiteTopologyAudit { get; set; } = true;
+    public bool RunStaleLicenseAudit { get; set; } = true;
+    public bool RunLicenseOverProvisioningAudit { get; set; } = true;
+    public bool RunRoleGroupOverlapAudit { get; set; } = true;
+    public bool RunPromptHygieneAudit { get; set; } = true;
+    public bool RunChangeAdjacencyAudit { get; set; } = true;
+    public bool RunFlappingDetectionAudit { get; set; } = true;
+    public bool RunHotSpotAudit { get; set; } = true;
 
     /// <summary>
     /// Optional single service name selected in the scheduler UI.
@@ -50,5 +61,8 @@ public sealed class ScheduledAuditProfile
     public bool HasAnyAuditSelected =>
         RunExtensionAudit || RunGroupAudit || RunQueueAudit || RunFlowAudit ||
         RunInactiveUserAudit || RunDidAudit || RunAuditLogs ||
-        RunOperationalEventLogs || RunOutboundEvents;
+        RunOperationalEventLogs || RunOutboundEvents || RunUserTelephonyAudit ||
+        RunQueueServiceabilityAudit || RunFlowDependencyAudit || RunSiteTopologyAudit ||
+        RunStaleLicenseAudit || RunLicenseOverProvisioningAudit || RunRoleGroupOverlapAudit ||
+        RunPromptHygieneAudit || RunChangeAdjacencyAudit || RunFlappingDetectionAudit || RunHotSpotAudit;
 }

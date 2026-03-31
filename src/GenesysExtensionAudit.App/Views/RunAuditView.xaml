@@ -72,7 +72,10 @@
                               FontWeight="SemiBold"
                               Margin="0,0,0,8" />
 
-                    <WrapPanel>
+                    <TextBlock Text="Configuration Integrity"
+                               FontWeight="SemiBold"
+                               Margin="0,2,0,6" />
+                    <WrapPanel Margin="0,0,0,8">
                         <CheckBox Content="Extensions"
                                   IsChecked="{Binding RunExtensionAudit}"
                                   Margin="0,0,18,8" />
@@ -91,18 +94,63 @@
                         <CheckBox Content="DIDs"
                                   IsChecked="{Binding RunDidAudit}"
                                   Margin="0,0,18,8" />
+                        <CheckBox Content="Site Topology"
+                                  IsChecked="{Binding RunSiteTopologyAudit}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="Prompt Hygiene"
+                                  IsChecked="{Binding RunPromptHygieneAudit}"
+                                  Margin="0,0,18,8" />
+                    </WrapPanel>
+
+                    <TextBlock Text="Cross-Endpoint Correlation"
+                               FontWeight="SemiBold"
+                               Margin="0,2,0,6" />
+                    <WrapPanel Margin="0,0,0,8">
+                        <CheckBox Content="User Telephony Integrity"
+                                  IsChecked="{Binding RunUserTelephonyAudit}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="Queue Serviceability"
+                                  IsChecked="{Binding RunQueueServiceabilityAudit}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="IVR Flow Dependency"
+                                  IsChecked="{Binding RunFlowDependencyAudit}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="Stale License Usage"
+                                  IsChecked="{Binding RunStaleLicenseAudit}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="License Over-Provisioning"
+                                  IsChecked="{Binding RunLicenseOverProvisioningAudit}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="Role / Group Overlap"
+                                  IsChecked="{Binding RunRoleGroupOverlapAudit}"
+                                  Margin="0,0,18,8" />
+                    </WrapPanel>
+
+                    <TextBlock Text="Operational / Temporal Intelligence"
+                               FontWeight="SemiBold"
+                               Margin="0,2,0,6" />
+                    <WrapPanel Margin="0,0,0,8">
                         <CheckBox Content="Audit Logs"
                                   IsChecked="{Binding RunAuditLogs}"
                                   Margin="0,0,18,8" />
                         <CheckBox Content="Operational Event Logs"
                                   IsChecked="{Binding RunOperationalEventLogs}"
                                   Margin="0,0,18,8" />
-                        <CheckBox Content="OutboundEvents"
+                        <CheckBox Content="Outbound Events"
                                   IsChecked="{Binding RunOutboundEvents}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="Change Adjacency"
+                                  IsChecked="{Binding RunChangeAdjacencyAudit}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="Flapping Detection"
+                                  IsChecked="{Binding RunFlappingDetectionAudit}"
+                                  Margin="0,0,18,8" />
+                        <CheckBox Content="Hot Spot Ranking"
+                                  IsChecked="{Binding RunHotSpotAudit}"
                                   Margin="0,0,18,8" />
                     </WrapPanel>
 
-                    <TextBlock Text="Choose one or more paths to run in this audit pass."
+                    <TextBlock Text="Choose the audits to run. Some interpreted views depend on source feeds: Change Adjacency and Flapping Detection use Audit Logs, and edge distribution signals require Operational Event Logs plus Site Topology."
                                Foreground="#6B7280"
                                FontSize="11" />
 

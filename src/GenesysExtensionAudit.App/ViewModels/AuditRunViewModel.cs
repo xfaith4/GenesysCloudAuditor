@@ -65,6 +65,17 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private bool _runOperationalEventLogs;
     private int _operationalEventLookbackDays = 7;
     private bool _runOutboundEvents;
+    private bool _runUserTelephonyAudit = true;
+    private bool _runQueueServiceabilityAudit = true;
+    private bool _runFlowDependencyAudit = true;
+    private bool _runSiteTopologyAudit = true;
+    private bool _runStaleLicenseAudit = true;
+    private bool _runLicenseOverProvisioningAudit = true;
+    private bool _runRoleGroupOverlapAudit = true;
+    private bool _runPromptHygieneAudit = true;
+    private bool _runChangeAdjacencyAudit = true;
+    private bool _runFlappingDetectionAudit = true;
+    private bool _runHotSpotAudit = true;
     private bool _isLoadingAuditLogEntities;
     private bool _auditLogEntitiesLoaded;
     private string _selectedAuditLogEntity = AllCatalogEntitiesOption;
@@ -262,6 +273,116 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         }
     }
 
+    public bool RunUserTelephonyAudit
+    {
+        get => _runUserTelephonyAudit;
+        set
+        {
+            if (SetField(ref _runUserTelephonyAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunQueueServiceabilityAudit
+    {
+        get => _runQueueServiceabilityAudit;
+        set
+        {
+            if (SetField(ref _runQueueServiceabilityAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunFlowDependencyAudit
+    {
+        get => _runFlowDependencyAudit;
+        set
+        {
+            if (SetField(ref _runFlowDependencyAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunSiteTopologyAudit
+    {
+        get => _runSiteTopologyAudit;
+        set
+        {
+            if (SetField(ref _runSiteTopologyAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunStaleLicenseAudit
+    {
+        get => _runStaleLicenseAudit;
+        set
+        {
+            if (SetField(ref _runStaleLicenseAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunLicenseOverProvisioningAudit
+    {
+        get => _runLicenseOverProvisioningAudit;
+        set
+        {
+            if (SetField(ref _runLicenseOverProvisioningAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunRoleGroupOverlapAudit
+    {
+        get => _runRoleGroupOverlapAudit;
+        set
+        {
+            if (SetField(ref _runRoleGroupOverlapAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunPromptHygieneAudit
+    {
+        get => _runPromptHygieneAudit;
+        set
+        {
+            if (SetField(ref _runPromptHygieneAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunChangeAdjacencyAudit
+    {
+        get => _runChangeAdjacencyAudit;
+        set
+        {
+            if (SetField(ref _runChangeAdjacencyAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunFlappingDetectionAudit
+    {
+        get => _runFlappingDetectionAudit;
+        set
+        {
+            if (SetField(ref _runFlappingDetectionAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
+    public bool RunHotSpotAudit
+    {
+        get => _runHotSpotAudit;
+        set
+        {
+            if (SetField(ref _runHotSpotAudit, value))
+                OnAuditSelectionChanged();
+        }
+    }
+
     public ObservableCollection<string> AuditLogEntities => _auditLogEntities;
     public ObservableCollection<string> WorkbookExportModes => _workbookExportModes;
 
@@ -366,7 +487,27 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
     public bool SelectAllAudits
     {
-        get => RunExtensionAudit && RunGroupAudit && RunQueueAudit && RunFlowAudit && RunInactiveUserAudit && RunDidAudit && RunAuditLogs && RunOperationalEventLogs && RunOutboundEvents;
+        get =>
+            RunExtensionAudit &&
+            RunGroupAudit &&
+            RunQueueAudit &&
+            RunFlowAudit &&
+            RunInactiveUserAudit &&
+            RunDidAudit &&
+            RunAuditLogs &&
+            RunOperationalEventLogs &&
+            RunOutboundEvents &&
+            RunUserTelephonyAudit &&
+            RunQueueServiceabilityAudit &&
+            RunFlowDependencyAudit &&
+            RunSiteTopologyAudit &&
+            RunStaleLicenseAudit &&
+            RunLicenseOverProvisioningAudit &&
+            RunRoleGroupOverlapAudit &&
+            RunPromptHygieneAudit &&
+            RunChangeAdjacencyAudit &&
+            RunFlappingDetectionAudit &&
+            RunHotSpotAudit;
         set
         {
             RunExtensionAudit = value;
@@ -378,11 +519,25 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             RunAuditLogs = value;
             RunOperationalEventLogs = value;
             RunOutboundEvents = value;
+            RunUserTelephonyAudit = value;
+            RunQueueServiceabilityAudit = value;
+            RunFlowDependencyAudit = value;
+            RunSiteTopologyAudit = value;
+            RunStaleLicenseAudit = value;
+            RunLicenseOverProvisioningAudit = value;
+            RunRoleGroupOverlapAudit = value;
+            RunPromptHygieneAudit = value;
+            RunChangeAdjacencyAudit = value;
+            RunFlappingDetectionAudit = value;
+            RunHotSpotAudit = value;
         }
     }
 
     public bool HasAnyAuditSelected =>
-        RunExtensionAudit || RunGroupAudit || RunQueueAudit || RunFlowAudit || RunInactiveUserAudit || RunDidAudit || RunAuditLogs || RunOperationalEventLogs || RunOutboundEvents;
+        RunExtensionAudit || RunGroupAudit || RunQueueAudit || RunFlowAudit || RunInactiveUserAudit || RunDidAudit ||
+        RunAuditLogs || RunOperationalEventLogs || RunOutboundEvents || RunUserTelephonyAudit || RunQueueServiceabilityAudit ||
+        RunFlowDependencyAudit || RunSiteTopologyAudit || RunStaleLicenseAudit || RunLicenseOverProvisioningAudit ||
+        RunRoleGroupOverlapAudit || RunPromptHygieneAudit || RunChangeAdjacencyAudit || RunFlappingDetectionAudit || RunHotSpotAudit;
 
     public string? LastExportPath
     {
@@ -524,6 +679,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
                 RunFlowAudit = RunFlowAudit,
                 RunInactiveUserAudit = RunInactiveUserAudit,
                 RunDidAudit = RunDidAudit,
+                RunUserTelephonyAudit = RunUserTelephonyAudit,
+                RunQueueServiceabilityAudit = RunQueueServiceabilityAudit,
+                RunFlowDependencyAudit = RunFlowDependencyAudit,
                 RunAuditLogs = RunAuditLogs,
                 AuditLogLookbackHours = AuditLogLookbackHours,
                 AuditLogServiceNames = GetSelectedAuditLogServiceNames(),
@@ -532,7 +690,15 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
                 AuditLogSortOrder = string.Equals(SelectedAuditLogSortOrder, "Ascending", StringComparison.Ordinal) ? "ASC" : "DESC",
                 RunOperationalEventLogs = RunOperationalEventLogs,
                 OperationalEventLookbackDays = OperationalEventLookbackDays,
-                RunOutboundEvents = RunOutboundEvents
+                RunOutboundEvents = RunOutboundEvents,
+                RunStaleLicenseAudit = RunStaleLicenseAudit,
+                RunLicenseOverProvisioningAudit = RunLicenseOverProvisioningAudit,
+                RunRoleGroupOverlapAudit = RunRoleGroupOverlapAudit,
+                RunSiteTopologyAudit = RunSiteTopologyAudit,
+                RunPromptHygieneAudit = RunPromptHygieneAudit,
+                RunChangeAdjacencyAudit = RunChangeAdjacencyAudit,
+                RunFlappingDetectionAudit = RunFlappingDetectionAudit,
+                RunHotSpotAudit = RunHotSpotAudit
             }, progress, ct).ConfigureAwait(true);
 
             _lastReport = report;
@@ -918,9 +1084,33 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             }));
         }
 
+        if (report.Options.RunQueueServiceabilityAudit && !report.Options.RunQueueAudit)
+        {
+            scopes.Add(("QueueServiceability", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeQueues = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
         if (report.Options.RunFlowAudit)
         {
             scopes.Add(("Flows", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeFlows = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
+        if (report.Options.RunFlowDependencyAudit && !report.Options.RunFlowAudit)
+        {
+            scopes.Add(("FlowDependency", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
                 IncludeFlows = true,
@@ -942,6 +1132,18 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             }));
         }
 
+        if (report.Options.RunUserTelephonyAudit && !report.Options.RunExtensionAudit)
+        {
+            scopes.Add(("UserTelephony", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeExtensions = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
         if (report.Options.RunDidAudit)
         {
             scopes.Add(("DIDs", new ExcelWorkbookScopeOptions
@@ -954,12 +1156,97 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             }));
         }
 
+        if (report.Options.RunStaleLicenseAudit)
+        {
+            scopes.Add(("StaleLicenses", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeStaleLicenses = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
+        if (report.Options.RunLicenseOverProvisioningAudit)
+        {
+            scopes.Add(("LicenseOverProvisioning", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeLicenseOverProvisioning = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
+        if (report.Options.RunRoleGroupOverlapAudit)
+        {
+            scopes.Add(("RoleGroupOverlap", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeRoleGroupOverlap = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
+        if (report.Options.RunSiteTopologyAudit)
+        {
+            scopes.Add(("SiteTopology", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeSiteTopology = true,
+                IncludeEdgePerformance = report.Options.RunOperationalEventLogs,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
+        if (report.Options.RunPromptHygieneAudit)
+        {
+            scopes.Add(("PromptHygiene", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludePromptHygiene = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
         if (report.Options.RunAuditLogs)
         {
             scopes.Add(("AuditLogs", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
                 IncludeAuditLogs = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
+        if (report.Options.RunChangeAdjacencyAudit && report.Options.RunAuditLogs)
+        {
+            scopes.Add(("ChangeAdjacency", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeChangeAdjacency = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
+        if (report.Options.RunFlappingDetectionAudit && report.Options.RunAuditLogs)
+        {
+            scopes.Add(("FlappingDetection", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeFlappingDetection = true,
                 IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false
@@ -984,6 +1271,18 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeOutboundEvents = true,
+                IncludeBestPracticeGuidance = false,
+                IncludeFindingLifecycle = false,
+                IncludeHistoricalDrift = false
+            }));
+        }
+
+        if (report.Options.RunHotSpotAudit)
+        {
+            scopes.Add(("HotSpots", new ExcelWorkbookScopeOptions
+            {
+                IncludeSummary = true,
+                IncludeHotSpot = true,
                 IncludeBestPracticeGuidance = false,
                 IncludeFindingLifecycle = false,
                 IncludeHistoricalDrift = false

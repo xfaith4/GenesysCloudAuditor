@@ -48,6 +48,17 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
     private bool _runOperationalEventLogs;
     private int _operationalEventLookbackDays = 7;
     private bool _runOutboundEvents;
+    private bool _runUserTelephonyAudit = true;
+    private bool _runQueueServiceabilityAudit = true;
+    private bool _runFlowDependencyAudit = true;
+    private bool _runSiteTopologyAudit = true;
+    private bool _runStaleLicenseAudit = true;
+    private bool _runLicenseOverProvisioningAudit = true;
+    private bool _runRoleGroupOverlapAudit = true;
+    private bool _runPromptHygieneAudit = true;
+    private bool _runChangeAdjacencyAudit = true;
+    private bool _runFlappingDetectionAudit = true;
+    private bool _runHotSpotAudit = true;
     private string _selectedAuditLogEntity = AllCatalogEntitiesOption;
     private bool _pushToGitHub;
     private bool _pushToElasticSearch;
@@ -182,6 +193,17 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
     }
 
     public bool RunOutboundEvents { get => _runOutboundEvents; set => SetField(ref _runOutboundEvents, value); }
+    public bool RunUserTelephonyAudit { get => _runUserTelephonyAudit; set => SetField(ref _runUserTelephonyAudit, value); }
+    public bool RunQueueServiceabilityAudit { get => _runQueueServiceabilityAudit; set => SetField(ref _runQueueServiceabilityAudit, value); }
+    public bool RunFlowDependencyAudit { get => _runFlowDependencyAudit; set => SetField(ref _runFlowDependencyAudit, value); }
+    public bool RunSiteTopologyAudit { get => _runSiteTopologyAudit; set => SetField(ref _runSiteTopologyAudit, value); }
+    public bool RunStaleLicenseAudit { get => _runStaleLicenseAudit; set => SetField(ref _runStaleLicenseAudit, value); }
+    public bool RunLicenseOverProvisioningAudit { get => _runLicenseOverProvisioningAudit; set => SetField(ref _runLicenseOverProvisioningAudit, value); }
+    public bool RunRoleGroupOverlapAudit { get => _runRoleGroupOverlapAudit; set => SetField(ref _runRoleGroupOverlapAudit, value); }
+    public bool RunPromptHygieneAudit { get => _runPromptHygieneAudit; set => SetField(ref _runPromptHygieneAudit, value); }
+    public bool RunChangeAdjacencyAudit { get => _runChangeAdjacencyAudit; set => SetField(ref _runChangeAdjacencyAudit, value); }
+    public bool RunFlappingDetectionAudit { get => _runFlappingDetectionAudit; set => SetField(ref _runFlappingDetectionAudit, value); }
+    public bool RunHotSpotAudit { get => _runHotSpotAudit; set => SetField(ref _runHotSpotAudit, value); }
 
     /// <summary>
     /// When true the scheduled runner will push the generated report to the
@@ -307,11 +329,22 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
                 RunFlowAudit = RunFlowAudit,
                 RunInactiveUserAudit = RunInactiveUserAudit,
                 RunDidAudit = RunDidAudit,
+                RunUserTelephonyAudit = RunUserTelephonyAudit,
+                RunQueueServiceabilityAudit = RunQueueServiceabilityAudit,
+                RunFlowDependencyAudit = RunFlowDependencyAudit,
                 RunAuditLogs = RunAuditLogs,
                 AuditLogLookbackHours = AuditLogLookbackHours,
                 RunOperationalEventLogs = RunOperationalEventLogs,
                 OperationalEventLookbackDays = OperationalEventLookbackDays,
                 RunOutboundEvents = RunOutboundEvents,
+                RunSiteTopologyAudit = RunSiteTopologyAudit,
+                RunStaleLicenseAudit = RunStaleLicenseAudit,
+                RunLicenseOverProvisioningAudit = RunLicenseOverProvisioningAudit,
+                RunRoleGroupOverlapAudit = RunRoleGroupOverlapAudit,
+                RunPromptHygieneAudit = RunPromptHygieneAudit,
+                RunChangeAdjacencyAudit = RunChangeAdjacencyAudit,
+                RunFlappingDetectionAudit = RunFlappingDetectionAudit,
+                RunHotSpotAudit = RunHotSpotAudit,
                 PushToGitHub = PushToGitHub,
                 PushToElasticSearch = PushToElasticSearch,
                 AuditLogServiceName = string.Equals(SelectedAuditLogEntity, AllCatalogEntitiesOption, StringComparison.Ordinal)

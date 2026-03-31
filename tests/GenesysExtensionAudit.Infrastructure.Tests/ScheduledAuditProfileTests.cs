@@ -25,8 +25,19 @@ public sealed class ScheduledAuditProfileTests
             RunFlowAudit = false,
             RunInactiveUserAudit = false,
             RunDidAudit = true,
+            RunUserTelephonyAudit = true,
+            RunQueueServiceabilityAudit = true,
+            RunFlowDependencyAudit = true,
             RunAuditLogs = true,
             AuditLogLookbackHours = 3,
+            RunSiteTopologyAudit = true,
+            RunStaleLicenseAudit = true,
+            RunLicenseOverProvisioningAudit = true,
+            RunRoleGroupOverlapAudit = true,
+            RunPromptHygieneAudit = true,
+            RunChangeAdjacencyAudit = true,
+            RunFlappingDetectionAudit = true,
+            RunHotSpotAudit = true,
             AuditLogServiceName = "telephony"
         };
 
@@ -38,7 +49,18 @@ public sealed class ScheduledAuditProfileTests
         Assert.Equal(250, rehydrated.PageSize);
         Assert.True(rehydrated.RunQueueAudit);
         Assert.True(rehydrated.RunDidAudit);
+        Assert.True(rehydrated.RunUserTelephonyAudit);
+        Assert.True(rehydrated.RunQueueServiceabilityAudit);
+        Assert.True(rehydrated.RunFlowDependencyAudit);
         Assert.True(rehydrated.RunAuditLogs);
+        Assert.True(rehydrated.RunSiteTopologyAudit);
+        Assert.True(rehydrated.RunStaleLicenseAudit);
+        Assert.True(rehydrated.RunLicenseOverProvisioningAudit);
+        Assert.True(rehydrated.RunRoleGroupOverlapAudit);
+        Assert.True(rehydrated.RunPromptHygieneAudit);
+        Assert.True(rehydrated.RunChangeAdjacencyAudit);
+        Assert.True(rehydrated.RunFlappingDetectionAudit);
+        Assert.True(rehydrated.RunHotSpotAudit);
         Assert.Equal("telephony", rehydrated.AuditLogServiceName);
         Assert.True(rehydrated.HasAnyAuditSelected);
     }
@@ -54,7 +76,20 @@ public sealed class ScheduledAuditProfileTests
             RunFlowAudit = false,
             RunInactiveUserAudit = false,
             RunDidAudit = false,
-            RunAuditLogs = false
+            RunAuditLogs = false,
+            RunOperationalEventLogs = false,
+            RunOutboundEvents = false,
+            RunUserTelephonyAudit = false,
+            RunQueueServiceabilityAudit = false,
+            RunFlowDependencyAudit = false,
+            RunSiteTopologyAudit = false,
+            RunStaleLicenseAudit = false,
+            RunLicenseOverProvisioningAudit = false,
+            RunRoleGroupOverlapAudit = false,
+            RunPromptHygieneAudit = false,
+            RunChangeAdjacencyAudit = false,
+            RunFlappingDetectionAudit = false,
+            RunHotSpotAudit = false
         };
 
         Assert.False(profile.HasAnyAuditSelected);

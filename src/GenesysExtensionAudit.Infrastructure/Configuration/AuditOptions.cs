@@ -28,6 +28,10 @@ public sealed class AuditOptions
     public bool RunOperationalEventLogs { get; set; } = false;
     public int OperationalEventLookbackDays { get; set; } = 7;
     public bool RunOutboundEvents { get; set; } = false;
+    public bool RunUserTelephonyAudit { get; set; } = true;
+    public bool RunQueueServiceabilityAudit { get; set; } = true;
+    public bool RunFlowDependencyAudit { get; set; } = true;
+    public bool RunSiteTopologyAudit { get; set; } = true;
 
     // Phase 1 Identity & License Hygiene
     public bool RunStaleLicenseAudit { get; set; } = true;
@@ -35,4 +39,8 @@ public sealed class AuditOptions
     public bool RunLicenseOverProvisioningAudit { get; set; } = true;
     public bool RunRoleGroupOverlapAudit { get; set; } = true;
     public int RoleGroupOverlapMaxUsersToCheck { get; set; } = 200;
+    public bool RunPromptHygieneAudit { get; set; } = true;
+    public bool RunChangeAdjacencyAudit { get; set; } = true;
+    public bool RunFlappingDetectionAudit { get; set; } = true;
+    public bool RunHotSpotAudit { get; set; } = true;
 }

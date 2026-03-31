@@ -455,17 +455,25 @@ static AuditRunOptions BuildRunOptionsFromSettings(
         RunFlowAudit = auditOpts.RunFlowAudit,
         RunInactiveUserAudit = auditOpts.RunInactiveUserAudit,
         RunDidAudit = auditOpts.RunDidAudit,
+        RunUserTelephonyAudit = auditOpts.RunUserTelephonyAudit,
+        RunQueueServiceabilityAudit = auditOpts.RunQueueServiceabilityAudit,
+        RunFlowDependencyAudit = auditOpts.RunFlowDependencyAudit,
         RunAuditLogs = auditOpts.RunAuditLogs,
         AuditLogLookbackHours = Math.Max(1, auditOpts.AuditLogLookbackHours),
         AuditLogServiceNames = auditOpts.AuditLogServiceNames ?? [],
         RunOperationalEventLogs = auditOpts.RunOperationalEventLogs,
         OperationalEventLookbackDays = Math.Max(1, auditOpts.OperationalEventLookbackDays),
         RunOutboundEvents = auditOpts.RunOutboundEvents,
+        RunSiteTopologyAudit = auditOpts.RunSiteTopologyAudit,
         RunStaleLicenseAudit = auditOpts.RunStaleLicenseAudit,
         StaleLicenseThresholdDays = Math.Max(1, auditOpts.StaleLicenseThresholdDays),
         RunLicenseOverProvisioningAudit = auditOpts.RunLicenseOverProvisioningAudit,
         RunRoleGroupOverlapAudit = auditOpts.RunRoleGroupOverlapAudit,
-        RoleGroupOverlapMaxUsersToCheck = auditOpts.RoleGroupOverlapMaxUsersToCheck
+        RoleGroupOverlapMaxUsersToCheck = auditOpts.RoleGroupOverlapMaxUsersToCheck,
+        RunPromptHygieneAudit = auditOpts.RunPromptHygieneAudit,
+        RunChangeAdjacencyAudit = auditOpts.RunChangeAdjacencyAudit,
+        RunFlappingDetectionAudit = auditOpts.RunFlappingDetectionAudit,
+        RunHotSpotAudit = auditOpts.RunHotSpotAudit
     };
 }
 
@@ -490,12 +498,23 @@ static AuditRunOptions BuildRunOptionsFromProfile(ScheduledAuditProfile profile)
         RunFlowAudit = profile.RunFlowAudit,
         RunInactiveUserAudit = profile.RunInactiveUserAudit,
         RunDidAudit = profile.RunDidAudit,
+        RunUserTelephonyAudit = profile.RunUserTelephonyAudit,
+        RunQueueServiceabilityAudit = profile.RunQueueServiceabilityAudit,
+        RunFlowDependencyAudit = profile.RunFlowDependencyAudit,
         RunAuditLogs = profile.RunAuditLogs,
         AuditLogLookbackHours = Math.Max(1, profile.AuditLogLookbackHours),
         AuditLogServiceNames = serviceNames,
         RunOperationalEventLogs = profile.RunOperationalEventLogs,
         OperationalEventLookbackDays = Math.Max(1, profile.OperationalEventLookbackDays),
-        RunOutboundEvents = profile.RunOutboundEvents
+        RunOutboundEvents = profile.RunOutboundEvents,
+        RunSiteTopologyAudit = profile.RunSiteTopologyAudit,
+        RunStaleLicenseAudit = profile.RunStaleLicenseAudit,
+        RunLicenseOverProvisioningAudit = profile.RunLicenseOverProvisioningAudit,
+        RunRoleGroupOverlapAudit = profile.RunRoleGroupOverlapAudit,
+        RunPromptHygieneAudit = profile.RunPromptHygieneAudit,
+        RunChangeAdjacencyAudit = profile.RunChangeAdjacencyAudit,
+        RunFlappingDetectionAudit = profile.RunFlappingDetectionAudit,
+        RunHotSpotAudit = profile.RunHotSpotAudit
     };
 }
 
