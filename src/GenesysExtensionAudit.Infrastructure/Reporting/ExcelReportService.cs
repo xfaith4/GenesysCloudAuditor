@@ -52,6 +52,50 @@ public sealed class ExcelReportService : IExcelReportService
     private static readonly XLColor SeverityWarning = XLColor.FromHtml("#FFF2CC");
     private static readonly XLColor SeverityInfo = XLColor.FromHtml("#E2F0D9");
 
+    private sealed record SummaryAuditRow(string Sheet, string Audit, bool Performed, int Count, string Severity, string Description);
+    private sealed record SummaryMetric(string Label, string Value);
+    private sealed record DomainHealthRow(string Domain, int? Score, string Status, int ActiveFindings, int CriticalHighCount, string Summary);
+
+    private sealed class SeveritySummary
+    {
+        public int Critical { get; private set; }
+        public int High { get; private set; }
+        public int Medium { get; private set; }
+        public int Low { get; private set; }
+        public int Info { get; private set; }
+
+        public void Add(int count, FindingSeverity severity)
+        {
+            if (count <= 0)
+                return;
+
+            switch (severity)
+            {
+                case FindingSeverity.Critical:
+                    Critical += count;
+                    break;
+                case FindingSeverity.High:
+                    High += count;
+                    break;
+                case FindingSeverity.Medium:
+                    Medium += count;
+                    break;
+                case FindingSeverity.Low:
+                    Low += count;
+                    break;
+                default:
+                    Info += count;
+                    break;
+            }
+        }
+
+        public void Add(IEnumerable<FindingSeverity> severities)
+        {
+            foreach (var severity in severities)
+                Add(1, severity);
+        }
+    }
+
     public Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null, CareEvidencePacket? carePacket = null)
     {
         ct.ThrowIfCancellationRequested();
@@ -60,7 +104,7 @@ public sealed class ExcelReportService : IExcelReportService
         using var wb = new XLWorkbook();
 
         if (scopeOptions.IncludeSummary)
-            WriteSummarySheet(wb, report);
+            WriteSummarySheet(wb, report, carePacket);
 
         // Care Case Summary is always written first (after overview summary) when a packet is provided.
         // Intentionally not gated by scope options — escalation candidates should always be visible.
@@ -146,95 +190,453 @@ public sealed class ExcelReportService : IExcelReportService
 
     // ─── Summary ────────────────────────────────────────────────────────────
 
-    private static void WriteSummarySheet(IXLWorkbook wb, AuditReportData report)
+    private static void WriteSummarySheet(IXLWorkbook wb, AuditReportData report, CareEvidencePacket? carePacket)
     {
         var ws = wb.Worksheets.Add("Summary");
 
-        var er = report.ExtensionReport;
-
-        var rows = new[]
-        {
-            ("Ext_Duplicates_Profile", "Extension Duplicates (Profile)", report.Options.RunExtensionAudit, er.DuplicateProfileExtensions.Count, "Critical", "Multiple users share the same work-phone extension"),
-            ("Ext_Ownership_Mismatch", "Extension Ownership Mismatches", report.Options.RunExtensionAudit, er.ExtensionAssignedToWrongEntity.Count, "Critical", "Extension on user profile is assigned to a different entity in the telephony system (platform bug)"),
-            ("Ext_Assign_vs_Profile", "Extension Assignment vs Profile Mismatches", report.Options.RunExtensionAudit, er.ProfileExtensionsNotAssigned.Count + er.AssignedExtensionsMissingFromProfiles.Count, "Warning", "Extensions in assignments not on profiles, or on profiles not in assignments"),
-            ("Invalid_Extensions", "Invalid Extension Values", report.Options.RunExtensionAudit, er.InvalidProfileExtensions.Count + er.InvalidAssignedExtensions.Count, "Warning", "Profile/assignment extension values that failed normalization"),
-            ("Empty_Groups", "Empty/Single-Member Groups", report.Options.RunGroupAudit, report.GroupFindings.Count, "Warning", "Groups with zero or one member"),
-            ("Empty_Queues", "Empty/Duplicate Queues", report.Options.RunQueueAudit, report.QueueFindings.Count, "Warning", "Queues with zero members or duplicate names"),
-            ("Stale_Flows", "Stale/Unpublished Flows", report.Options.RunFlowAudit, report.FlowFindings.Count, "Warning", $"Flows not republished in {report.Options.StaleFlowThresholdDays}+ days or never published"),
-            ("Stale_Tokens", "Users with Stale Token", report.Options.RunInactiveUserAudit, report.InactiveUserFindings.Count, "Warning", $"Users with token last-issued older than {report.Options.InactiveUserThresholdDays} days"),
-            ("Users_No_Location", "Users Missing Location", report.Options.RunInactiveUserAudit, report.NoLocationUserFindings.Count, "Warning", "Users with no location configured on their account"),
-            ("DID_Mismatches", "DID Mismatches", report.Options.RunDidAudit, report.DidFindings.Count, "Warning", "DIDs unassigned, orphaned, or assigned to inactive users"),
-            ("IVR_Flow_Bindings", "IVR Flow Bindings", report.Options.RunFlowDependencyAudit, report.IvrFlowBindingFindings.Count, "Critical", "IVR entry points bound to draft, stale, or deleted flows — callers may be unable to connect"),
-            ("User_Telephony_Integrity", "User Telephony Integrity", report.Options.RunUserTelephonyAudit, report.UserTelephonyIntegrityFindings.Count, "High", "User extension / station / DID ownership contradictions across API surfaces"),
-            ("Queue_Serviceability", "Queue Serviceability", report.Options.RunQueueServiceabilityAudit, report.QueueServiceabilityFindings.Count, "High", "Queues with zero active or resolvable members — cannot service work"),
-            ("Audit_Logs", "Audit Logs Events", report.Options.RunAuditLogs, report.AuditLogFindings.Count, "Info", "Audit transaction events returned from Genesys audit logs query"),
-            ("Operational_Events", "Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count, "Info", $"Operational events from last {report.Options.OperationalEventLookbackDays} day(s)"),
-            ("Outbound_Events", "Outbound Events", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count, "Info", "Outbound event logs"),
-            ("Stale_Licenses", "Stale License Usage", report.Options.RunStaleLicenseAudit, report.StaleLicenseFindings.Count, "Warning", $"Licensed users who have not logged in for >{report.Options.StaleLicenseThresholdDays} days — potential license waste"),
-            ("License_Over_Provisioning", "License Over-Provisioning", report.Options.RunLicenseOverProvisioningAudit, report.LicenseOverProvisioningFindings.Count, "Warning", "Users on CX3/WEM/Outbound tier with no recent login — consider downgrading tier"),
-            ("Role_Group_Overlap", "Role & Group Overlap", report.Options.RunRoleGroupOverlapAudit, report.RoleGroupOverlapFindings.Count, "Warning", "Direct role assignments that are already covered by a group-inherited role in the same division"),
-            ("Site_Topology", "Site–Edge–Trunk Topology", report.Options.RunSiteTopologyAudit, report.SiteTopologyFindings.Count, "Critical", "Sites with no active edges, offline edges, orphaned edge–site bindings, or trunks that are down/out-of-service"),
-            ("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
-            ("Finding_Lifecycle", "Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
-            ("Historical_Drift", "Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count, "High", "Material telephony, routing, and topology relationship changes compared to the previous saved snapshot"),
-        };
-
-        var totalFindings = rows.Where(r => r.Item3).Sum(r => r.Item4);
+        var auditRows = BuildSummaryAuditRows(report).ToList();
+        var totalFindings = auditRows.Where(r => r.Performed).Sum(r => r.Count);
         var duration = report.RunCompletedAtUtc > report.RunStartedAtUtc
             ? report.RunCompletedAtUtc - report.RunStartedAtUtc
             : TimeSpan.Zero;
+        var globalSeverity = BuildGlobalSeveritySummary(report);
+        var triageMetrics = BuildTriageMetrics(report, carePacket, totalFindings, globalSeverity).ToList();
+        var domainHealth = BuildDomainHealthRows(report).ToList();
+        var topImpacted = report.HotSpotFindings.Take(5).ToList();
+        var escalationOverview = carePacket?.EscalationCandidates
+            .OrderBy(c => SupportReadinessSortKey(c.SupportReadiness))
+            .ThenByDescending(c => c.SupportReadinessScore)
+            .ThenByDescending(c => c.ApiSurfaces.Count)
+            .Take(5)
+            .ToList()
+            ?? [];
 
-        string[] headers = ["Sheet", "Audit", "Performed", "Items", "Severity", "Description"];
-        WriteSheetHeader(ws, "Genesys Cloud Audit — Executive Summary",
-            report, totalFindings, headers);
+        var titleRange = ws.Range(1, 1, 1, 8);
+        titleRange.Merge();
+        titleRange.Style.Fill.BackgroundColor = TitleBg;
+        titleRange.Style.Font.Bold = true;
+        titleRange.Style.Font.FontColor = HeaderFg;
+        titleRange.Style.Font.FontSize = 14;
+        titleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+        titleRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+        ws.Row(1).Height = 24;
+        ws.Cell(1, 1).Value = "  Genesys Cloud Audit — Executive Summary & Triage Dashboard";
 
-        int row = 4;
-        foreach (var (sheet, check, performed, count, severity, desc) in rows)
+        var metaRange = ws.Range(2, 1, 2, 8);
+        metaRange.Merge();
+        metaRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#D6E4F0");
+        metaRange.Style.Font.FontSize = 10;
+        metaRange.Style.Font.Italic = true;
+        ws.Cell(2, 1).Value =
+            $"  Generated: {report.GeneratedAt:yyyy-MM-dd HH:mm:ss}   |   Org: {report.OrgRegion}   |   Findings: {totalFindings}   |   Duration: {duration:hh\\:mm\\:ss}";
+
+        var row = 4;
+        WriteSectionHeader(ws, row, 8, "Triage Overview");
+        row++;
+        WriteTableHeader(ws, row, "Metric", "Value", "Metric", "Value", "Metric", "Value", "Metric", "Value");
+        row++;
+        for (var i = 0; i < triageMetrics.Count; i += 4)
         {
-            ws.Cell(row, 1).Value = sheet;
-            ws.Cell(row, 2).Value = check;
-            ws.Cell(row, 3).Value = performed ? "Yes" : "No";
-            ws.Cell(row, 4).Value = count;
-            ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-            ws.Cell(row, 5).Value = severity;
-            ws.Cell(row, 6).Value = desc;
-
-            // Color-code severity + row
-            var rowRange = ws.Range(row, 1, row, 6);
-            var severityCell = ws.Cell(row, 5);
-            if (severity is "Critical" or "High")
-                severityCell.Style.Fill.BackgroundColor = SeverityCritical;
-            else if (severity == "Warning")
-                severityCell.Style.Fill.BackgroundColor = SeverityWarning;
-            else
-                severityCell.Style.Fill.BackgroundColor = SeverityInfo;
-
-            if (!performed)
-                ws.Cell(row, 3).Style.Fill.BackgroundColor = XLColor.FromHtml("#E5E7EB");
-
-            if (row % 2 == 0)
+            for (var block = 0; block < 4; block++)
             {
-                foreach (var cell in rowRange.Cells().Where(c => c.Address.ColumnNumber != 5))
-                    cell.Style.Fill.BackgroundColor = AltRowBg;
+                var metricIndex = i + block;
+                if (metricIndex >= triageMetrics.Count)
+                    break;
+
+                var metric = triageMetrics[metricIndex];
+                var baseColumn = block * 2 + 1;
+                ws.Cell(row, baseColumn).Value = metric.Label;
+                ws.Cell(row, baseColumn).Style.Font.Bold = true;
+                ws.Cell(row, baseColumn + 1).Value = metric.Value;
+                ws.Cell(row, baseColumn + 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             }
 
+            ApplyAltRow(ws, row, 8);
             row++;
         }
 
-        // Run metadata block
-        ws.Cell(row + 1, 1).Value = "Run Start (UTC)";
-        ws.Cell(row + 1, 2).Value = report.RunStartedAtUtc.ToString("yyyy-MM-dd HH:mm:ss");
-        ws.Cell(row + 2, 1).Value = "Run End (UTC)";
-        ws.Cell(row + 2, 2).Value = report.RunCompletedAtUtc.ToString("yyyy-MM-dd HH:mm:ss");
-        ws.Cell(row + 3, 1).Value = "Total Duration";
-        ws.Cell(row + 3, 2).Value = duration.ToString(@"hh\:mm\:ss");
-        ws.Range(row + 1, 1, row + 3, 1).Style.Font.Bold = true;
+        row++;
+        WriteSectionHeader(ws, row, 6, "Domain Health");
+        row++;
+        WriteTableHeader(ws, row, "Domain", "Score", "Status", "Active Findings", "Critical / High", "Summary");
+        row++;
+        foreach (var domain in domainHealth)
+        {
+            ws.Cell(row, 1).Value = domain.Domain;
+            ws.Cell(row, 2).Value = domain.Score?.ToString() ?? "Not Run";
+            ws.Cell(row, 3).Value = domain.Status;
+            ws.Cell(row, 4).Value = domain.ActiveFindings;
+            ws.Cell(row, 5).Value = domain.CriticalHighCount;
+            ws.Cell(row, 6).Value = domain.Summary;
 
+            if (domain.Score.HasValue)
+                ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            ws.Cell(row, 3).Style.Fill.BackgroundColor = domain.Status switch
+            {
+                "Good" => SeverityInfo,
+                "Watch" => SeverityWarning,
+                "Poor" => SeverityCritical,
+                "Critical" => SeverityCritical,
+                _ => XLColor.FromHtml("#E5E7EB")
+            };
+
+            ApplyAltRow(ws, row, 6);
+            row++;
+        }
+
+        row++;
+        WriteSectionHeader(ws, row, 8, "Top Impacted Objects");
+        row++;
+        WriteTableHeader(ws, row, "Rank", "Object Type", "Object Name", "Object ID", "Domains", "Finding Count", "Severity", "Issue");
+        row++;
+        if (topImpacted.Count == 0)
+        {
+            ws.Cell(row, 1).Value = "No hot spots were identified in this run.";
+            ws.Range(row, 1, row, 8).Merge();
+            row++;
+        }
+        else
+        {
+            foreach (var hotSpot in topImpacted)
+            {
+                ws.Cell(row, 1).Value = hotSpot.Rank;
+                ws.Cell(row, 2).Value = hotSpot.ObjectType;
+                ws.Cell(row, 3).Value = hotSpot.ObjectName;
+                ws.Cell(row, 4).Value = hotSpot.ObjectId;
+                ws.Cell(row, 5).Value = string.Join(", ", hotSpot.AffectedDomains);
+                ws.Cell(row, 6).Value = hotSpot.TotalFindingCount;
+                ws.Cell(row, 7).Value = hotSpot.Severity.ToString();
+                ws.Cell(row, 8).Value = hotSpot.Issue;
+
+                ApplySeverityFill(ws.Cell(row, 7), hotSpot.Severity);
+                ApplyAltRow(ws, row, 8);
+                row++;
+            }
+        }
+
+        row++;
+        WriteSectionHeader(ws, row, 8, "Escalation Overview");
+        row++;
+        WriteTableHeader(ws, row, "Readiness", "Domain", "Object", "Owner", "Probable Cause", "Blast Radius", "Confidence", "Score");
+        row++;
+        if (carePacket is null)
+        {
+            ws.Cell(row, 1).Value = "Care evidence was not computed in this export path.";
+            ws.Range(row, 1, row, 8).Merge();
+            row++;
+        }
+        else if (escalationOverview.Count == 0)
+        {
+            ws.Cell(row, 1).Value = "No support-worthy escalation candidates were identified in this run.";
+            ws.Range(row, 1, row, 8).Merge();
+            row++;
+        }
+        else
+        {
+            foreach (var candidate in escalationOverview)
+            {
+                ws.Cell(row, 1).Value = candidate.SupportReadiness;
+                ws.Cell(row, 2).Value = candidate.Domain;
+                ws.Cell(row, 3).Value = candidate.AffectedObjectName ?? candidate.AffectedObjectId;
+                ws.Cell(row, 4).Value = candidate.SuspectedOwner;
+                ws.Cell(row, 5).Value = candidate.ProbableCauseCategory;
+                ws.Cell(row, 6).Value = candidate.BlastRadius;
+                ws.Cell(row, 7).Value = candidate.Confidence;
+                ws.Cell(row, 8).Value = candidate.SupportReadinessScore;
+
+                ws.Cell(row, 1).Style.Fill.BackgroundColor = candidate.SupportReadiness switch
+                {
+                    "Ready" => SeverityCritical,
+                    "NeedsReview" => SeverityWarning,
+                    "Monitor" => SeverityInfo,
+                    _ => XLColor.NoColor
+                };
+
+                ApplyAltRow(ws, row, 8);
+                row++;
+            }
+        }
+
+        row++;
+        WriteSectionHeader(ws, row, 6, "Audit Inventory");
+        row++;
+        WriteTableHeader(ws, row, "Sheet", "Audit", "Performed", "Items", "Severity", "Description");
+        row++;
+        foreach (var audit in auditRows)
+        {
+            ws.Cell(row, 1).Value = audit.Sheet;
+            ws.Cell(row, 2).Value = audit.Audit;
+            ws.Cell(row, 3).Value = audit.Performed ? "Yes" : "No";
+            ws.Cell(row, 4).Value = audit.Count;
+            ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 5).Value = audit.Severity;
+            ws.Cell(row, 6).Value = audit.Description;
+
+            ApplySeverityFill(ws.Cell(row, 5), audit.Severity);
+
+            if (!audit.Performed)
+                ws.Cell(row, 3).Style.Fill.BackgroundColor = XLColor.FromHtml("#E5E7EB");
+
+            ApplyAltRow(ws, row, 6);
+            row++;
+        }
+
+        row++;
+        ws.Cell(row, 1).Value = "Run Start (UTC)";
+        ws.Cell(row, 2).Value = report.RunStartedAtUtc.ToString("yyyy-MM-dd HH:mm:ss");
+        ws.Cell(row + 1, 1).Value = "Run End (UTC)";
+        ws.Cell(row + 1, 2).Value = report.RunCompletedAtUtc.ToString("yyyy-MM-dd HH:mm:ss");
+        ws.Cell(row + 2, 1).Value = "Total Duration";
+        ws.Cell(row + 2, 2).Value = duration.ToString(@"hh\:mm\:ss");
+        ws.Range(row, 1, row + 2, 1).Style.Font.Bold = true;
+
+        ws.SheetView.FreezeRows(2);
         ws.Column(1).Width = 24;
-        ws.Column(3).Width = 12;
-        ws.Column(4).Width = 10;
-        ws.Column(5).Width = 12;
-        AdjustColumns(ws, 6, minWidth: 10, maxWidth: 80);
+        ws.Column(2).Width = 18;
+        ws.Column(3).Width = 20;
+        ws.Column(4).Width = 16;
+        ws.Column(5).Width = 22;
+        ws.Column(6).Width = 42;
+        ws.Column(7).Width = 18;
+        ws.Column(8).Width = 14;
+        AdjustColumns(ws, 8, minWidth: 10, maxWidth: 80);
+    }
+
+    private static IReadOnlyList<SummaryAuditRow> BuildSummaryAuditRows(AuditReportData report)
+    {
+        var er = report.ExtensionReport;
+        return
+        [
+            new("Ext_Duplicates_Profile", "Extension Duplicates (Profile)", report.Options.RunExtensionAudit, er.DuplicateProfileExtensions.Count, "Critical", "Multiple users share the same work-phone extension"),
+            new("Ext_Ownership_Mismatch", "Extension Ownership Mismatches", report.Options.RunExtensionAudit, er.ExtensionAssignedToWrongEntity.Count, "Critical", "Extension on user profile is assigned to a different entity in the telephony system (platform bug)"),
+            new("Ext_Assign_vs_Profile", "Extension Assignment vs Profile Mismatches", report.Options.RunExtensionAudit, er.ProfileExtensionsNotAssigned.Count + er.AssignedExtensionsMissingFromProfiles.Count, "Warning", "Extensions in assignments not on profiles, or on profiles not in assignments"),
+            new("Invalid_Extensions", "Invalid Extension Values", report.Options.RunExtensionAudit, er.InvalidProfileExtensions.Count + er.InvalidAssignedExtensions.Count, "Warning", "Profile/assignment extension values that failed normalization"),
+            new("Empty_Groups", "Empty/Single-Member Groups", report.Options.RunGroupAudit, report.GroupFindings.Count, "Warning", "Groups with zero or one member"),
+            new("Empty_Queues", "Empty/Duplicate Queues", report.Options.RunQueueAudit, report.QueueFindings.Count, "Warning", "Queues with zero members or duplicate names"),
+            new("Stale_Flows", "Stale/Unpublished Flows", report.Options.RunFlowAudit, report.FlowFindings.Count, "Warning", $"Flows not republished in {report.Options.StaleFlowThresholdDays}+ days or never published"),
+            new("Stale_Tokens", "Users with Stale Token", report.Options.RunInactiveUserAudit, report.InactiveUserFindings.Count, "Warning", $"Users with token last-issued older than {report.Options.InactiveUserThresholdDays} days"),
+            new("Users_No_Location", "Users Missing Location", report.Options.RunInactiveUserAudit, report.NoLocationUserFindings.Count, "Warning", "Users with no location configured on their account"),
+            new("DID_Mismatches", "DID Mismatches", report.Options.RunDidAudit, report.DidFindings.Count, "Warning", "DIDs unassigned, orphaned, or assigned to inactive users"),
+            new("IVR_Flow_Bindings", "IVR Flow Bindings", report.Options.RunFlowDependencyAudit, report.IvrFlowBindingFindings.Count, "Critical", "IVR entry points bound to draft, stale, or deleted flows — callers may be unable to connect"),
+            new("User_Telephony_Integrity", "User Telephony Integrity", report.Options.RunUserTelephonyAudit, report.UserTelephonyIntegrityFindings.Count, "High", "User extension / station / DID ownership contradictions across API surfaces"),
+            new("Queue_Serviceability", "Queue Serviceability", report.Options.RunQueueServiceabilityAudit, report.QueueServiceabilityFindings.Count, "High", "Queues with zero active or resolvable members — cannot service work"),
+            new("Audit_Logs", "Audit Logs Events", report.Options.RunAuditLogs, report.AuditLogFindings.Count, "Info", "Audit transaction events returned from Genesys audit logs query"),
+            new("Operational_Events", "Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count, "Info", $"Operational events from last {report.Options.OperationalEventLookbackDays} day(s)"),
+            new("Outbound_Events", "Outbound Events", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count, "Info", "Outbound event logs"),
+            new("Stale_Licenses", "Stale License Usage", report.Options.RunStaleLicenseAudit, report.StaleLicenseFindings.Count, "Warning", $"Licensed users who have not logged in for >{report.Options.StaleLicenseThresholdDays} days — potential license waste"),
+            new("License_Over_Provisioning", "License Over-Provisioning", report.Options.RunLicenseOverProvisioningAudit, report.LicenseOverProvisioningFindings.Count, "Warning", "Users on CX3/WEM/Outbound tier with no recent login — consider downgrading tier"),
+            new("Role_Group_Overlap", "Role & Group Overlap", report.Options.RunRoleGroupOverlapAudit, report.RoleGroupOverlapFindings.Count, "Warning", "Direct role assignments that are already covered by a group-inherited role in the same division"),
+            new("Site_Topology", "Site–Edge–Trunk Topology", report.Options.RunSiteTopologyAudit, report.SiteTopologyFindings.Count, "Critical", "Sites with no active edges, offline edges, orphaned edge–site bindings, or trunks that are down/out-of-service"),
+            new("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
+            new("Finding_Lifecycle", "Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
+            new("Historical_Drift", "Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count, "High", "Material telephony, routing, and topology relationship changes compared to the previous saved snapshot"),
+        ];
+    }
+
+    private static IReadOnlyList<SummaryMetric> BuildTriageMetrics(
+        AuditReportData report,
+        CareEvidencePacket? carePacket,
+        int totalFindings,
+        SeveritySummary globalSeverity)
+    {
+        var newCount = report.FindingLifecycleFindings.Count(f => f.LifecycleStatus == FindingLifecycleStatus.New);
+        var recurrentCount = report.FindingLifecycleFindings.Count(f => f.LifecycleStatus == FindingLifecycleStatus.Recurrent);
+        var resolvedCount = report.FindingLifecycleFindings.Count(f => f.LifecycleStatus == FindingLifecycleStatus.Resolved);
+
+        return
+        [
+            new("Total Findings", totalFindings.ToString()),
+            new("Open Case Recommended", carePacket?.Summary.ReadyForCareCount.ToString() ?? "Not computed"),
+            new("Escalation Candidates", carePacket?.Summary.EscalationCandidateCount.ToString() ?? "Not computed"),
+            new("Historical Drift", report.HistoricalDriftWasComputed ? report.HistoricalDriftFindings.Count.ToString() : "Not computed"),
+            new("New Findings", report.FindingLifecycleWasComputed ? newCount.ToString() : "Not computed"),
+            new("Recurrent Findings", report.FindingLifecycleWasComputed ? recurrentCount.ToString() : "Not computed"),
+            new("Resolved Findings", report.FindingLifecycleWasComputed ? resolvedCount.ToString() : "Not computed"),
+            new("Hot Spots", report.HotSpotFindings.Count.ToString()),
+            new("Critical Findings", globalSeverity.Critical.ToString()),
+            new("High Findings", globalSeverity.High.ToString()),
+            new("Needs Review", carePacket?.Summary.NeedsReviewCount.ToString() ?? "Not computed"),
+            new("Monitor", carePacket?.Summary.MonitorCount.ToString() ?? "Not computed"),
+        ];
+    }
+
+    private static IReadOnlyList<DomainHealthRow> BuildDomainHealthRows(AuditReportData report)
+    {
+        var rows = new List<DomainHealthRow>
+        {
+            BuildDomainHealthRow(
+                "Telephony",
+                report.Options.RunExtensionAudit || report.Options.RunDidAudit || report.Options.RunUserTelephonyAudit || report.Options.RunSiteTopologyAudit,
+                ("Extension duplicates", report.ExtensionReport.DuplicateProfileExtensions.Count, FindingSeverity.Critical),
+                ("Ownership mismatches", report.ExtensionReport.ExtensionAssignedToWrongEntity.Count, FindingSeverity.Critical),
+                ("Assignment vs profile", report.ExtensionReport.ProfileExtensionsNotAssigned.Count + report.ExtensionReport.AssignedExtensionsMissingFromProfiles.Count, FindingSeverity.Medium),
+                ("Invalid extensions", report.ExtensionReport.InvalidProfileExtensions.Count + report.ExtensionReport.InvalidAssignedExtensions.Count, FindingSeverity.Medium),
+                ("DID mismatches", report.DidFindings.Count, FindingSeverity.Medium),
+                ("User telephony", report.UserTelephonyIntegrityFindings.Count, HighestSeverity(report.UserTelephonyIntegrityFindings.Select(f => f.Severity), FindingSeverity.High)),
+                ("Site topology", report.SiteTopologyFindings.Count, HighestSeverity(report.SiteTopologyFindings.Select(f => f.Severity), FindingSeverity.High)),
+                ("Historical drift", report.HistoricalDriftFindings.Count(f => f.Domain is "Telephony Ownership" or "Topology Relationships"), FindingSeverity.High)),
+
+            BuildDomainHealthRow(
+                "Routing",
+                report.Options.RunQueueAudit || report.Options.RunFlowAudit || report.Options.RunFlowDependencyAudit || report.Options.RunQueueServiceabilityAudit || report.Options.RunPromptHygieneAudit,
+                ("Queue hygiene", report.QueueFindings.Count, FindingSeverity.Medium),
+                ("Queue serviceability", report.QueueServiceabilityFindings.Count, HighestSeverity(report.QueueServiceabilityFindings.Select(f => f.Severity), FindingSeverity.High)),
+                ("Flow hygiene", report.FlowFindings.Count, FindingSeverity.Medium),
+                ("IVR flow dependency", report.IvrFlowBindingFindings.Count, HighestSeverity(report.IvrFlowBindingFindings.Select(f => f.Severity), FindingSeverity.High)),
+                ("Prompt hygiene", report.PromptHygieneFindings.Count, HighestSeverity(report.PromptHygieneFindings.Select(f => f.Severity), FindingSeverity.Medium)),
+                ("Historical drift", report.HistoricalDriftFindings.Count(f => f.Domain == "Routing Bindings"), FindingSeverity.High)),
+
+            BuildDomainHealthRow(
+                "Identity",
+                report.Options.RunGroupAudit || report.Options.RunInactiveUserAudit,
+                ("Group hygiene", report.GroupFindings.Count, FindingSeverity.Medium),
+                ("Inactive users", report.InactiveUserFindings.Count, FindingSeverity.Medium),
+                ("Missing location", report.NoLocationUserFindings.Count, FindingSeverity.Low)),
+
+            BuildDomainHealthRow(
+                "Security",
+                report.Options.RunStaleLicenseAudit || report.Options.RunLicenseOverProvisioningAudit || report.Options.RunRoleGroupOverlapAudit,
+                ("Stale licenses", report.StaleLicenseFindings.Count, FindingSeverity.Medium),
+                ("Over-provisioning", report.LicenseOverProvisioningFindings.Count, FindingSeverity.Medium),
+                ("Role overlap", report.RoleGroupOverlapFindings.Count, FindingSeverity.Low)),
+
+            BuildDomainHealthRow(
+                "Outbound",
+                report.Options.RunOutboundEvents,
+                ("Outbound events", report.OutboundEventFindings.Count, FindingSeverity.Info))
+        };
+
+        return rows;
+    }
+
+    private static DomainHealthRow BuildDomainHealthRow(string domain, bool performed, params (string Label, int Count, FindingSeverity Severity)[] contributors)
+    {
+        if (!performed)
+            return new DomainHealthRow(domain, null, "Not Run", 0, 0, "This domain was not evaluated in the current run.");
+
+        var activeFindings = contributors.Sum(c => c.Count);
+        var criticalHigh = contributors.Where(c => c.Severity is FindingSeverity.Critical or FindingSeverity.High).Sum(c => c.Count);
+        var weightedScore = contributors.Sum(c => c.Count * SeverityWeight(c.Severity));
+        var score = Math.Max(0, 100 - weightedScore);
+        var status = score switch
+        {
+            >= 90 => "Good",
+            >= 70 => "Watch",
+            >= 40 => "Poor",
+            _ => "Critical"
+        };
+
+        var topDrivers = contributors
+            .Where(c => c.Count > 0)
+            .OrderByDescending(c => c.Count)
+            .ThenByDescending(c => SeverityWeight(c.Severity))
+            .Take(2)
+            .Select(c => $"{c.Label} ({c.Count})")
+            .ToList();
+
+        var summary = activeFindings == 0
+            ? "No findings were recorded for this domain in the current run."
+            : $"Primary drivers: {string.Join(", ", topDrivers)}.";
+
+        return new DomainHealthRow(domain, score, status, activeFindings, criticalHigh, summary);
+    }
+
+    private static SeveritySummary BuildGlobalSeveritySummary(AuditReportData report)
+    {
+        var summary = new SeveritySummary();
+
+        summary.Add(report.ExtensionReport.DuplicateProfileExtensions.Count, FindingSeverity.Critical);
+        summary.Add(report.ExtensionReport.ExtensionAssignedToWrongEntity.Count, FindingSeverity.Critical);
+        summary.Add(report.ExtensionReport.ProfileExtensionsNotAssigned.Count + report.ExtensionReport.AssignedExtensionsMissingFromProfiles.Count, FindingSeverity.Medium);
+        summary.Add(report.ExtensionReport.InvalidProfileExtensions.Count + report.ExtensionReport.InvalidAssignedExtensions.Count, FindingSeverity.Medium);
+        summary.Add(report.GroupFindings.Count, FindingSeverity.Medium);
+        summary.Add(report.QueueFindings.Count, FindingSeverity.Medium);
+        summary.Add(report.FlowFindings.Count, FindingSeverity.Medium);
+        summary.Add(report.InactiveUserFindings.Count, FindingSeverity.Medium);
+        summary.Add(report.NoLocationUserFindings.Count, FindingSeverity.Low);
+        summary.Add(report.DidFindings.Count, FindingSeverity.Medium);
+        summary.Add(report.AuditLogFindings.Count, FindingSeverity.Info);
+        summary.Add(report.OperationalEventFindings.Count, FindingSeverity.Info);
+        summary.Add(report.OutboundEventFindings.Count, FindingSeverity.Info);
+        summary.Add(report.StaleLicenseFindings.Count, FindingSeverity.Medium);
+        summary.Add(report.LicenseOverProvisioningFindings.Count, FindingSeverity.Medium);
+        summary.Add(report.RoleGroupOverlapFindings.Count, FindingSeverity.Low);
+        summary.Add(report.UserTelephonyIntegrityFindings.Select(f => f.Severity));
+        summary.Add(report.QueueServiceabilityFindings.Select(f => f.Severity));
+        summary.Add(report.IvrFlowBindingFindings.Select(f => f.Severity));
+        summary.Add(report.SiteTopologyFindings.Select(f => f.Severity));
+        summary.Add(report.PromptHygieneFindings.Select(f => f.Severity));
+        summary.Add(report.ChangeAdjacencyFindings.Select(f => f.Severity));
+        summary.Add(report.FlappingDetectionFindings.Select(f => f.Severity));
+        summary.Add(report.HotSpotFindings.Select(f => f.Severity));
+        summary.Add(report.HistoricalDriftFindings.Select(f => f.Severity));
+
+        return summary;
+    }
+
+    private static FindingSeverity HighestSeverity(IEnumerable<FindingSeverity> severities, FindingSeverity fallback)
+        => severities.DefaultIfEmpty(fallback).OrderBy(s => s).First();
+
+    private static int SeverityWeight(FindingSeverity severity) => severity switch
+    {
+        FindingSeverity.Critical => 25,
+        FindingSeverity.High => 15,
+        FindingSeverity.Medium => 8,
+        FindingSeverity.Low => 4,
+        _ => 2
+    };
+
+    private static int SupportReadinessSortKey(string? readiness) => readiness switch
+    {
+        "Ready" => 0,
+        "NeedsReview" => 1,
+        "Monitor" => 2,
+        _ => 3
+    };
+
+    private static void WriteSectionHeader(IXLWorksheet ws, int row, int colCount, string title)
+    {
+        var range = ws.Range(row, 1, row, colCount);
+        range.Merge();
+        range.Style.Fill.BackgroundColor = HeaderBg;
+        range.Style.Font.Bold = true;
+        range.Style.Font.FontColor = HeaderFg;
+        range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+        ws.Cell(row, 1).Value = $"  {title}";
+    }
+
+    private static void WriteTableHeader(IXLWorksheet ws, int row, params string[] headers)
+    {
+        for (var c = 0; c < headers.Length; c++)
+        {
+            var cell = ws.Cell(row, c + 1);
+            cell.Value = headers[c];
+            cell.Style.Fill.BackgroundColor = TitleBg;
+            cell.Style.Font.Bold = true;
+            cell.Style.Font.FontColor = HeaderFg;
+            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        }
+    }
+
+    private static void ApplySeverityFill(IXLCell cell, FindingSeverity severity)
+    {
+        if (severity is FindingSeverity.Critical or FindingSeverity.High)
+            cell.Style.Fill.BackgroundColor = SeverityCritical;
+        else if (severity == FindingSeverity.Medium)
+            cell.Style.Fill.BackgroundColor = SeverityWarning;
+        else
+            cell.Style.Fill.BackgroundColor = SeverityInfo;
+    }
+
+    private static void ApplySeverityFill(IXLCell cell, string severityLabel)
+    {
+        if (severityLabel is "Critical" or "High")
+            cell.Style.Fill.BackgroundColor = SeverityCritical;
+        else if (severityLabel == "Warning")
+            cell.Style.Fill.BackgroundColor = SeverityWarning;
+        else
+            cell.Style.Fill.BackgroundColor = SeverityInfo;
     }
 
     // ─── Extension Duplicates (Profile) ────────────────────────────────────

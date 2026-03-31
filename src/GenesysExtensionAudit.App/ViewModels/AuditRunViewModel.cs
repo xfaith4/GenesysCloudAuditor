@@ -33,6 +33,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
     private readonly IAuditOrchestrator _orchestrator;
     private readonly IExcelReportService _excelService;
+    private readonly ICareEvidenceExportService _careEvidenceExportService;
     private readonly IAuditSnapshotService _snapshotService;
     private readonly IAuditLogCatalogCache _auditLogCatalogCache;
     private readonly IGitHubUploadService _gitHubUploadService;
@@ -81,6 +82,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     public RunAuditViewModel(
         IAuditOrchestrator orchestrator,
         IExcelReportService excelService,
+        ICareEvidenceExportService careEvidenceExportService,
         IAuditSnapshotService snapshotService,
         IAuditLogCatalogCache auditLogCatalogCache,
         IGitHubUploadService gitHubUploadService,
@@ -88,6 +90,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     {
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
+        _careEvidenceExportService = careEvidenceExportService ?? throw new ArgumentNullException(nameof(careEvidenceExportService));
         _snapshotService = snapshotService ?? throw new ArgumentNullException(nameof(snapshotService));
         _auditLogCatalogCache = auditLogCatalogCache ?? throw new ArgumentNullException(nameof(auditLogCatalogCache));
         _gitHubUploadService = gitHubUploadService ?? throw new ArgumentNullException(nameof(gitHubUploadService));
@@ -722,6 +725,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         report.HistoricalDriftWasComputed = snapshotComparison.HistoricalDriftWasComputed;
         report.PreviousSnapshotGeneratedAtUtc = previousSnapshot.Snapshot?.GeneratedUtc;
         report.PreviousSnapshotPath = previousSnapshot.Path;
+        var carePacket = _careEvidenceExportService.BuildPacket(report);
 
         var datePrefix = DateTime.Now.ToString("yyyy-MM-dd");
         if (string.Equals(SelectedWorkbookExportMode, SeparateExportMode, StringComparison.Ordinal))
@@ -752,7 +756,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             return;
         }
 
-        var consolidatedXlsx = await _excelService.GenerateAsync(report, ct).ConfigureAwait(true);
+        var consolidatedXlsx = await _excelService.GenerateAsync(report, ct, carePacket: carePacket).ConfigureAwait(true);
         var consolidatedBaseName = $"{datePrefix}_GenesysCloudAudit_Full.xlsx";
         var consolidatedPath = GetNextAvailableFilePath(outputDirectory, consolidatedBaseName);
         await File.WriteAllBytesAsync(consolidatedPath, consolidatedXlsx, ct).ConfigureAwait(true);
