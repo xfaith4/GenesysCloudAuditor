@@ -317,6 +317,46 @@ public sealed class ExcelReportServiceSummaryTests
         AssertContains(explainabilityValues, "Comparison result");
     }
 
+    [Fact]
+    public async Task WriteAsync_WritesWorkbookToDiskBeforeReturning()
+    {
+        var report = new AuditReportData
+        {
+            GeneratedAt = new DateTimeOffset(2026, 04, 07, 09, 15, 00, TimeSpan.Zero),
+            OrgRegion = "us-east-1",
+            Options = new AuditRunOptions()
+        };
+
+        var outputPath = Path.Combine(
+            Path.GetTempPath(),
+            "genesys-audit-export-tests",
+            $"{Guid.NewGuid():N}.xlsx");
+
+        try
+        {
+            await new ExcelReportService().WriteAsync(
+                outputPath,
+                report,
+                CancellationToken.None,
+                scopeOptions: SummaryOnlyScope());
+
+            Assert.True(File.Exists(outputPath));
+            Assert.NotEqual(0L, new FileInfo(outputPath).Length);
+
+            using var workbook = new XLWorkbook(outputPath);
+            Assert.NotNull(workbook.Worksheet("Summary"));
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+
+            var directory = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static ExcelWorkbookScopeOptions SummaryOnlyScope() => new()
     {
         IncludeSummary = true,

@@ -272,16 +272,14 @@ static async Task<int> RunAsync(string[] args)
             carePacket.Summary.CriticalCount,
             carePacket.Summary.HighCount);
 
-        // ── Generate Excel ────────────────────────────────────────────────────
-        logger.LogInformation("Generating Excel workbook...");
-        var xlsx = await excelService.GenerateAsync(report, cts.Token, carePacket: carePacket);
-
         // ── Save locally ──────────────────────────────────────────────────────
         var fileName = $"{exportOpts.FilePrefix}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
         var filePath = Path.Combine(outputDir, fileName);
 
-        await File.WriteAllBytesAsync(filePath, xlsx, cts.Token);
-        logger.LogInformation("Report saved: {FilePath} ({Bytes:N0} bytes)", filePath, xlsx.Length);
+        logger.LogInformation("Generating Excel workbook...");
+        await excelService.WriteAsync(filePath, report, cts.Token, carePacket: carePacket);
+        var workbookSize = new FileInfo(filePath).Length;
+        logger.LogInformation("Report saved: {FilePath} ({Bytes:N0} bytes)", filePath, workbookSize);
 
         // ── Write care evidence JSON ──────────────────────────────────────────
         var careJsonFileName = Path.ChangeExtension(fileName, ".care-evidence.json");
@@ -341,6 +339,14 @@ static async Task<int> RunAsync(string[] args)
             logger.LogInformation("Elastic export disabled for this run.");
         }
 
+        byte[]? workbookBytes = null;
+
+        async Task<byte[]> GetWorkbookBytesAsync()
+        {
+            workbookBytes ??= await File.ReadAllBytesAsync(filePath, cts.Token);
+            return workbookBytes;
+        }
+
         // ── Upload to SharePoint ──────────────────────────────────────────────
         if (dryRun)
         {
@@ -352,7 +358,7 @@ static async Task<int> RunAsync(string[] args)
             logger.LogInformation(
                 "Uploading to SharePoint: {SiteUrl} / {FolderPath}",
                 spOpts.SiteUrl, spOpts.FolderPath);
-            var url = await uploadService.UploadAsync(fileName, xlsx, cts.Token);
+            var url = await uploadService.UploadAsync(fileName, await GetWorkbookBytesAsync(), cts.Token);
             logger.LogInformation("Upload complete: {Url}", url);
         }
         else
@@ -380,7 +386,7 @@ static async Task<int> RunAsync(string[] args)
             logger.LogInformation(
                 "Pushing to GitHub: {Owner}/{Repo} branch={Branch} folder={Folder}",
                 githubOpts.Owner, githubOpts.Repository, githubOpts.Branch, githubOpts.FolderPath);
-            var ghUrl = await gitHubService.UploadAsync(fileName, xlsx, cts.Token);
+            var ghUrl = await gitHubService.UploadAsync(fileName, await GetWorkbookBytesAsync(), cts.Token);
             logger.LogInformation("GitHub push complete: {Url}", ghUrl);
         }
         else if (!githubOpts.IsConfigured)

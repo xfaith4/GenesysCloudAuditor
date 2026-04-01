@@ -8,6 +8,7 @@ namespace GenesysExtensionAudit.Infrastructure.Reporting;
 public interface IExcelReportService
 {
     Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null, CareEvidencePacket? carePacket = null);
+    Task WriteAsync(string path, AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null, CareEvidencePacket? carePacket = null);
 }
 
 public sealed class ExcelWorkbookScopeOptions
@@ -100,11 +101,46 @@ public sealed class ExcelReportService : IExcelReportService
     }
 
     public Task<byte[]> GenerateAsync(AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null, CareEvidencePacket? carePacket = null)
+        => Task.Run(() =>
+        {
+            ct.ThrowIfCancellationRequested();
+
+            using var wb = BuildWorkbook(report, scopeOptions, carePacket);
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
+        }, ct);
+
+    public Task WriteAsync(string path, AuditReportData report, CancellationToken ct, ExcelWorkbookScopeOptions? scopeOptions = null, CareEvidencePacket? carePacket = null)
+        => Task.Run(() =>
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(path);
+            ct.ThrowIfCancellationRequested();
+
+            var fullPath = Path.GetFullPath(path);
+            var directory = Path.GetDirectoryName(fullPath);
+            if (!string.IsNullOrWhiteSpace(directory))
+                Directory.CreateDirectory(directory);
+
+            using var wb = BuildWorkbook(report, scopeOptions, carePacket);
+            using var stream = new FileStream(
+                fullPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 131072,
+                options: FileOptions.None);
+
+            wb.SaveAs(stream);
+            stream.Flush(flushToDisk: true);
+        }, ct);
+
+    private static XLWorkbook BuildWorkbook(AuditReportData report, ExcelWorkbookScopeOptions? scopeOptions, CareEvidencePacket? carePacket)
     {
-        ct.ThrowIfCancellationRequested();
+        ArgumentNullException.ThrowIfNull(report);
         scopeOptions ??= new ExcelWorkbookScopeOptions();
 
-        using var wb = new XLWorkbook();
+        var wb = new XLWorkbook();
 
         if (scopeOptions.IncludeSummary)
             WriteSummarySheet(wb, report, carePacket);
@@ -198,9 +234,7 @@ public sealed class ExcelReportService : IExcelReportService
         if (scopeOptions.IncludeBestPracticeGuidance && report.BestPracticeGuidanceWasComputed)
             WriteBestPracticeGuidanceSheet(wb, report);
 
-        using var ms = new MemoryStream();
-        wb.SaveAs(ms);
-        return Task.FromResult(ms.ToArray());
+        return wb;
     }
 
     // ─── Summary ────────────────────────────────────────────────────────────

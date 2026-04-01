@@ -965,51 +965,61 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         var previousSnapshot = await _snapshotService
             .LoadLatestAsync(outputDirectory, snapshotPrefix, ct)
             .ConfigureAwait(true);
-        var snapshotComparison = _snapshotService.Compare(report, previousSnapshot.Snapshot);
+        var snapshotComparison = await Task.Run(
+            () => _snapshotService.Compare(report, previousSnapshot.Snapshot),
+            ct).ConfigureAwait(true);
         report.FindingLifecycleFindings = snapshotComparison.LifecycleFindings;
         report.FindingLifecycleWasComputed = true;
         report.HistoricalDriftFindings = snapshotComparison.HistoricalDriftFindings;
         report.HistoricalDriftWasComputed = snapshotComparison.HistoricalDriftWasComputed;
         report.PreviousSnapshotGeneratedAtUtc = previousSnapshot.Snapshot?.GeneratedUtc;
         report.PreviousSnapshotPath = previousSnapshot.Path;
-        var carePacket = _careEvidenceExportService.BuildPacket(report);
+        var carePacket = await Task.Run(
+            () => _careEvidenceExportService.BuildPacket(report),
+            ct).ConfigureAwait(true);
 
         var datePrefix = DateTime.Now.ToString("yyyy-MM-dd");
         if (string.Equals(SelectedWorkbookExportMode, SeparateExportMode, StringComparison.Ordinal))
         {
             var generatedFiles = new List<string>();
-            var generatedPayloads = new List<(string FileName, byte[] Content)>();
-            foreach (var audit in BuildSeparateAuditScopes(report))
+            var auditScopes = BuildSeparateAuditScopes(report);
+            for (var index = 0; index < auditScopes.Count; index++)
             {
                 ct.ThrowIfCancellationRequested();
 
-                var xlsx = await _excelService.GenerateAsync(report, ct, audit.Scope).ConfigureAwait(true);
+                var audit = auditScopes[index];
+                StatusMessage = $"Exporting workbook {index + 1}/{auditScopes.Count}: {audit.AuditName}...";
+                ProgressMessage = StatusMessage;
+                AppendProgressLine(StatusMessage);
+
                 var baseFileName = $"{datePrefix}_GenesysCloudAudit_{audit.AuditName}.xlsx";
                 var fullPath = GetNextAvailableFilePath(outputDirectory, baseFileName);
+                await _excelService.WriteAsync(fullPath, report, ct, audit.Scope).ConfigureAwait(true);
 
-                await File.WriteAllBytesAsync(fullPath, xlsx, ct).ConfigureAwait(true);
                 generatedFiles.Add(fullPath);
-                generatedPayloads.Add((Path.GetFileName(fullPath), xlsx));
+                AppendProgressLine($"Saved {Path.GetFileName(fullPath)}");
             }
 
             var artifactBaseName = $"{datePrefix}_GenesysCloudAudit_Artifacts";
             var careJsonPath = GetNextAvailableFilePath(outputDirectory, $"{artifactBaseName}.care-evidence.json");
-            var careJson = _careEvidenceArtifactService.BuildJson(carePacket);
-            await File.WriteAllBytesAsync(careJsonPath, careJson, ct).ConfigureAwait(true);
+            await WriteArtifactAsync(
+                careJsonPath,
+                () => _careEvidenceArtifactService.BuildJson(carePacket),
+                ct).ConfigureAwait(true);
             generatedFiles.Add(careJsonPath);
-            generatedPayloads.Add((Path.GetFileName(careJsonPath), careJson));
 
             var careHtmlPath = GetNextAvailableFilePath(outputDirectory, $"{artifactBaseName}.care-summary.html");
-            var careHtml = _careEvidenceArtifactService.BuildHtml(report, carePacket);
-            await File.WriteAllBytesAsync(careHtmlPath, careHtml, ct).ConfigureAwait(true);
+            await WriteArtifactAsync(
+                careHtmlPath,
+                () => _careEvidenceArtifactService.BuildHtml(report, carePacket),
+                ct).ConfigureAwait(true);
             generatedFiles.Add(careHtmlPath);
-            generatedPayloads.Add((Path.GetFileName(careHtmlPath), careHtml));
 
             LastExportPath = outputDirectory;
             OnPropertyChanged(nameof(HasExport));
             StatusMessage = $"Saved {generatedFiles.Count} report(s) to {outputDirectory}";
 
-            await TryPushToGitHubAsync(generatedPayloads, ct).ConfigureAwait(true);
+            await TryPushToGitHubAsync(generatedFiles, ct).ConfigureAwait(true);
             await TryExportToElasticAsync(report, carePacket, snapshotComparison.Snapshot, ct).ConfigureAwait(true);
             await _snapshotService
                 .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDirectory, snapshotPrefix, ct)
@@ -1017,18 +1027,24 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             return;
         }
 
-        var consolidatedXlsx = await _excelService.GenerateAsync(report, ct, carePacket: carePacket).ConfigureAwait(true);
+        StatusMessage = "Exporting consolidated workbook...";
+        ProgressMessage = StatusMessage;
+        AppendProgressLine(StatusMessage);
         var consolidatedBaseName = $"{datePrefix}_GenesysCloudAudit_Full.xlsx";
         var consolidatedPath = GetNextAvailableFilePath(outputDirectory, consolidatedBaseName);
-        await File.WriteAllBytesAsync(consolidatedPath, consolidatedXlsx, ct).ConfigureAwait(true);
+        await _excelService.WriteAsync(consolidatedPath, report, ct, carePacket: carePacket).ConfigureAwait(true);
 
         var careJsonPathForWorkbook = Path.ChangeExtension(consolidatedPath, ".care-evidence.json");
-        var careJsonForWorkbook = _careEvidenceArtifactService.BuildJson(carePacket);
-        await File.WriteAllBytesAsync(careJsonPathForWorkbook, careJsonForWorkbook, ct).ConfigureAwait(true);
+        await WriteArtifactAsync(
+            careJsonPathForWorkbook,
+            () => _careEvidenceArtifactService.BuildJson(carePacket),
+            ct).ConfigureAwait(true);
 
         var careHtmlPathForWorkbook = Path.ChangeExtension(consolidatedPath, ".care-summary.html");
-        var careHtmlForWorkbook = _careEvidenceArtifactService.BuildHtml(report, carePacket);
-        await File.WriteAllBytesAsync(careHtmlPathForWorkbook, careHtmlForWorkbook, ct).ConfigureAwait(true);
+        await WriteArtifactAsync(
+            careHtmlPathForWorkbook,
+            () => _careEvidenceArtifactService.BuildHtml(report, carePacket),
+            ct).ConfigureAwait(true);
 
         LastExportPath = consolidatedPath;
         OnPropertyChanged(nameof(HasExport));
@@ -1036,9 +1052,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
         await TryPushToGitHubAsync(
             [
-                (Path.GetFileName(consolidatedPath), consolidatedXlsx),
-                (Path.GetFileName(careJsonPathForWorkbook), careJsonForWorkbook),
-                (Path.GetFileName(careHtmlPathForWorkbook), careHtmlForWorkbook)
+                consolidatedPath,
+                careJsonPathForWorkbook,
+                careHtmlPathForWorkbook
             ],
             ct).ConfigureAwait(true);
         await TryExportToElasticAsync(report, carePacket, snapshotComparison.Snapshot, ct).ConfigureAwait(true);
@@ -1322,32 +1338,40 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         return scopes;
     }
 
-    private async Task TryPushToGitHubAsync(IReadOnlyList<(string FileName, byte[] Content)> files, CancellationToken ct)
+    private static async Task WriteArtifactAsync(string path, Func<byte[]> contentFactory, CancellationToken ct)
     {
-        if (!PushToGitHub || !_gitHubUploadService.IsConfigured || files.Count == 0)
+        var content = await Task.Run(contentFactory, ct).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(path, content, ct).ConfigureAwait(false);
+    }
+
+    private async Task TryPushToGitHubAsync(IReadOnlyList<string> filePaths, CancellationToken ct)
+    {
+        if (!PushToGitHub || !_gitHubUploadService.IsConfigured || filePaths.Count == 0)
             return;
 
         StatusMessage = "Pushing report(s) to GitHub...";
         var pushedCount = 0;
         var lastUrl = string.Empty;
-        foreach (var file in files)
+        foreach (var filePath in filePaths)
         {
             try
             {
+                var fileName = Path.GetFileName(filePath);
+                var content = await File.ReadAllBytesAsync(filePath, ct).ConfigureAwait(true);
                 lastUrl = await _gitHubUploadService
-                    .UploadAsync(file.FileName, file.Content, ct)
+                    .UploadAsync(fileName, content, ct)
                     .ConfigureAwait(true);
                 pushedCount++;
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"GitHub push failed for {file.FileName}: {ex.Message}";
-                StatusMessage = $"Saved locally ({pushedCount}/{files.Count} pushed to GitHub)";
+                ErrorMessage = $"GitHub push failed for {Path.GetFileName(filePath)}: {ex.Message}";
+                StatusMessage = $"Saved locally ({pushedCount}/{filePaths.Count} pushed to GitHub)";
                 return;
             }
         }
 
-        StatusMessage = files.Count == 1
+        StatusMessage = filePaths.Count == 1
             ? $"Saved and pushed to GitHub: {lastUrl}"
             : $"Saved locally and pushed {pushedCount} report(s) to GitHub.";
     }
