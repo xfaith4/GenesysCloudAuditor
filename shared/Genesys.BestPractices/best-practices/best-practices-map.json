@@ -1,6 +1,6 @@
 {
-  "version": "0.2.0",
-  "generated_on": "2026-03-31",
+  "version": "0.3.0",
+  "generated_on": "2026-04-01",
   "mappings": [
     {
       "finding_type": "QueueRoutingMethodUndefined",
@@ -210,6 +210,194 @@
       ],
       "default_severity": "Medium",
       "recommended_action_short": "Move supported changes into Terraform-backed workflows."
+    },
+    {
+      "finding_type": "PredictiveCampaignScriptMissingSetStage",
+      "best_practice_keys": [
+        "queue.outbound.predictive_set_stage_required"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Add a Set Stage action to the predictive campaign agent script."
+    },
+    {
+      "finding_type": "PredictiveCampaignEffectiveAgentsBelowMinimum",
+      "best_practice_keys": [
+        "queue.outbound.predictive_minimum_agents"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Increase effective agent count to at least 15 for the campaign window."
+    },
+    {
+      "finding_type": "OutboundContactListNotRandomized",
+      "best_practice_keys": [
+        "queue.outbound.contact_list_randomized"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Randomize contact list before campaign use."
+    },
+    {
+      "finding_type": "PredictiveCampaignQueueAutoAnswerDisabled",
+      "best_practice_keys": [
+        "telephony.outbound.auto_answer_for_predictive"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Enable auto-answer on queues serving predictive campaigns."
+    },
+    {
+      "finding_type": "OutboundAgentPersistentConnectionNotConfigured",
+      "best_practice_keys": [
+        "telephony.outbound.persistent_connections"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Enable persistent connections for Polycom and WebRTC outbound agents."
+    },
+    {
+      "finding_type": "TerraformCredentialHardcoded",
+      "best_practice_keys": [
+        "devops.terraform.no_hardcoded_credentials"
+      ],
+      "default_severity": "Critical",
+      "recommended_action_short": "Move Terraform credentials to environment variables or a vault."
+    },
+    {
+      "finding_type": "TerraformConsistencyCheckerDisabledInProduction",
+      "best_practice_keys": [
+        "devops.terraform.eventual_consistency_configured"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Enable consistency checker in production Terraform pipelines."
+    },
+    {
+      "finding_type": "BrowserApplicationUsesClientCredentials",
+      "best_practice_keys": [
+        "api.sdk.browser_pkce_only",
+        "api.oauth.minimum_scope"
+      ],
+      "default_severity": "Critical",
+      "recommended_action_short": "Migrate browser app authentication to PKCE grant."
+    },
+    {
+      "finding_type": "IntegrationUsesPreviewApiInProduction",
+      "best_practice_keys": [
+        "api.sdk.no_preview_apis_in_production"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Replace preview API usage with GA equivalents."
+    },
+    {
+      "finding_type": "SdkVersionSignificantlyOutdated",
+      "best_practice_keys": [
+        "api.sdk.version_currency"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Update SDK dependency to the latest or near-latest version."
+    },
+    {
+      "finding_type": "SdkBodyLoggingEnabledInProduction",
+      "best_practice_keys": [
+        "api.sdk.pii_logging_disabled_in_production"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Disable SDK body logging in production or apply PII masking controls."
+    },
+    {
+      "finding_type": "SystemStatusSubscriptionMissing",
+      "best_practice_keys": [
+        "security.monitoring.system_status_subscription"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Subscribe to Genesys Cloud system status alerts for your AWS region."
+    },
+    {
+      "finding_type": "ArchitectFlowMissingFailurePaths",
+      "best_practice_keys": [
+        "architect.error_handling.all_failure_paths_defined"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Wire explicit failure paths to recovery actions for all failable flow actions."
+    },
+    {
+      "finding_type": "AdminUserMfaNotEnforced",
+      "best_practice_keys": [
+        "security.authentication.mfa_enforced_for_admins",
+        "security.least_privilege.default"
+      ],
+      "default_severity": "Critical",
+      "recommended_action_short": "Enforce MFA on all administrative accounts via SSO policy."
+    },
+    {
+      "finding_type": "ArchitectFlowSizeAtOrAboveRedThreshold",
+      "best_practice_keys": [
+        "architect.flow_size.keep_below_publish_threshold"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Consolidate actions and extract common modules to reduce flow size below 70%."
+    },
+    {
+      "finding_type": "BotIntentInsufficientTrainingExamples",
+      "best_practice_keys": [
+        "architect.bot.intent_minimum_training_examples"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Add utterance examples until each intent has at least 20."
+    },
+    {
+      "finding_type": "WorkitemQueueMixedWithOtherMediaTypes",
+      "best_practice_keys": [
+        "queue.workitems.dedicated_media_type_queues"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Separate workitem routing to dedicated workitem-only queues."
+    },
+    {
+      "finding_type": "AnalyticsSynchronousQueryOverLargeRange",
+      "best_practice_keys": [
+        "api.analytics.use_async_for_historical_queries"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Switch large historical analytics queries to the async endpoint."
+    },
+    {
+      "finding_type": "IntegrationPollsCampaignStateInsteadOfSubscribing",
+      "best_practice_keys": [
+        "api.notifications.outbound_campaign_state_via_subscription",
+        "api.notifications.prefer_over_polling"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Subscribe to v2.outbound.campaigns.{id} notification topic instead of polling."
+    },
+    {
+      "finding_type": "OutboundConcurrentCampaignLimitApproached",
+      "best_practice_keys": [
+        "telephony.outbound.concurrent_campaign_limits"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Stagger campaign schedules to remain within concurrent and CPS limits."
+    },
+    {
+      "finding_type": "SsoUsersMfaNotEnforcedAtIdp",
+      "best_practice_keys": [
+        "security.authentication.sso_mfa_enforced_at_idp",
+        "security.authentication.mfa_enforced_for_admins"
+      ],
+      "default_severity": "Critical",
+      "recommended_action_short": "Configure MFA enforcement for Genesys Cloud at the identity provider."
+    },
+    {
+      "finding_type": "SipTrunkGroupConfiguredActivePassive",
+      "best_practice_keys": [
+        "edge.trunk.active_active_load_balancing"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Reconfigure SIP trunk group to active/active with dedicated per-Edge trunks."
+    },
+    {
+      "finding_type": "AgentScriptUsesQueueNameInCondition",
+      "best_practice_keys": [
+        "architect.scripting.prefer_queue_id_over_name"
+      ],
+      "default_severity": "Low",
+      "recommended_action_short": "Replace Scripter.Queue Name with Scripter.Queue ID in conditional script logic."
     }
   ]
 }
