@@ -172,6 +172,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         IReadOnlyList<EdgePerformanceObservation> edgePerformanceObservations = [];
         IReadOnlyList<PromptDto> promptDtos = [];
         IReadOnlyList<PromptHygieneFinding> promptHygieneFindings = [];
+        IReadOnlyList<AuditLogSignalFinding> auditLogSignalFindings = [];
         IReadOnlyList<ChangeAdjacencyFinding> changeAdjacencyFindings = [];
         IReadOnlyList<FlappingFinding> flappingDetectionFindings = [];
         IReadOnlyList<HotSpotFinding> hotSpotFindings = [];
@@ -258,6 +259,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             var now = DateTimeOffset.UtcNow;
             var lookbackHours = Math.Max(1, options.AuditLogLookbackHours);
             var interval = $"{now.AddHours(-lookbackHours):o}/{now:o}";
+            Report(progress, 56, $"Preparing audit logs query for {lookbackHours} hour(s) across {serviceMappings.Count} service(s)...");
 
             // Build server-side filters from options (ANDed together).
             List<AuditLogFilterDto>? filterDtos = null;
@@ -293,6 +295,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
 
             Report(progress, 58, "Submitting audit logs transaction...");
             var transactionId = await _auditLogsClient.SubmitAuditQueryAsync(submit, ct).ConfigureAwait(false);
+            Report(progress, 58, $"Submitted audit logs transaction {transactionId}. Polling for completion...");
 
             const int maxPolls = 60;
             const int pollIntervalSeconds = 2;
@@ -302,6 +305,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 ct.ThrowIfCancellationRequested();
                 var status = await _auditLogsClient.GetAuditQueryStatusAsync(transactionId, ct).ConfigureAwait(false);
                 state = (status.State ?? string.Empty).Trim().ToUpperInvariant();
+                Report(progress, 58, $"Audit logs transaction poll {i}/{maxPolls}: state={state}.");
 
                 if (state == "FULFILLED")
                     break;
@@ -317,8 +321,10 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             Report(progress, 59, "Fetching audit logs results...");
             var records = new List<JsonElement>();
             string? nextUri = null;
+            var pageNumber = 0;
             do
             {
+                pageNumber++;
                 var page = await _auditLogsClient
                     .GetAuditQueryResultsPageAsync(transactionId, nextUri, ct)
                     .ConfigureAwait(false);
@@ -326,6 +332,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 if (page.Results is { Count: > 0 })
                     records.AddRange(page.Results);
 
+                Report(progress, 59, $"Fetched audit logs results page {pageNumber} ({page.Results?.Count ?? 0} row(s), total {records.Count}).");
                 nextUri = page.NextUri;
             } while (!string.IsNullOrWhiteSpace(nextUri));
 
@@ -532,7 +539,14 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             edgeDtos,
             trunkDtos);
 
-        Report(progress, 92, "Composing report...");
+        if (options.RunAuditLogs && auditLogFindings.Count > 0)
+        {
+            Report(progress, 92, "Interpreting audit-log admin/security signals...");
+            auditLogSignalFindings = new AuditLogSignalsAnalyzer().Analyze(auditLogFindings);
+            _logger.LogInformation("Audit-log signal interpretation complete. Findings={Count}", auditLogSignalFindings.Count);
+        }
+
+        Report(progress, 93, "Composing report...");
 
         var partialReport = new AuditReportData
         {
@@ -549,6 +563,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             NoLocationUserFindings = noLocationUserFindings,
             DidFindings = didFindings,
             AuditLogFindings = auditLogFindings,
+            AuditLogSignalFindings = auditLogSignalFindings,
             OperationalEventFindings = operationalEventFindings,
             OutboundEventFindings = outboundEventFindings,
             UserTelephonyIntegrityFindings = userTelephonyIntegrityFindings,
@@ -566,7 +581,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         // Phase 2.1 — Change adjacency marker (requires audit logs + at least one other finding)
         if (options.RunChangeAdjacencyAudit && auditLogFindings.Count > 0)
         {
-            Report(progress, 94, "Analyzing change adjacency...");
+            Report(progress, 95, "Analyzing change adjacency...");
             var findingIndex = ActiveFindingIndex.Build(partialReport);
             changeAdjacencyFindings = new ChangeAdjacencyAnalyzer().Analyze(
                 auditLogFindings, findingIndex, options.ChangeAdjacencyWindowMinutes);
@@ -576,7 +591,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         // Phase 2.2 — Flapping and instability detection (requires audit logs)
         if (options.RunFlappingDetectionAudit && auditLogFindings.Count > 0)
         {
-            Report(progress, 96, "Analyzing flapping and instability...");
+            Report(progress, 97, "Analyzing flapping and instability...");
             flappingDetectionFindings = new FlappingDetectionAnalyzer().Analyze(
                 auditLogFindings,
                 options.FlappingDetectionWindowMinutes,
@@ -603,6 +618,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 NoLocationUserFindings = partialReport.NoLocationUserFindings,
                 DidFindings = partialReport.DidFindings,
                 AuditLogFindings = partialReport.AuditLogFindings,
+                AuditLogSignalFindings = partialReport.AuditLogSignalFindings,
                 OperationalEventFindings = partialReport.OperationalEventFindings,
                 OutboundEventFindings = partialReport.OutboundEventFindings,
                 UserTelephonyIntegrityFindings = partialReport.UserTelephonyIntegrityFindings,
@@ -618,7 +634,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 ChangeAdjacencyFindings = changeAdjacencyFindings,
                 FlappingDetectionFindings = flappingDetectionFindings
             };
-            Report(progress, 98, "Ranking hot spots...");
+            Report(progress, 99, "Ranking hot spots...");
             hotSpotFindings = new HotSpotAnalyzer().Analyze(reportWithPhase2, options.HotSpotMinDistinctDomains);
             _logger.LogInformation("Hot spot ranking complete. Findings={Count}", hotSpotFindings.Count);
         }
@@ -634,6 +650,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             + flowFindings.Count + inactiveUserFindings.Count
             + noLocationUserFindings.Count
             + didFindings.Count + auditLogFindings.Count
+            + auditLogSignalFindings.Count
             + operationalEventFindings.Count + outboundEventFindings.Count
             + userTelephonyIntegrityFindings.Count
             + queueServiceabilityFindings.Count
@@ -651,12 +668,13 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         _logger.LogInformation(
             "Audit complete. TotalFindings={TotalFindings} Groups={Groups} Queues={Queues} Flows={Flows} StaleTokenUsers={StaleTokenUsers} NoLocationUsers={NoLocationUsers} DIDs={DIDs} " +
             "UserTelephonyIntegrity={UserTelephonyIntegrity} QueueServiceability={QueueServiceability} IvrFlowBindings={IvrFlowBindings} " +
-            "OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents} " +
+            "AuditLogSignals={AuditLogSignals} OperationalEvents={OperationalEvents} OutboundEvents={OutboundEvents} " +
             "StaleLicenses={StaleLicenses} LicenseOverProvisioning={LicenseOverProvisioning} RoleGroupOverlap={RoleGroupOverlap} SiteTopology={SiteTopology} EdgePerformance={EdgePerformance} PromptHygiene={PromptHygiene} ChangeAdjacency={ChangeAdjacency} " +
             "FlappingDetection={FlappingDetection} HotSpot={HotSpot}",
             totalFindings, groupFindings.Count, queueFindings.Count,
             flowFindings.Count, inactiveUserFindings.Count, noLocationUserFindings.Count, didFindings.Count,
             userTelephonyIntegrityFindings.Count, queueServiceabilityFindings.Count, ivrFlowBindingFindings.Count,
+            auditLogSignalFindings.Count,
             operationalEventFindings.Count, outboundEventFindings.Count,
             staleLicenseFindings.Count, licenseOverProvisioningFindings.Count, roleGroupOverlapFindings.Count, siteTopologyFindings.Count,
             edgePerformanceObservations.Count(observation => observation.IsAnomalous),
@@ -682,6 +700,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             NoLocationUserFindings = noLocationUserFindings,
             DidFindings = didFindings,
             AuditLogFindings = auditLogFindings,
+            AuditLogSignalFindings = auditLogSignalFindings,
             OperationalEventFindings = operationalEventFindings,
             OutboundEventFindings = outboundEventFindings,
             UserTelephonyIntegrityFindings = userTelephonyIntegrityFindings,

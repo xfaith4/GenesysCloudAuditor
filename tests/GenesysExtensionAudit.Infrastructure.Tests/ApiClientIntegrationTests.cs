@@ -525,6 +525,40 @@ public sealed class ApiClientIntegrationTests
             page.Items[0].Timestamp!.Value);
     }
 
+    [Fact]
+    public async Task GenesysAuditLogsClient_GetServiceCatalog_ParsesWrappedServicesObject()
+    {
+        var handler = new RouteMockHttpMessageHandler();
+
+        handler.WhenGet("/api/v2/audits/query/servicemapping",
+            json: """
+                  {
+                    "services": {
+                      "Routing": {
+                        "entityTypes": ["Queue"],
+                        "actions": ["CREATE", "UPDATE"]
+                      },
+                      "Architect": {
+                        "entityTypes": ["Flow", "Prompt"],
+                        "actions": ["PUBLISH"]
+                      }
+                    }
+                  }
+                  """);
+
+        handler.WhenGet("/api/v2/audits/query/realtime/servicemapping", json: "{}");
+
+        var client = BuildAuditLogsClient(handler, "mypurecloud.com");
+        var catalog = await client.GetServiceCatalogAsync(default);
+
+        Assert.Equal(2, catalog.Count);
+        Assert.Equal(["Architect", "Routing"], catalog.Select(c => c.ServiceName).ToArray());
+
+        var routing = catalog.Single(c => c.ServiceName == "Routing");
+        Assert.Equal(["Queue"], routing.EntityTypes);
+        Assert.Equal(["CREATE", "UPDATE"], routing.Actions);
+    }
+
     // ──────────────────────────────────────────────
     // Helpers
     // ──────────────────────────────────────────────
@@ -575,6 +609,14 @@ public sealed class ApiClientIntegrationTests
         var tokenProvider = new FakeTokenProvider("test-token");
         var regionOptions = Options.Create(new GenesysRegionOptions { Region = region });
         return new GenesysOutboundEventsClient(http, tokenProvider, regionOptions, NullLogger<GenesysOutboundEventsClient>.Instance);
+    }
+
+    private static GenesysAuditLogsClient BuildAuditLogsClient(RouteMockHttpMessageHandler handler, string region)
+    {
+        var http = new HttpClient(handler);
+        var tokenProvider = new FakeTokenProvider("test-token");
+        var regionOptions = Options.Create(new GenesysRegionOptions { Region = region });
+        return new GenesysAuditLogsClient(http, tokenProvider, regionOptions, NullLogger<GenesysAuditLogsClient>.Instance);
     }
 
     // ──────────────────────────────────────────────

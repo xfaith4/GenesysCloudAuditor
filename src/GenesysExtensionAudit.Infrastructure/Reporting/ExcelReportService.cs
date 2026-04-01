@@ -151,7 +151,10 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         if (scopeOptions.IncludeAuditLogs)
+        {
             WriteAuditLogsSheet(wb, report);
+            WriteAuditLogSignalsSheet(wb, report);
+        }
 
         if (scopeOptions.IncludeOperationalEvents)
             WriteOperationalEventsSheet(wb, report);
@@ -436,6 +439,7 @@ public sealed class ExcelReportService : IExcelReportService
             new("User_Telephony_Integrity", "User Telephony Integrity", report.Options.RunUserTelephonyAudit, report.UserTelephonyIntegrityFindings.Count, "High", "User extension / station / DID ownership contradictions across API surfaces"),
             new("Queue_Serviceability", "Queue Serviceability", report.Options.RunQueueServiceabilityAudit, report.QueueServiceabilityFindings.Count, "High", "Queues with zero active or resolvable members — cannot service work"),
             new("Audit_Logs", "Audit Logs Events", report.Options.RunAuditLogs, report.AuditLogFindings.Count, "Info", "Audit transaction events returned from Genesys audit logs query"),
+            new("Audit_Log_Signals", "Audit Log Signals", report.Options.RunAuditLogs, report.AuditLogSignalFindings.Count, "High", "Interpreted access-control, division-scope, OAuth-client, queue-membership, and flow-publication review signals derived from the collected audit logs"),
             new("Operational_Events", "Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count, "Info", $"Operational events from last {report.Options.OperationalEventLookbackDays} day(s)"),
             new("Outbound_Events", "Outbound Events", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count, "Info", "Outbound event logs"),
             new("Stale_Licenses", "Stale License Usage", report.Options.RunStaleLicenseAudit, report.StaleLicenseFindings.Count, "Warning", $"Licensed users who have not logged in for >{report.Options.StaleLicenseThresholdDays} days — potential license waste"),
@@ -521,7 +525,8 @@ public sealed class ExcelReportService : IExcelReportService
 
             BuildDomainHealthRow(
                 "Security",
-                report.Options.RunStaleLicenseAudit || report.Options.RunLicenseOverProvisioningAudit || report.Options.RunRoleGroupOverlapAudit,
+                report.Options.RunAuditLogs || report.Options.RunStaleLicenseAudit || report.Options.RunLicenseOverProvisioningAudit || report.Options.RunRoleGroupOverlapAudit,
+                ("Audit log signals", report.AuditLogSignalFindings.Count, HighestSeverity(report.AuditLogSignalFindings.Select(f => f.Severity), FindingSeverity.High)),
                 ("Stale licenses", report.StaleLicenseFindings.Count, FindingSeverity.Medium),
                 ("Over-provisioning", report.LicenseOverProvisioningFindings.Count, FindingSeverity.Medium),
                 ("Role overlap", report.RoleGroupOverlapFindings.Count, FindingSeverity.Low)),
@@ -582,6 +587,7 @@ public sealed class ExcelReportService : IExcelReportService
         summary.Add(report.NoLocationUserFindings.Count, FindingSeverity.Low);
         summary.Add(report.DidFindings.Count, FindingSeverity.Medium);
         summary.Add(report.AuditLogFindings.Count, FindingSeverity.Info);
+        summary.Add(report.AuditLogSignalFindings.Select(f => f.Severity));
         summary.Add(report.OperationalEventFindings.Count, FindingSeverity.Info);
         summary.Add(report.OutboundEventFindings.Count, FindingSeverity.Info);
         summary.Add(report.StaleLicenseFindings.Count, FindingSeverity.Medium);
@@ -1618,6 +1624,50 @@ public sealed class ExcelReportService : IExcelReportService
         }
 
         AdjustColumns(ws, 13);
+    }
+
+    private static void WriteAuditLogSignalsSheet(IXLWorkbook wb, AuditReportData report)
+    {
+        var ws = wb.Worksheets.Add("Audit_Log_Signals");
+        var findings = report.AuditLogSignalFindings;
+
+        string[] headers =
+        [
+            "First Event (UTC)", "Last Event (UTC)", "Signal", "Severity", "Category",
+            "Service", "Action", "Actor", "Actor Email", "Actor User ID", "Client ID",
+            "Entity Type", "Entity Name", "Entity ID", "Event Count", "Issue", "Recommended Action"
+        ];
+        WriteSheetHeader(ws, "Audit Log Signals", report, findings.Count, headers);
+
+        var row = 4;
+        foreach (var f in findings)
+        {
+            WriteRow(
+                ws,
+                row,
+                f.FirstEventUtc?.ToString("yyyy-MM-dd HH:mm:ss"),
+                f.LastEventUtc?.ToString("yyyy-MM-dd HH:mm:ss"),
+                f.SignalCategory,
+                f.Severity.ToString(),
+                f.Category.ToString(),
+                f.ServiceName,
+                f.Action,
+                f.UserName,
+                f.UserEmail,
+                f.UserId,
+                f.ClientId,
+                f.EntityType,
+                f.EntityName,
+                f.EntityId,
+                f.EventCount,
+                f.Issue,
+                f.RecommendedAction);
+            ApplyAltRow(ws, row, 17);
+            ApplySeverityFill(ws.Cell(row, 4), f.Severity);
+            row++;
+        }
+
+        AdjustColumns(ws, 17);
     }
 
     private static void WriteEdgePerformanceSheet(IXLWorkbook wb, AuditReportData report)

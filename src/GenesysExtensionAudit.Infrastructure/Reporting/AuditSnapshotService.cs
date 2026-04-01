@@ -340,6 +340,7 @@ public sealed class AuditSnapshotService : IAuditSnapshotService
         if (report.Options.RunSiteTopologyAudit) domains.Add("Site Topology");
         if (report.Options.RunPromptHygieneAudit) domains.Add("Prompt Hygiene");
         if (report.Options.RunAuditLogs) domains.Add("Audit Logs");
+        if (report.Options.RunAuditLogs) domains.Add("Audit Log Signals");
         if (report.Options.RunOperationalEventLogs) domains.Add("Operational Events");
         if (report.Options.RunOutboundEvents) domains.Add("Outbound Events");
         if (report.Options.RunStaleLicenseAudit || report.Options.RunLicenseOverProvisioningAudit || report.Options.RunRoleGroupOverlapAudit)
@@ -584,6 +585,9 @@ public sealed class AuditSnapshotService : IAuditSnapshotService
 
         foreach (var f in report.FlappingDetectionFindings)
             findings.Add(Create("Flapping Detection", f.FindingCode, $"flapping|{f.FindingCode}|{f.AffectedObjectId}", f.AffectedObjectId, f.AffectedObjectName, f.Issue, f.Severity, observedAtUtc));
+
+        foreach (var f in report.AuditLogSignalFindings)
+            findings.Add(Create("Audit Log Signals", f.FindingCode, $"audit-log-signal|{f.FindingCode}|{f.EntityId}|{f.EntityName}|{f.UserId}|{f.ClientId}|{f.Action}", f.EntityId, f.EntityName, f.Issue, f.Severity, observedAtUtc));
 
         foreach (var f in report.HotSpotFindings)
             findings.Add(Create("Hot Spots", "HotSpotFinding", $"hot-spot|{f.ObjectType}|{f.ObjectId}|{f.ObjectName}", f.ObjectId, f.ObjectName, f.Issue, f.Severity, observedAtUtc));

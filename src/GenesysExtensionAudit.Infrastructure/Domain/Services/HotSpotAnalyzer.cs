@@ -101,6 +101,9 @@ public sealed class HotSpotAnalyzer
         foreach (var f in report.FlappingDetectionFindings)
             Register(f.AffectedObjectId, f.AffectedObjectName, f.AffectedObjectType, "Flapping Detection");
 
+        foreach (var f in report.AuditLogSignalFindings)
+            Register(f.EntityId, f.EntityName, f.EntityType, "Audit Log Signals");
+
         // ── Rank hot spots ────────────────────────────────────────────────────
 
         var threshold = Math.Max(1, minDistinctDomains);

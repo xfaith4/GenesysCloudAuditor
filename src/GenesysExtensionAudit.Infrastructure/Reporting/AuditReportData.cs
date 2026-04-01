@@ -201,6 +201,31 @@ public static class ChangeAdjacencyCode
     public const string RepeatedChanges = "REPEATED_CHANGES";
 }
 
+// ─── Finding codes for AuditLogSignalFinding (Phase 2.4 seed) ───────────────
+
+/// <summary>
+/// Identifies which interpreted audit-log signal family produced a finding.
+/// These signals are derived from the already-collected audit-log window and
+/// are intended to reduce operator burden versus reading raw event exports.
+/// </summary>
+public static class AuditLogSignalCode
+{
+    /// <summary>Role, permission, or other access-control related changes.</summary>
+    public const string AccessControlChange = "AUDIT_SIGNAL_ACCESS_CONTROL_CHANGE";
+
+    /// <summary>Division or scope-related changes that may broaden or reduce reach.</summary>
+    public const string DivisionScopeChange = "AUDIT_SIGNAL_DIVISION_SCOPE_CHANGE";
+
+    /// <summary>OAuth client or credential changes that may alter API access posture.</summary>
+    public const string OAuthClientChange = "AUDIT_SIGNAL_OAUTH_CLIENT_CHANGE";
+
+    /// <summary>Repeated queue membership changes that may indicate unstable routing ownership.</summary>
+    public const string QueueMembershipChurn = "AUDIT_SIGNAL_QUEUE_MEMBERSHIP_CHURN";
+
+    /// <summary>Flow publish, rollback, restore, or related publication activity that merits review.</summary>
+    public const string FlowPublicationChange = "AUDIT_SIGNAL_FLOW_PUBLICATION_CHANGE";
+}
+
 // ─── Phase 4.1 — Finding lifecycle classification ───────────────────────────
 
 /// <summary>
@@ -296,6 +321,30 @@ public sealed record AuditLogFinding(
     string? CorrelationId,
     /// <summary>Severity/level of the audit event (e.g. INFO, WARNING).</summary>
     string? Level);
+
+/// <summary>
+/// An interpreted operator-ready signal derived from one or more raw audit-log events.
+/// This layer groups relevant security/admin changes into a compact review list.
+/// </summary>
+public sealed record AuditLogSignalFinding(
+    string FindingCode,
+    string SignalCategory,
+    DateTimeOffset? FirstEventUtc,
+    DateTimeOffset? LastEventUtc,
+    int EventCount,
+    string? ServiceName,
+    string? Action,
+    string? UserName,
+    string? UserEmail,
+    string? UserId,
+    string? ClientId,
+    string? EntityType,
+    string? EntityName,
+    string? EntityId,
+    string Issue,
+    FindingSeverity Severity,
+    FindingCategory Category,
+    string RecommendedAction);
 
 public sealed record OperationalEventFinding(
     DateTimeOffset? TimestampUtc,
@@ -681,6 +730,7 @@ public sealed class AuditReportData
     public IReadOnlyList<NoLocationUserFinding> NoLocationUserFindings { get; init; } = [];
     public IReadOnlyList<DidFinding> DidFindings { get; init; } = [];
     public IReadOnlyList<AuditLogFinding> AuditLogFindings { get; init; } = [];
+    public IReadOnlyList<AuditLogSignalFinding> AuditLogSignalFindings { get; init; } = [];
     public IReadOnlyList<OperationalEventFinding> OperationalEventFindings { get; init; } = [];
     public IReadOnlyList<OutboundEventFinding> OutboundEventFindings { get; init; } = [];
 

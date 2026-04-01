@@ -158,50 +158,175 @@ public sealed class GenesysAuditLogsClient : GenesysCloudApiClient, IGenesysAudi
     private static void ParseServiceMapping(
         JsonElement root,
         Dictionary<string, (HashSet<string> EntityTypes, HashSet<string> Actions)> byService)
+        => ParseServiceElement(root, byService);
+
+    private static void ParseServiceElement(
+        JsonElement element,
+        Dictionary<string, (HashSet<string> EntityTypes, HashSet<string> Actions)> byService)
     {
-        if (root.ValueKind != JsonValueKind.Object)
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                if (TryParseNamedServiceElement(element, byService))
+                    return;
+
+                foreach (var prop in element.EnumerateObject())
+                {
+                    var name = prop.Name?.Trim();
+                    if (string.IsNullOrWhiteSpace(name))
+                        continue;
+
+                    if (IsContainerPropertyName(name))
+                    {
+                        ParseServiceElement(prop.Value, byService);
+                        continue;
+                    }
+
+                    if (LooksLikeServiceDescriptor(prop.Value))
+                    {
+                        MergeServiceDescriptor(name, prop.Value, byService);
+                        continue;
+                    }
+
+                    if (prop.Value.ValueKind == JsonValueKind.Array)
+                        ParseServiceElement(prop.Value, byService);
+                }
+
+                break;
+
+            case JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
+                    ParseServiceElement(item, byService);
+
+                break;
+        }
+    }
+
+    private static bool TryParseNamedServiceElement(
+        JsonElement element,
+        Dictionary<string, (HashSet<string> EntityTypes, HashSet<string> Actions)> byService)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+            return false;
+
+        var serviceName =
+            GetStringProperty(element, "serviceName")
+            ?? GetStringProperty(element, "service")
+            ?? GetStringProperty(element, "name");
+
+        if (string.IsNullOrWhiteSpace(serviceName) || IsContainerPropertyName(serviceName))
+            return false;
+
+        if (!LooksLikeServiceDescriptor(element))
+            return false;
+
+        MergeServiceDescriptor(serviceName, element, byService);
+        return true;
+    }
+
+    private static bool LooksLikeServiceDescriptor(JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Object)
+            return false;
+
+        return element.TryGetProperty("entityTypes", out _)
+               || element.TryGetProperty("actions", out _)
+               || element.TryGetProperty("actionMappings", out _)
+               || element.TryGetProperty("entityType", out _)
+               || element.TryGetProperty("action", out _);
+    }
+
+    private static void MergeServiceDescriptor(
+        string serviceName,
+        JsonElement descriptor,
+        Dictionary<string, (HashSet<string> EntityTypes, HashSet<string> Actions)> byService)
+    {
+        var normalizedServiceName = serviceName?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedServiceName) || IsContainerPropertyName(normalizedServiceName))
             return;
 
-        foreach (var prop in root.EnumerateObject())
+        if (!byService.TryGetValue(normalizedServiceName, out var entry))
         {
-            var name = prop.Name?.Trim();
-            if (string.IsNullOrWhiteSpace(name) || IsContainerPropertyName(name))
-                continue;
-
-            if (!byService.TryGetValue(name, out var entry))
-            {
-                entry = (new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                         new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-                byService[name] = entry;
-            }
-
-            if (prop.Value.ValueKind == JsonValueKind.Object)
-            {
-                // entityTypes array
-                if (prop.Value.TryGetProperty("entityTypes", out var etArr) &&
-                    etArr.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var et in etArr.EnumerateArray())
-                    {
-                        var v = et.GetString()?.Trim();
-                        if (!string.IsNullOrWhiteSpace(v))
-                            entry.EntityTypes.Add(v!);
-                    }
-                }
-
-                // actions array — may also appear under "actionMappings"
-                if (prop.Value.TryGetProperty("actions", out var actArr) &&
-                    actArr.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var a in actArr.EnumerateArray())
-                    {
-                        var v = a.GetString()?.Trim();
-                        if (!string.IsNullOrWhiteSpace(v))
-                            entry.Actions.Add(v!);
-                    }
-                }
-            }
+            entry = (new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+                     new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+            byService[normalizedServiceName] = entry;
         }
+
+        AddStrings(descriptor, "entityTypes", entry.EntityTypes);
+        AddStrings(descriptor, "actions", entry.Actions);
+        AddString(descriptor, "entityType", entry.EntityTypes);
+        AddString(descriptor, "action", entry.Actions);
+
+        if (descriptor.TryGetProperty("actionMappings", out var actionMappings))
+            ParseActionMappings(actionMappings, entry.Actions);
+    }
+
+    private static void ParseActionMappings(JsonElement actionMappings, HashSet<string> actions)
+    {
+        switch (actionMappings.ValueKind)
+        {
+            case JsonValueKind.Array:
+                foreach (var item in actionMappings.EnumerateArray())
+                {
+                    AddString(item, "action", actions);
+                    AddString(item, "name", actions);
+                    if (item.ValueKind == JsonValueKind.String)
+                    {
+                        var value = item.GetString()?.Trim();
+                        if (!string.IsNullOrWhiteSpace(value))
+                            actions.Add(value);
+                    }
+                }
+
+                break;
+
+            case JsonValueKind.Object:
+                foreach (var prop in actionMappings.EnumerateObject())
+                {
+                    var name = prop.Name?.Trim();
+                    if (!string.IsNullOrWhiteSpace(name))
+                        actions.Add(name);
+
+                    AddString(prop.Value, "action", actions);
+                    AddString(prop.Value, "name", actions);
+                }
+
+                break;
+        }
+    }
+
+    private static void AddStrings(JsonElement element, string propertyName, HashSet<string> values)
+    {
+        if (!element.TryGetProperty(propertyName, out var propertyValue) ||
+            propertyValue.ValueKind != JsonValueKind.Array)
+        {
+            return;
+        }
+
+        foreach (var item in propertyValue.EnumerateArray())
+        {
+            var value = item.GetString()?.Trim();
+            if (!string.IsNullOrWhiteSpace(value))
+                values.Add(value);
+        }
+    }
+
+    private static void AddString(JsonElement element, string propertyName, HashSet<string> values)
+    {
+        var value = GetStringProperty(element, propertyName);
+        if (!string.IsNullOrWhiteSpace(value))
+            values.Add(value);
+    }
+
+    private static string? GetStringProperty(JsonElement element, string propertyName)
+    {
+        if (!element.TryGetProperty(propertyName, out var propertyValue) ||
+            propertyValue.ValueKind != JsonValueKind.String)
+        {
+            return null;
+        }
+
+        return propertyValue.GetString()?.Trim();
     }
 
     private async Task<JsonElement?> TryGetCatalogAsync(string path, CancellationToken ct)
@@ -222,6 +347,7 @@ public sealed class GenesysAuditLogsClient : GenesysCloudApiClient, IGenesysAudi
 
     private static bool IsContainerPropertyName(string name)
         => name.Equals("entities", StringComparison.OrdinalIgnoreCase)
+           || name.Equals("services", StringComparison.OrdinalIgnoreCase)
            || name.Equals("results", StringComparison.OrdinalIgnoreCase)
            || name.Equals("items", StringComparison.OrdinalIgnoreCase)
            || name.Equals("serviceMappings", StringComparison.OrdinalIgnoreCase)

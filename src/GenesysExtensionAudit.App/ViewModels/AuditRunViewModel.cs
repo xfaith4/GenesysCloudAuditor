@@ -50,6 +50,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private readonly ObservableCollection<RunSummaryRow> _lastRunSummary = [];
     private readonly ObservableCollection<BestPracticeGuidanceFinding> _bestPracticeGuidance = [];
     private readonly ObservableCollection<string> _workbookExportModes = [ConsolidatedExportMode, SeparateExportMode];
+    private readonly List<string> _progressConsoleLines = [];
 
     private int _pageSize = 100;
     private bool _includeInactive;
@@ -94,6 +95,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     private bool _isRunning;
     private int _progressPercent;
     private string _progressMessage = string.Empty;
+    private string _progressConsoleText = string.Empty;
     private string _statusMessage = "Ready.";
     private string? _errorMessage;
     private string? _lastExportPath;
@@ -137,6 +139,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
         _auditLogEntities.Add(AllCatalogEntitiesOption);
         RefreshBestPracticesStatus();
+        LoadAuditCatalog(forceRefresh: false, suppressErrors: true, updateStatus: false);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -241,7 +244,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             if (SetField(ref _runAuditLogs, value))
             {
                 if (value && !_auditLogEntitiesLoaded)
-                    LoadAuditCatalog(forceRefresh: false);
+                    LoadAuditCatalog(forceRefresh: false, suppressErrors: false, updateStatus: true);
                 OnAuditSelectionChanged();
             }
         }
@@ -601,6 +604,18 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         private set => SetField(ref _progressMessage, value);
     }
 
+    public string ProgressConsoleText
+    {
+        get => _progressConsoleText;
+        private set
+        {
+            if (SetField(ref _progressConsoleText, value))
+                OnPropertyChanged(nameof(HasProgressConsoleOutput));
+        }
+    }
+
+    public bool HasProgressConsoleOutput => !string.IsNullOrWhiteSpace(ProgressConsoleText);
+
     public string StatusMessage
     {
         get => _statusMessage;
@@ -631,6 +646,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         ErrorMessage = null;
         ProgressPercent = 0;
         ProgressMessage = string.Empty;
+        ClearProgressConsole();
 
         if (!HasAnyAuditSelected)
         {
@@ -641,6 +657,10 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
         IsRunning = true;
         StatusMessage = "Starting audit...";
+        AppendProgressLine("Starting audit run.");
+        AppendProgressLine($"Selected audits: {string.Join(", ", GetSelectedAuditNames())}");
+        if (RunAuditLogs)
+            AppendProgressLine(BuildAuditLogQuerySummary());
 
         _cts = new CancellationTokenSource();
         var ct = _cts.Token;
@@ -653,10 +673,16 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
                     ProgressPercent = p.Percent;
 
                 if (!string.IsNullOrWhiteSpace(p.Message))
+                {
                     ProgressMessage = p.Message;
+                    AppendProgressLine(p.Message);
+                }
 
                 if (!string.IsNullOrWhiteSpace(p.Status))
+                {
                     StatusMessage = p.Status;
+                    AppendProgressLine($"Status: {p.Status}");
+                }
             }
             catch
             {
@@ -712,16 +738,20 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
             ProgressPercent = 100;
             ProgressMessage = "Completed.";
+            StatusMessage = "Completed.";
+            AppendProgressLine("Audit run completed.");
         }
         catch (OperationCanceledException)
         {
             StatusMessage = "Audit cancelled.";
             ProgressMessage = "Cancelled.";
+            AppendProgressLine("Audit run cancelled.");
         }
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
             StatusMessage = "Audit failed.";
+            AppendProgressLine($"ERROR: {ex.Message}");
         }
         finally
         {
@@ -737,6 +767,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         {
             _cts?.Cancel();
             StatusMessage = "Cancelling...";
+            AppendProgressLine("Cancellation requested.");
         }
         catch
         {
@@ -869,9 +900,9 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
     }
 
     private void RefreshAuditCatalog()
-        => LoadAuditCatalog(forceRefresh: true);
+        => LoadAuditCatalog(forceRefresh: true, suppressErrors: false, updateStatus: true);
 
-    private async void LoadAuditCatalog(bool forceRefresh)
+    private async void LoadAuditCatalog(bool forceRefresh, bool suppressErrors, bool updateStatus)
     {
         if (IsLoadingAuditLogEntities)
             return;
@@ -884,19 +915,18 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
                 .GetOrRefreshCatalogAsync(forceRefresh, CancellationToken.None)
                 .ConfigureAwait(true);
 
-            _auditLogEntities.Clear();
-            _auditLogEntities.Add(AllCatalogEntitiesOption);
-            foreach (var svc in catalog)
-                _auditLogEntities.Add(svc.ServiceName);
-
-            SelectedAuditLogEntity = AllCatalogEntitiesOption;
+            ApplyAuditLogCatalog(catalog, preserveSelection: true);
             _auditLogEntitiesLoaded = true;
-            StatusMessage = $"Loaded {_auditLogEntities.Count - 1} audit-log catalog services.";
+            if (updateStatus)
+                StatusMessage = $"Loaded {_auditLogEntities.Count - 1} audit-log catalog services.";
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Failed to load audit-log catalog: {ex.Message}";
-            StatusMessage = "Failed to load audit-log catalog.";
+            if (!suppressErrors)
+            {
+                ErrorMessage = $"Failed to load audit-log catalog: {ex.Message}";
+                StatusMessage = "Failed to load audit-log catalog.";
+            }
         }
         finally
         {
@@ -1368,6 +1398,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             ("Users Missing Location", report.Options.RunInactiveUserAudit, report.NoLocationUserFindings.Count),
             ("DIDs", report.Options.RunDidAudit, report.DidFindings.Count),
             ("Audit Logs", report.Options.RunAuditLogs, report.AuditLogFindings.Count),
+            ("Audit Log Signals", report.Options.RunAuditLogs, report.AuditLogSignalFindings.Count),
             ("Operational Event Logs", report.Options.RunOperationalEventLogs, report.OperationalEventFindings.Count),
             ("Edge Performance", report.Options.RunSiteTopologyAudit && report.Options.RunOperationalEventLogs, report.EdgePerformanceObservations.Count(o => o.IsAnomalous)),
             ("OutboundEvents", report.Options.RunOutboundEvents, report.OutboundEventFindings.Count),
@@ -1407,6 +1438,95 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         BestPracticesStatusDetails = status.Messages.Count == 0
             ? "Catalog, mapping, and glossary content loaded successfully."
             : string.Join(Environment.NewLine, status.Messages.Take(4));
+    }
+
+    private void ApplyAuditLogCatalog(IReadOnlyList<AuditServiceInfo> catalog, bool preserveSelection)
+    {
+        var previousSelection = SelectedAuditLogEntity;
+
+        _auditLogEntities.Clear();
+        _auditLogEntities.Add(AllCatalogEntitiesOption);
+        foreach (var service in catalog)
+            _auditLogEntities.Add(service.ServiceName);
+
+        var nextSelection = preserveSelection &&
+                            !string.IsNullOrWhiteSpace(previousSelection) &&
+                            _auditLogEntities.Contains(previousSelection)
+            ? previousSelection
+            : AllCatalogEntitiesOption;
+
+        SelectedAuditLogEntity = nextSelection;
+    }
+
+    private void ClearProgressConsole()
+    {
+        _progressConsoleLines.Clear();
+        ProgressConsoleText = string.Empty;
+    }
+
+    private void AppendProgressLine(string message)
+    {
+        var trimmed = message?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+            return;
+
+        _progressConsoleLines.Add($"[{DateTime.Now:HH:mm:ss}] {trimmed}");
+        if (_progressConsoleLines.Count > 250)
+            _progressConsoleLines.RemoveAt(0);
+
+        ProgressConsoleText = string.Join(Environment.NewLine, _progressConsoleLines);
+    }
+
+    private IReadOnlyList<string> GetSelectedAuditNames()
+    {
+        var selected = new List<string>();
+
+        if (RunExtensionAudit) selected.Add("Extensions");
+        if (RunGroupAudit) selected.Add("Groups");
+        if (RunQueueAudit) selected.Add("Queues");
+        if (RunFlowAudit) selected.Add("Flows");
+        if (RunInactiveUserAudit) selected.Add("Inactive Users");
+        if (RunDidAudit) selected.Add("DIDs");
+        if (RunUserTelephonyAudit) selected.Add("User Telephony Integrity");
+        if (RunQueueServiceabilityAudit) selected.Add("Queue Serviceability");
+        if (RunFlowDependencyAudit) selected.Add("IVR Flow Dependency");
+        if (RunAuditLogs) selected.Add("Audit Logs");
+        if (RunOperationalEventLogs) selected.Add("Operational Event Logs");
+        if (RunOutboundEvents) selected.Add("Outbound Events");
+        if (RunSiteTopologyAudit) selected.Add("Site Topology");
+        if (RunStaleLicenseAudit) selected.Add("Stale License Usage");
+        if (RunLicenseOverProvisioningAudit) selected.Add("License Over-Provisioning");
+        if (RunRoleGroupOverlapAudit) selected.Add("Role / Group Overlap");
+        if (RunPromptHygieneAudit) selected.Add("Prompt Hygiene");
+        if (RunChangeAdjacencyAudit) selected.Add("Change Adjacency");
+        if (RunFlappingDetectionAudit) selected.Add("Flapping Detection");
+        if (RunHotSpotAudit) selected.Add("Hot Spot Ranking");
+
+        return selected;
+    }
+
+    private string BuildAuditLogQuerySummary()
+    {
+        var parts = new List<string>
+        {
+            $"Audit Logs query: lookback={AuditLogLookbackHours}h",
+            $"service={(string.Equals(SelectedAuditLogEntity, AllCatalogEntitiesOption, StringComparison.Ordinal) ? "all catalog services" : SelectedAuditLogEntity)}",
+            $"sort={(string.Equals(SelectedAuditLogSortOrder, "Ascending", StringComparison.Ordinal) ? "ASC" : "DESC")}"
+        };
+
+        if (!string.Equals(SelectedAuditLogAction, AllActionsOption, StringComparison.Ordinal))
+            parts.Add($"action={SelectedAuditLogAction}");
+
+        if (!string.Equals(SelectedAuditLogEntityType, AllEntityTypesOption, StringComparison.Ordinal))
+            parts.Add($"entityType={SelectedAuditLogEntityType}");
+
+        if (!string.IsNullOrWhiteSpace(AuditLogUserIdFilter))
+            parts.Add($"userId={AuditLogUserIdFilter.Trim()}");
+
+        if (!string.IsNullOrWhiteSpace(AuditLogEntityIdFilter))
+            parts.Add($"entityId={AuditLogEntityIdFilter.Trim()}");
+
+        return string.Join(" | ", parts);
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

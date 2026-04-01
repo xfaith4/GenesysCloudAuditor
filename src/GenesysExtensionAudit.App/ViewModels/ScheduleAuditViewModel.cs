@@ -84,6 +84,7 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
         DeleteScheduledTaskCommand = new RelayCommand(DeleteScheduledTask, () => !IsBusy && SelectedTask is not null);
         RefreshAuditCatalogCommand = new RelayCommand(RefreshAuditCatalog, () => !IsBusy && !IsLoadingAuditLogEntities);
 
+        LoadAuditCatalog(forceRefresh: false, suppressErrors: true, updateStatus: false);
         RefreshScheduledTasks();
     }
 
@@ -173,7 +174,7 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
             if (SetField(ref _runAuditLogs, value))
             {
                 if (value && AuditLogEntities.Count <= 1)
-                    LoadAuditCatalog(forceRefresh: false);
+                    LoadAuditCatalog(forceRefresh: false, suppressErrors: false, updateStatus: true);
             }
         }
     }
@@ -391,9 +392,9 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
     }
 
     private void RefreshAuditCatalog()
-        => LoadAuditCatalog(forceRefresh: true);
+        => LoadAuditCatalog(forceRefresh: true, suppressErrors: false, updateStatus: true);
 
-    private async void LoadAuditCatalog(bool forceRefresh)
+    private async void LoadAuditCatalog(bool forceRefresh, bool suppressErrors, bool updateStatus)
     {
         if (IsLoadingAuditLogEntities || IsBusy)
             return;
@@ -412,13 +413,19 @@ public sealed class ScheduleAuditViewModel : INotifyPropertyChanged
             foreach (var entity in ordered)
                 _auditLogEntities.Add(entity);
 
-            SelectedAuditLogEntity = AllCatalogEntitiesOption;
-            StatusMessage = $"Loaded {_auditLogEntities.Count - 1} audit-log catalog entities.";
+            if (!_auditLogEntities.Contains(SelectedAuditLogEntity))
+                SelectedAuditLogEntity = AllCatalogEntitiesOption;
+
+            if (updateStatus)
+                StatusMessage = $"Loaded {_auditLogEntities.Count - 1} audit-log catalog entities.";
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Failed to load audit-log catalog entities: {ex.Message}";
-            StatusMessage = "Failed to load audit-log catalog entities.";
+            if (!suppressErrors)
+            {
+                ErrorMessage = $"Failed to load audit-log catalog entities: {ex.Message}";
+                StatusMessage = "Failed to load audit-log catalog entities.";
+            }
         }
         finally
         {
