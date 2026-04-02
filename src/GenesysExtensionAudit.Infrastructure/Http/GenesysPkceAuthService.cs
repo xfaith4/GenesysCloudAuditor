@@ -251,10 +251,8 @@ public sealed class GenesysPkceAuthService : IGenesysPkceAuthService
         };
     }
 
-    private static bool TryValidateRedirectUri(string redirectUri, out Uri uri, out string message)
+    private static bool TryValidateRedirectUri(string redirectUri, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Uri? uri, out string message)
     {
-        uri = default!;
-
         if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out uri))
         {
             message = "PkceRedirectUri must be a valid absolute URI.";
