@@ -11,9 +11,10 @@ public partial class MainWindow : Window
     {
         var version = GetDisplayVersion();
         AppVersionText = $"v{version}";
-        Title = $"Genesys Cloud Auditor {AppVersionText}";
 
         InitializeComponent();
+
+        Title = $"Genesys Cloud Auditor {AppVersionText}";
     }
 
     private static string GetDisplayVersion()

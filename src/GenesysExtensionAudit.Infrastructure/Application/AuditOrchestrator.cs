@@ -111,7 +111,10 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
             options.RunLicenseOverProvisioningAudit ||
             options.RunRoleGroupOverlapAudit ||
             options.RunSiteTopologyAudit ||
-            options.RunPromptHygieneAudit;
+            options.RunPromptHygieneAudit ||
+            options.RunChangeAdjacencyAudit ||
+            options.RunFlappingDetectionAudit ||
+            options.RunHotSpotAudit;
 
         if (!runAny)
             throw new InvalidOperationException("At least one audit path must be selected.");
