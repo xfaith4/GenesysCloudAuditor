@@ -333,6 +333,7 @@ The intent is to scan selected Genesys Cloud API domains on a recurring cadence,
 | Rule registry and metadata model       | High     | Define a common structure for source-backed best-practice rules, rule IDs, versions, owner, and APIs | Planned |
 | Source/provenance tracking             | High     | Persist the documentation source or internal standard that justifies each rule                        | Planned |
 | Sentinel worksheet and summary rollup  | High     | Add a triage-first export showing only interpreted best-practice signals, not raw event dumps         | Planned |
+| Best-practice mapping hygiene hardening | High    | Normalize aliases, remove raw event/rollup enrichment noise, and map only actionable finding types   | Planned |
 | Audit-log signaling engine             | High     | Convert raw audit logs into categorized signals such as risky change, unusual churn, role drift       | Planned |
 | Admin role change detection            | High     | Flag privileged role grants/removals, division scope changes, and admin access changes                | Planned |
 | Platform configuration change detector | High     | Detect significant queue, flow, IVR, site, edge, trunk, prompt, and telephony configuration changes  | Planned |
@@ -375,6 +376,8 @@ Planned audit-log signal families:
   - what is newly risky versus chronic
   - what likely needs admin review this week
 - rule metadata in exports so operators can trace each signal back to its best-practice basis
+- unmapped best-practice finding types limited to real policy coverage gaps, not raw event exports or derived rollups
+- generic umbrella findings replaced with specific codes before they enter the best-practice mapping layer
 - less dependence on manually reading raw audit logs except for deep investigation
 
 ### Why this matters
