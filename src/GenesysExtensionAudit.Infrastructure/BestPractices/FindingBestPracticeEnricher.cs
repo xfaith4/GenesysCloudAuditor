@@ -19,6 +19,8 @@ public sealed class FindingBestPracticeEnricher : IFindingBestPracticeEnricher
             [TelephonyIntegrityCode.StationWithoutExtension] = "DidOrExtensionAssignmentInconsistent",
             [TelephonyIntegrityCode.DidOwnerExtensionMismatch] = "DidOrExtensionAssignmentInconsistent",
             ["DidFinding"] = "DidOrExtensionAssignmentInconsistent",
+            ["DuplicateProfileExtension"] = "DidOrExtensionAssignmentInconsistent",
+            ["ProfileExtensionNotAssigned"] = "DidOrExtensionAssignmentInconsistent",
             ["FlowFinding"] = "FlowLifecycleDisciplineWeak",
             ["RoleGroupOverlapFinding"] = "RoleAssignmentOverprivileged"
         };
@@ -94,7 +96,7 @@ public sealed class FindingBestPracticeEnricher : IFindingBestPracticeEnricher
         var matches = new List<BestPracticeGuidanceFinding>();
         var unmatched = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        TrackExtensionFindingTypes(report, unmatched);
+        AppendExtensionFindings(report, unmatched, matches);
         AppendBatch(report.GroupFindings, unmatched, matches, finding => new BestPracticeFindingContext("Group Hygiene", "GroupFinding", "Group", finding.GroupId, finding.GroupName, finding.Issue, "Medium", null));
         AppendBatch(report.QueueFindings, unmatched, matches, finding => new BestPracticeFindingContext("Queue Hygiene", "QueueFinding", "Queue", finding.QueueId, finding.QueueName, finding.Issue, "Medium", null));
         AppendBatch(report.InactiveUserFindings, unmatched, matches, finding => new BestPracticeFindingContext("Inactive User", "InactiveUserFinding", "User", finding.UserId, finding.UserName, finding.Issue, "Medium", null));
@@ -108,9 +110,8 @@ public sealed class FindingBestPracticeEnricher : IFindingBestPracticeEnricher
         foreach (var finding in report.FlowFindings)
             Append(matches, unmatched, new BestPracticeFindingContext("Stale Flow", "FlowFinding", "Flow", finding.FlowId, finding.FlowName, finding.Issue, "High", null));
 
-        AppendBatch(report.AuditLogFindings, unmatched, matches, finding => new BestPracticeFindingContext("Audit Log", "AuditLogFinding", finding.EntityType, finding.EntityId, finding.EntityName, $"{finding.ServiceName} {finding.Action}".Trim(), "Info", null));
-        AppendBatch(report.OperationalEventFindings, unmatched, matches, finding => new BestPracticeFindingContext("Operational Event", "OperationalEventFinding", "OperationalEvent", finding.EntityId, finding.EntityName, finding.EventDefinitionName ?? "Operational event", "Info", null));
-        AppendBatch(report.OutboundEventFindings, unmatched, matches, finding => new BestPracticeFindingContext("Outbound Event", "OutboundEventFinding", "OutboundEvent", finding.EventId, finding.Name, finding.Message ?? "Outbound event", "Info", null));
+        // Raw exported events are not best-practice violations by themselves.
+        // The sentinel layer should map interpreted signals, not event rows.
         AppendBatch(report.QueueServiceabilityFindings, unmatched, matches, finding => new BestPracticeFindingContext("Queue Serviceability", finding.FindingCode, "Queue", finding.QueueId, finding.QueueName, finding.Issue, finding.Severity.ToString(), finding.RecommendedAction));
         AppendBatch(report.IvrFlowBindingFindings, unmatched, matches, finding => new BestPracticeFindingContext("IVR Flow Dependency", finding.FindingCode, "IVR", finding.IvrId, finding.IvrName, finding.Issue, finding.Severity.ToString(), finding.RecommendedAction));
         AppendBatch(report.StaleLicenseFindings, unmatched, matches, finding => new BestPracticeFindingContext("Stale License", "StaleLicenseFinding", "User", finding.UserId, finding.UserName, finding.Issue, "Medium", null));
@@ -123,7 +124,6 @@ public sealed class FindingBestPracticeEnricher : IFindingBestPracticeEnricher
         AppendBatch(report.PromptHygieneFindings, unmatched, matches, finding => new BestPracticeFindingContext("Prompt Hygiene", finding.FindingCode, "Prompt", finding.PromptId, finding.PromptName, finding.Issue, finding.Severity.ToString(), finding.RecommendedAction));
         AppendBatch(report.ChangeAdjacencyFindings, unmatched, matches, finding => new BestPracticeFindingContext("Change Adjacency", finding.FindingCode, finding.AffectedObjectType, finding.AffectedObjectId, finding.AffectedObjectName, finding.Issue, finding.Severity.ToString(), finding.RecommendedAction));
         AppendBatch(report.FlappingDetectionFindings, unmatched, matches, finding => new BestPracticeFindingContext("Flapping Detection", finding.FindingCode, finding.AffectedObjectType, finding.AffectedObjectId, finding.AffectedObjectName, finding.Issue, finding.Severity.ToString(), finding.RecommendedAction));
-        AppendBatch(report.HotSpotFindings, unmatched, matches, finding => new BestPracticeFindingContext("Hot Spot", "HotSpotFinding", finding.ObjectType, finding.ObjectId, finding.ObjectName, finding.Issue, finding.Severity.ToString(), finding.RecommendedAction));
         AppendBatch(report.HistoricalDriftFindings, unmatched, matches, finding => new BestPracticeFindingContext("Historical Drift", "HistoricalDriftFinding", finding.ObjectType, finding.ObjectId, finding.ObjectName, finding.Issue, finding.Severity.ToString(), finding.RecommendedAction));
 
         var unmatchedList = unmatched.OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToList();
@@ -137,12 +137,37 @@ public sealed class FindingBestPracticeEnricher : IFindingBestPracticeEnricher
         return new BestPracticeEnrichmentResult(matches, unmatchedList);
     }
 
-    private static void TrackExtensionFindingTypes(AuditReportData report, ISet<string> unmatched)
+    private void AppendExtensionFindings(
+        AuditReportData report,
+        ISet<string> unmatched,
+        ICollection<BestPracticeGuidanceFinding> matches)
     {
         var extensionReport = report.ExtensionReport;
-        TrackUnmappedIfAny(extensionReport.DuplicateProfileExtensions.Count, "DuplicateProfileExtension", unmatched);
+
+        AppendBatch(extensionReport.DuplicateProfileExtensions, unmatched, matches, finding =>
+            new BestPracticeFindingContext(
+                "Extension Integrity",
+                "DuplicateProfileExtension",
+                "Extension",
+                finding.ExtensionKey,
+                finding.ExtensionKey,
+                $"Extension '{finding.ExtensionKey}' is present on multiple user profiles.",
+                FindingSeverity.Critical.ToString(),
+                "Normalize profile extension ownership so each active user has a unique managed extension."));
+
         TrackUnmappedIfAny(extensionReport.ExtensionAssignedToWrongEntity.Count, "ExtensionAssignedToWrongEntity", unmatched);
-        TrackUnmappedIfAny(extensionReport.ProfileExtensionsNotAssigned.Count, "ProfileExtensionNotAssigned", unmatched);
+
+        AppendBatch(extensionReport.ProfileExtensionsNotAssigned, unmatched, matches, finding =>
+            new BestPracticeFindingContext(
+                "Extension Integrity",
+                "ProfileExtensionNotAssigned",
+                "Extension",
+                finding.ExtensionKey,
+                finding.ExtensionKey,
+                $"Extension '{finding.ExtensionKey}' exists on a user profile but no matching telephony assignment was found.",
+                FindingSeverity.High.ToString(),
+                "Assign the extension through managed telephony ownership so the profile and assignment layers agree."));
+
         TrackUnmappedIfAny(extensionReport.AssignedExtensionsMissingFromProfiles.Count, "AssignedExtensionMissingFromProfile", unmatched);
         TrackUnmappedIfAny(extensionReport.InvalidProfileExtensions.Count, "InvalidProfileExtension", unmatched);
         TrackUnmappedIfAny(extensionReport.InvalidAssignedExtensions.Count, "InvalidAssignedExtension", unmatched);

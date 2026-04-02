@@ -1,6 +1,6 @@
 # Roadmap
-Version: 0.2.0  
-Generated: 2026-03-31
+Version: 0.2.1  
+Generated: 2026-04-01
 
 ## Objective
 
@@ -118,12 +118,22 @@ Complete the link between analyzer outputs and catalog rules.
 Deliverables:
 - expand `best-practices-map.json`
 - align to exact analyzer result names
+- normalize equivalent analyzer outputs through aliases before mapping
 - add one-to-many mappings where required
 - add severity override support
 - add default remediation text per finding type
+- exclude raw event-export rows and synthetic rollup findings from direct best-practice enrichment
+- split umbrella finding types into explicit codes before mapping them
+- track a short list of intentionally deferred finding families separately from true mapping gaps
 
 Why:
 This is the bridge between detection and guidance.
+
+Current focus:
+- alias extension-related findings such as duplicate-profile and profile-not-assigned into the existing DID/extension assignment guidance family
+- add direct mappings for prompt hygiene, IVR schedule-group, queue serviceability cap, and license hygiene finding codes
+- stop treating raw operational/outbound event rows and hot-spot rollups as first-class best-practice finding types
+- replace generic types such as `GroupFinding` and `QueueFinding` with specific finding codes before adding map coverage
 
 ### 9. Schema tightening
 Keep the artifacts reliable and safe for automation.
@@ -185,6 +195,12 @@ Rules will evolve; the system needs lifecycle discipline.
 - finalize rule keys
 - align analyzer finding types to the map file
 - wire report output to `recommended_action_short`
+
+Immediate tranche:
+- add alias normalization for extension hygiene finding families already covered by existing telephony rules
+- add explicit mappings for specific finding codes that already have clear catalog support
+- remove raw event exports and synthetic rollups from enrichment input so the unmapped list reflects actionable policy gaps
+- refactor generic group/queue finding types into explicit codes, then map them
 
 ### Phase 2 — Evidence and remediation
 - add evidence expectations to each finding type

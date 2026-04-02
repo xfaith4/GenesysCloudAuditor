@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using ClosedXML.Excel;
 using GenesysExtensionAudit.Application;
+using GenesysExtensionAudit.Domain.Services;
 using GenesysExtensionAudit.Infrastructure.BestPractices;
 using GenesysExtensionAudit.Infrastructure.Configuration;
 using GenesysExtensionAudit.Infrastructure.Reporting;
@@ -158,6 +159,81 @@ public sealed class BestPracticesIntegrationTests
         Assert.Equal("telephony.did_extension.structured_assignment", Assert.Single(one).BestPracticeKeys.Single());
         Assert.Single(many);
         Assert.Equal(2, Assert.Single(many).BestPracticeKeys.Count);
+    }
+
+    [Fact]
+    public void Enricher_AliasesExtensionFindings_AndSkipsRawEventExports()
+    {
+        var service = CreateContentService(rootPath: GetSharedPackageRoot());
+        var enricher = CreateEnricher(service);
+        var report = new AuditReportData
+        {
+            ExtensionReport = new AuditEngine.AuditReport
+            {
+                DuplicateProfileExtensions =
+                [
+                    new AuditEngine.DuplicateProfileExtensionFinding(
+                        "1001",
+                        [
+                            new AuditEngine.ProfileExtensionDetail(
+                                UserId: "user-1",
+                                UserName: "Operator One",
+                                State: "active",
+                                ExtensionRaw: "1001")
+                        ])
+                ]
+            },
+            OperationalEventFindings =
+            [
+                new OperationalEventFinding(
+                    TimestampUtc: new DateTimeOffset(2026, 04, 07, 13, 00, 00, TimeSpan.Zero),
+                    EventDefinitionId: "def-1",
+                    EventDefinitionName: "edge.heartbeat",
+                    EntityId: "edge-1",
+                    EntityName: "Edge One",
+                    CurrentValue: "online",
+                    PreviousValue: "online",
+                    ErrorCode: null,
+                    ConversationId: "conv-1")
+            ],
+            OutboundEventFindings =
+            [
+                new OutboundEventFinding(
+                    TimestampUtc: new DateTimeOffset(2026, 04, 07, 13, 05, 00, TimeSpan.Zero),
+                    EventId: "evt-1",
+                    Name: "Campaign event",
+                    Category: "campaign",
+                    Level: "INFO",
+                    Code: "OUT-1",
+                    Message: "Campaign state changed",
+                    CorrelationId: "corr-2")
+            ],
+            HotSpotFindings =
+            [
+                new HotSpotFinding(
+                    Rank: 1,
+                    ObjectId: "queue-1",
+                    ObjectName: "Queue One",
+                    ObjectType: "Queue",
+                    TotalFindingCount: 3,
+                    DistinctDomainCount: 2,
+                    AffectedDomains: ["Queue Hygiene", "Historical Drift"],
+                    Issue: "Queue One appears across multiple domains.",
+                    Severity: FindingSeverity.High,
+                    RecommendedAction: "Investigate queue first.")
+            ]
+        };
+
+        var result = enricher.Enrich(report);
+
+        var match = Assert.Single(result.Matches);
+        Assert.Equal("DuplicateProfileExtension", match.SourceFindingType);
+        Assert.Equal("DidOrExtensionAssignmentInconsistent", match.MappingFindingType);
+        Assert.Contains("telephony.did_extension.structured_assignment", match.BestPracticeKeys);
+
+        Assert.DoesNotContain("OperationalEventFinding", result.UnmatchedFindingTypes);
+        Assert.DoesNotContain("OutboundEventFinding", result.UnmatchedFindingTypes);
+        Assert.DoesNotContain("HotSpotFinding", result.UnmatchedFindingTypes);
     }
 
     [Fact]
