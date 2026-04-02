@@ -10,6 +10,8 @@
 
     <!-- Enables `dotnet user-secrets` for this desktop project -->
     <UserSecretsId>GenesysExtensionAudit.App-9b5d4d7f-4b3a-4b9f-9f6c-9d9e7e7f6a11</UserSecretsId>
+    <!-- Allows dotnet restore to succeed on non-Windows CI runners -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
