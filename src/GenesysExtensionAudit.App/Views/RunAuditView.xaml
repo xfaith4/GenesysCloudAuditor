@@ -360,7 +360,7 @@
                       Padding="12"
                       Margin="0,0,0,16"
                       Visibility="{Binding HasProgressConsoleOutput, Converter={StaticResource BoolToVisibility}}">
-                <TextBox Text="{Binding ProgressConsoleText}"
+                <TextBox Text="{Binding ProgressConsoleText, Mode=OneWay}"
                          IsReadOnly="True"
                          AcceptsReturn="True"
                          TextWrapping="NoWrap"
