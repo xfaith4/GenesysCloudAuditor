@@ -452,7 +452,7 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
         if (options.RunUserTelephonyAudit)
         {
             Report(progress, 75, "Analyzing user telephony integrity...");
-            userTelephonyIntegrityFindings = AnalyzeUserTelephonyIntegrity(userDtos, extDtos, didDtos);
+            userTelephonyIntegrityFindings = AnalyzeUserTelephonyIntegrity(userDtos, extDtos, didDtos, options.IncludeInactiveUsers);
             _logger.LogInformation("User telephony integrity check complete. Findings={Count}", userTelephonyIntegrityFindings.Count);
         }
 
@@ -1441,9 +1441,13 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
     private static IReadOnlyList<UserTelephonyIntegrityFinding> AnalyzeUserTelephonyIntegrity(
         IReadOnlyList<GenesysUserDto> users,
         IReadOnlyList<EdgeExtensionEntityDto> extensions,
-        IReadOnlyList<DidDto> dids)
+        IReadOnlyList<DidDto> dids,
+        bool includeInactiveUsers)
     {
         var findings = new List<UserTelephonyIntegrityFinding>();
+        var userById = users
+            .Where(u => !string.IsNullOrWhiteSpace(u.Id))
+            .ToDictionary(u => u.Id!, StringComparer.OrdinalIgnoreCase);
 
         // Build lookup: normalized extension key → user IDs that own the assignment
         var assignedExtToUserIds = extensions
@@ -1462,6 +1466,105 @@ public sealed class AuditOrchestrator : IAuditOrchestrator
                 && d.Owner.Id is not null)
             .GroupBy(d => d.Owner!.Id!, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
+        foreach (var extension in extensions.Where(e =>
+                     !string.IsNullOrWhiteSpace(e.Extension)
+                     && string.Equals(e.AssignedTo?.Type, "USER", StringComparison.OrdinalIgnoreCase)
+                     && !string.IsNullOrWhiteSpace(e.AssignedTo?.Id)))
+        {
+            var ownerUserId = extension.AssignedTo!.Id!;
+            if (userById.TryGetValue(ownerUserId, out var ownerUser))
+            {
+                if (!string.Equals(ownerUser.State, "inactive", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                findings.Add(new UserTelephonyIntegrityFinding(
+                    UserId: ownerUserId,
+                    UserName: ownerUser.Name,
+                    Email: ownerUser.Email,
+                    UserState: ownerUser.State,
+                    ProfileExtensionRaw: extension.Extension,
+                    StationId: ownerUser.Station?.Id,
+                    StationName: ownerUser.Station?.Name,
+                    RelatedDidNumber: null,
+                    FindingCode: TelephonyIntegrityCode.GhostTelephonyAssignment,
+                    Issue: $"Extension '{extension.Extension}' is still assigned to inactive user '{ownerUser.Name ?? ownerUserId}'. " +
+                           "Telephony ownership appears stale and can misroute calls or block reassignment.",
+                    Severity: FindingSeverity.High,
+                    Category: FindingCategory.LocalConfigFix,
+                    RecommendedAction: "Remove or reassign the extension from the inactive user so active telephony ownership matches the intended operator."));
+                continue;
+            }
+
+            if (!includeInactiveUsers)
+                continue;
+
+            findings.Add(new UserTelephonyIntegrityFinding(
+                UserId: ownerUserId,
+                UserName: null,
+                Email: null,
+                UserState: null,
+                ProfileExtensionRaw: extension.Extension,
+                StationId: null,
+                StationName: null,
+                RelatedDidNumber: null,
+                FindingCode: TelephonyIntegrityCode.GhostTelephonyAssignment,
+                Issue: $"Extension '{extension.Extension}' is assigned to user ID '{ownerUserId}', but that user was not returned by the user inventory. " +
+                       "The assignment may point to a deleted or otherwise invalid identity.",
+                Severity: FindingSeverity.High,
+                Category: FindingCategory.LocalConfigFix,
+                RecommendedAction: "Confirm whether the user still exists. If not, clear or reassign the extension to a valid active user."));
+        }
+
+        foreach (var did in dids.Where(d =>
+                     !string.IsNullOrWhiteSpace(d.PhoneNumber)
+                     && d.Owner is not null
+                     && string.Equals(d.Owner.Type, "User", StringComparison.OrdinalIgnoreCase)
+                     && !string.IsNullOrWhiteSpace(d.Owner.Id)))
+        {
+            var ownerUserId = did.Owner!.Id!;
+            if (userById.TryGetValue(ownerUserId, out var ownerUser))
+            {
+                if (!string.Equals(ownerUser.State, "inactive", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                findings.Add(new UserTelephonyIntegrityFinding(
+                    UserId: ownerUserId,
+                    UserName: ownerUser.Name,
+                    Email: ownerUser.Email,
+                    UserState: ownerUser.State,
+                    ProfileExtensionRaw: ExtractWorkPhoneExtension(ownerUser),
+                    StationId: ownerUser.Station?.Id,
+                    StationName: ownerUser.Station?.Name,
+                    RelatedDidNumber: did.PhoneNumber,
+                    FindingCode: TelephonyIntegrityCode.GhostTelephonyAssignment,
+                    Issue: $"DID '{did.PhoneNumber}' is still assigned to inactive user '{ownerUser.Name ?? ownerUserId}'. " +
+                           "Caller identity and routing ownership may no longer represent a valid operator.",
+                    Severity: FindingSeverity.High,
+                    Category: FindingCategory.LocalConfigFix,
+                    RecommendedAction: "Remove or reassign the DID from the inactive user so inbound and outbound caller identity reflects a valid active owner."));
+                continue;
+            }
+
+            if (!includeInactiveUsers)
+                continue;
+
+            findings.Add(new UserTelephonyIntegrityFinding(
+                UserId: ownerUserId,
+                UserName: null,
+                Email: null,
+                UserState: null,
+                ProfileExtensionRaw: null,
+                StationId: null,
+                StationName: null,
+                RelatedDidNumber: did.PhoneNumber,
+                FindingCode: TelephonyIntegrityCode.GhostTelephonyAssignment,
+                Issue: $"DID '{did.PhoneNumber}' is assigned to user ID '{ownerUserId}', but that user was not returned by the user inventory. " +
+                       "The DID may be stranded on a deleted or invalid identity.",
+                Severity: FindingSeverity.High,
+                Category: FindingCategory.LocalConfigFix,
+                RecommendedAction: "Confirm whether the owning user still exists. If not, clear or reassign the DID to the correct active user."));
+        }
 
         foreach (var user in users)
         {

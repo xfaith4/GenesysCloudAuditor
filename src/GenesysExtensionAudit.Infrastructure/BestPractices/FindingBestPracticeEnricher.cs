@@ -18,6 +18,7 @@ public sealed class FindingBestPracticeEnricher : IFindingBestPracticeEnricher
             [TelephonyIntegrityCode.ExtensionWithoutStation] = "DidOrExtensionAssignmentInconsistent",
             [TelephonyIntegrityCode.StationWithoutExtension] = "DidOrExtensionAssignmentInconsistent",
             [TelephonyIntegrityCode.DidOwnerExtensionMismatch] = "DidOrExtensionAssignmentInconsistent",
+            [TelephonyIntegrityCode.GhostTelephonyAssignment] = "DidOrExtensionAssignmentInconsistent",
             ["DidFinding"] = "DidOrExtensionAssignmentInconsistent",
             ["DuplicateProfileExtension"] = "DidOrExtensionAssignmentInconsistent",
             ["ProfileExtensionNotAssigned"] = "DidOrExtensionAssignmentInconsistent",

@@ -566,7 +566,7 @@ public sealed class AuditSnapshotService : IAuditSnapshotService
             findings.Add(Create("License Hygiene", "RoleGroupOverlapFinding", $"role-group-overlap|{f.UserId}|{f.RoleId}|{f.DivisionId}|{f.GroupId}", f.UserId, f.UserName, f.Issue, FindingSeverity.Low, observedAtUtc));
 
         foreach (var f in report.UserTelephonyIntegrityFindings)
-            findings.Add(Create("User Telephony Integrity", f.FindingCode, $"user-telephony|{f.FindingCode}|{f.UserId}|{f.StationId}|{f.RelatedDidNumber}", f.UserId, f.UserName, f.Issue, f.Severity, observedAtUtc));
+            findings.Add(Create("User Telephony Integrity", f.FindingCode, $"user-telephony|{f.FindingCode}|{f.UserId}|{f.ProfileExtensionRaw}|{f.StationId}|{f.RelatedDidNumber}", f.UserId, f.UserName, f.Issue, f.Severity, observedAtUtc));
 
         foreach (var f in report.QueueServiceabilityFindings)
             findings.Add(Create("Queue Serviceability", f.FindingCode, $"queue-serviceability|{f.FindingCode}|{f.QueueId}", f.QueueId, f.QueueName, f.Issue, f.Severity, observedAtUtc));

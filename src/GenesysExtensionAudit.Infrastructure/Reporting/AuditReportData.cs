@@ -50,6 +50,12 @@ public static class TelephonyIntegrityCode
     /// contact info — the DID and profile are out of sync.
     /// </summary>
     public const string DidOwnerExtensionMismatch = "DID_OWNER_EXTENSION_MISMATCH";
+
+    /// <summary>
+    /// A telephony asset still points at a user identity that is missing from the fetched
+    /// user inventory or is present but inactive.
+    /// </summary>
+    public const string GhostTelephonyAssignment = "GHOST_TELEPHONY_ASSIGNMENT";
 }
 
 // ─── Finding codes for QueueServiceabilityFinding (Phase 1.3) ────────────────
