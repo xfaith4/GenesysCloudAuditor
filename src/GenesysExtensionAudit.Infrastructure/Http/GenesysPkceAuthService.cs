@@ -253,13 +253,14 @@ public sealed class GenesysPkceAuthService : IGenesysPkceAuthService
 
     private static bool TryValidateRedirectUri(string redirectUri, out Uri uri, out string message)
     {
-        uri = default!;
-
-        if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out uri))
+        if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var parsedUri))
         {
+            uri = null!;
             message = "PkceRedirectUri must be a valid absolute URI.";
             return false;
         }
+
+        uri = parsedUri;
 
         if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
         {

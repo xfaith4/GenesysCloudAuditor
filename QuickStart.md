@@ -198,8 +198,16 @@ If the build fails:
 ## 6. Run the Desktop Application
 
 ```powershell
-dotnet run --project GenesysExtensionAudit.App.csproj
+dotnet run --project src\GenesysExtensionAudit.App\GenesysExtensionAudit.App.csproj
 ```
+
+If you want to launch the built Windows executable directly after `dotnet build -c Release`, use:
+
+```powershell
+.\src\GenesysExtensionAudit.App\bin\Release\net8.0-windows\GenesysExtensionAudit.exe
+```
+
+`dotnet build` only compiles the app. It does not start the desktop UI automatically.
 
 ### Expected desktop behavior
 
