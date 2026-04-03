@@ -1032,7 +1032,12 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         AppendProgressLine(StatusMessage);
         var consolidatedBaseName = $"{datePrefix}_GenesysCloudAudit_Full.xlsx";
         var consolidatedPath = GetNextAvailableFilePath(outputDirectory, consolidatedBaseName);
-        await _excelService.WriteAsync(consolidatedPath, report, ct, carePacket: carePacket).ConfigureAwait(true);
+        await _excelService.WriteAsync(
+            consolidatedPath,
+            report,
+            ct,
+            BuildConsolidatedWorkbookScope(report),
+            carePacket: carePacket).ConfigureAwait(true);
 
         var careJsonPathForWorkbook = Path.ChangeExtension(consolidatedPath, ".care-evidence.json");
         await WriteArtifactAsync(
@@ -1099,10 +1104,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("Extensions", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeExtensions = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeExtensionAudit = true
             }));
         }
 
@@ -1111,10 +1113,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("Groups", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeGroups = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeGroups = true
             }));
         }
 
@@ -1123,10 +1122,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("Queues", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeQueues = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeQueueAudit = true
             }));
         }
 
@@ -1135,10 +1131,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("QueueServiceability", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeQueues = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeQueueServiceability = true
             }));
         }
 
@@ -1147,10 +1140,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("Flows", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeFlows = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeFlowAudit = true
             }));
         }
 
@@ -1159,10 +1149,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("FlowDependency", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeFlows = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeFlowDependency = true
             }));
         }
 
@@ -1171,10 +1158,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("InactiveUsers", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeInactiveUsers = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeInactiveUsers = true
             }));
         }
 
@@ -1183,10 +1167,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("UserTelephony", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeExtensions = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeUserTelephonyIntegrity = true
             }));
         }
 
@@ -1195,10 +1176,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("DIDs", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeDids = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeDids = true
             }));
         }
 
@@ -1207,10 +1185,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("StaleLicenses", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeStaleLicenses = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeStaleLicenses = true
             }));
         }
 
@@ -1219,10 +1194,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("LicenseOverProvisioning", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeLicenseOverProvisioning = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeLicenseOverProvisioning = true
             }));
         }
 
@@ -1231,10 +1203,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("RoleGroupOverlap", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeRoleGroupOverlap = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeRoleGroupOverlap = true
             }));
         }
 
@@ -1244,10 +1213,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 IncludeSummary = true,
                 IncludeSiteTopology = true,
-                IncludeEdgePerformance = report.Options.RunOperationalEventLogs,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeEdgePerformance = report.Options.RunOperationalEventLogs
             }));
         }
 
@@ -1256,10 +1222,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("PromptHygiene", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludePromptHygiene = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludePromptHygiene = true
             }));
         }
 
@@ -1268,10 +1231,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("AuditLogs", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeAuditLogs = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeAuditLogs = true
             }));
         }
 
@@ -1280,10 +1240,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("ChangeAdjacency", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeChangeAdjacency = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeChangeAdjacency = true
             }));
         }
 
@@ -1292,10 +1249,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("FlappingDetection", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeFlappingDetection = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeFlappingDetection = true
             }));
         }
 
@@ -1304,10 +1258,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("OperationalEvents", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeOperationalEvents = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeOperationalEvents = true
             }));
         }
 
@@ -1316,10 +1267,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("OutboundEvents", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeOutboundEvents = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeOutboundEvents = true
             }));
         }
 
@@ -1328,15 +1276,42 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             scopes.Add(("HotSpots", new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = true,
-                IncludeHotSpot = true,
-                IncludeBestPracticeGuidance = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeHotSpot = true
             }));
         }
 
         return scopes;
     }
+
+    private static ExcelWorkbookScopeOptions BuildConsolidatedWorkbookScope(AuditReportData report)
+        => new()
+        {
+            IncludeSummary = true,
+            IncludeExtensionAudit = report.Options.RunExtensionAudit,
+            IncludeUserTelephonyIntegrity = report.Options.RunUserTelephonyAudit,
+            IncludeGroups = report.Options.RunGroupAudit,
+            IncludeQueueAudit = report.Options.RunQueueAudit,
+            IncludeQueueServiceability = report.Options.RunQueueServiceabilityAudit,
+            IncludeFlowAudit = report.Options.RunFlowAudit,
+            IncludeFlowDependency = report.Options.RunFlowDependencyAudit,
+            IncludeInactiveUsers = report.Options.RunInactiveUserAudit,
+            IncludeDids = report.Options.RunDidAudit,
+            IncludeAuditLogs = report.Options.RunAuditLogs,
+            IncludeOperationalEvents = report.Options.RunOperationalEventLogs,
+            IncludeOutboundEvents = report.Options.RunOutboundEvents,
+            IncludeStaleLicenses = report.Options.RunStaleLicenseAudit,
+            IncludeLicenseOverProvisioning = report.Options.RunLicenseOverProvisioningAudit,
+            IncludeRoleGroupOverlap = report.Options.RunRoleGroupOverlapAudit,
+            IncludeSiteTopology = report.Options.RunSiteTopologyAudit,
+            IncludeEdgePerformance = report.Options.RunSiteTopologyAudit && report.Options.RunOperationalEventLogs,
+            IncludePromptHygiene = report.Options.RunPromptHygieneAudit,
+            IncludeChangeAdjacency = report.Options.RunChangeAdjacencyAudit && report.Options.RunAuditLogs,
+            IncludeFlappingDetection = report.Options.RunFlappingDetectionAudit && report.Options.RunAuditLogs,
+            IncludeHotSpot = report.Options.RunHotSpotAudit,
+            IncludeFindingLifecycle = false,
+            IncludeHistoricalDrift = false,
+            IncludeBestPracticeGuidance = false
+        };
 
     private static async Task WriteArtifactAsync(string path, Func<byte[]> contentFactory, CancellationToken ct)
     {

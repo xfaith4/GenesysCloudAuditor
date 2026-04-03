@@ -13,28 +13,60 @@ public interface IExcelReportService
 
 public sealed class ExcelWorkbookScopeOptions
 {
-    public bool IncludeSummary { get; init; } = true;
-    public bool IncludeExtensions { get; init; } = true;
-    public bool IncludeGroups { get; init; } = true;
-    public bool IncludeQueues { get; init; } = true;
-    public bool IncludeFlows { get; init; } = true;
-    public bool IncludeInactiveUsers { get; init; } = true;
-    public bool IncludeDids { get; init; } = true;
-    public bool IncludeAuditLogs { get; init; } = true;
-    public bool IncludeOperationalEvents { get; init; } = true;
-    public bool IncludeOutboundEvents { get; init; } = true;
-    public bool IncludeStaleLicenses { get; init; } = true;
-    public bool IncludeLicenseOverProvisioning { get; init; } = true;
-    public bool IncludeRoleGroupOverlap { get; init; } = true;
-    public bool IncludeSiteTopology { get; init; } = true;
-    public bool IncludeEdgePerformance { get; init; } = true;
-    public bool IncludePromptHygiene { get; init; } = true;
-    public bool IncludeChangeAdjacency { get; init; } = true;
-    public bool IncludeFlappingDetection { get; init; } = true;
-    public bool IncludeHotSpot { get; init; } = true;
-    public bool IncludeFindingLifecycle { get; init; } = true;
-    public bool IncludeHistoricalDrift { get; init; } = true;
-    public bool IncludeBestPracticeGuidance { get; init; } = true;
+    public bool IncludeSummary { get; init; }
+    public bool IncludeExtensionAudit { get; init; }
+    public bool IncludeUserTelephonyIntegrity { get; init; }
+    public bool IncludeGroups { get; init; }
+    public bool IncludeQueueAudit { get; init; }
+    public bool IncludeQueueServiceability { get; init; }
+    public bool IncludeFlowAudit { get; init; }
+    public bool IncludeFlowDependency { get; init; }
+    public bool IncludeInactiveUsers { get; init; }
+    public bool IncludeDids { get; init; }
+    public bool IncludeAuditLogs { get; init; }
+    public bool IncludeOperationalEvents { get; init; }
+    public bool IncludeOutboundEvents { get; init; }
+    public bool IncludeStaleLicenses { get; init; }
+    public bool IncludeLicenseOverProvisioning { get; init; }
+    public bool IncludeRoleGroupOverlap { get; init; }
+    public bool IncludeSiteTopology { get; init; }
+    public bool IncludeEdgePerformance { get; init; }
+    public bool IncludePromptHygiene { get; init; }
+    public bool IncludeChangeAdjacency { get; init; }
+    public bool IncludeFlappingDetection { get; init; }
+    public bool IncludeHotSpot { get; init; }
+    public bool IncludeFindingLifecycle { get; init; }
+    public bool IncludeHistoricalDrift { get; init; }
+    public bool IncludeBestPracticeGuidance { get; init; }
+
+    public static ExcelWorkbookScopeOptions All() => new()
+    {
+        IncludeSummary = true,
+        IncludeExtensionAudit = true,
+        IncludeUserTelephonyIntegrity = true,
+        IncludeGroups = true,
+        IncludeQueueAudit = true,
+        IncludeQueueServiceability = true,
+        IncludeFlowAudit = true,
+        IncludeFlowDependency = true,
+        IncludeInactiveUsers = true,
+        IncludeDids = true,
+        IncludeAuditLogs = true,
+        IncludeOperationalEvents = true,
+        IncludeOutboundEvents = true,
+        IncludeStaleLicenses = true,
+        IncludeLicenseOverProvisioning = true,
+        IncludeRoleGroupOverlap = true,
+        IncludeSiteTopology = true,
+        IncludeEdgePerformance = true,
+        IncludePromptHygiene = true,
+        IncludeChangeAdjacency = true,
+        IncludeFlappingDetection = true,
+        IncludeHotSpot = true,
+        IncludeFindingLifecycle = true,
+        IncludeHistoricalDrift = true,
+        IncludeBestPracticeGuidance = true
+    };
 }
 
 /// <summary>
@@ -56,7 +88,7 @@ public sealed class ExcelReportService : IExcelReportService
     private static readonly XLColor SeverityWarning = XLColor.FromHtml("#FFF2CC");
     private static readonly XLColor SeverityInfo = XLColor.FromHtml("#E2F0D9");
 
-    private sealed record SummaryAuditRow(string Sheet, string Audit, bool Performed, int Count, string Severity, string Description);
+    private sealed record SummaryAuditRow(string Sheet, string Audit, bool AuditRun, int Count, string Severity, string Description);
     private sealed record SummaryMetric(string Label, string Value);
     private sealed record DomainHealthRow(string Domain, int? Score, string Status, int ActiveFindings, int CriticalHighCount, string Summary);
 
@@ -138,7 +170,7 @@ public sealed class ExcelReportService : IExcelReportService
     private static XLWorkbook BuildWorkbook(AuditReportData report, ExcelWorkbookScopeOptions? scopeOptions, CareEvidencePacket? carePacket)
     {
         ArgumentNullException.ThrowIfNull(report);
-        scopeOptions ??= new ExcelWorkbookScopeOptions();
+        scopeOptions ??= ExcelWorkbookScopeOptions.All();
 
         var wb = new XLWorkbook();
 
@@ -153,29 +185,31 @@ public sealed class ExcelReportService : IExcelReportService
             WriteRelationshipExplainabilitySheet(wb, report, carePacket);
         }
 
-        if (scopeOptions.IncludeExtensions)
+        if (scopeOptions.IncludeExtensionAudit)
         {
             WriteExtDuplicatesProfileSheet(wb, report);
             WriteExtOwnershipMismatchSheet(wb, report);
             WriteExtAssignVsProfileSheet(wb, report);
-            WriteUserTelephonyIntegritySheet(wb, report);
             WriteInvalidExtensionsSheet(wb, report);
         }
+
+        if (scopeOptions.IncludeUserTelephonyIntegrity)
+            WriteUserTelephonyIntegritySheet(wb, report);
 
         if (scopeOptions.IncludeDids)
             WriteDidMismatchSheet(wb, report);
 
-        if (scopeOptions.IncludeFlows)
-        {
+        if (scopeOptions.IncludeFlowAudit)
             WriteStaleFlowsSheet(wb, report);
-            WriteIvrFlowBindingsSheet(wb, report);
-        }
 
-        if (scopeOptions.IncludeQueues)
-        {
+        if (scopeOptions.IncludeFlowDependency)
+            WriteIvrFlowBindingsSheet(wb, report);
+
+        if (scopeOptions.IncludeQueueAudit)
             WriteEmptyQueuesSheet(wb, report);
+
+        if (scopeOptions.IncludeQueueServiceability)
             WriteQueueServiceabilitySheet(wb, report);
-        }
 
         if (scopeOptions.IncludeGroups)
             WriteEmptyGroupsSheet(wb, report);
@@ -245,7 +279,7 @@ public sealed class ExcelReportService : IExcelReportService
 
         var auditRows = BuildSummaryAuditRows(report, carePacket).ToList();
         var totalFindings = auditRows
-            .Where(r => r.Performed && r.Sheet is not "Care_Case_Summary" and not "Relationship_Explainability" and not "Best_Practice_Guidance")
+            .Where(r => r.AuditRun && r.Sheet is not "Care_Case_Summary" and not "Relationship_Explainability" and not "Best_Practice_Guidance")
             .Sum(r => r.Count);
         var duration = report.RunCompletedAtUtc > report.RunStartedAtUtc
             ? report.RunCompletedAtUtc - report.RunStartedAtUtc
@@ -412,13 +446,14 @@ public sealed class ExcelReportService : IExcelReportService
         row++;
         WriteSectionHeader(ws, row, 6, "Audit Inventory");
         row++;
-        WriteTableHeader(ws, row, "Sheet", "Audit", "Performed", "Items", "Severity", "Description");
+        var auditInventoryHeaderRow = row;
+        WriteTableHeader(ws, row, "Sheet", "Audit", "Audit Run", "Items", "Severity", "Description");
         row++;
         foreach (var audit in auditRows)
         {
             ws.Cell(row, 1).Value = audit.Sheet;
             ws.Cell(row, 2).Value = audit.Audit;
-            ws.Cell(row, 3).Value = audit.Performed ? "Yes" : "No";
+            ws.Cell(row, 3).Value = audit.AuditRun ? "Yes" : "No";
             ws.Cell(row, 4).Value = audit.Count;
             ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell(row, 5).Value = audit.Severity;
@@ -426,12 +461,17 @@ public sealed class ExcelReportService : IExcelReportService
 
             ApplySeverityFill(ws.Cell(row, 5), audit.Severity);
 
-            if (!audit.Performed)
+            if (!audit.AuditRun)
                 ws.Cell(row, 3).Style.Fill.BackgroundColor = XLColor.FromHtml("#E5E7EB");
 
             ApplyAltRow(ws, row, 6);
             row++;
         }
+
+        var auditInventoryRange = ws.Range(auditInventoryHeaderRow, 1, row - 1, 6);
+        auditInventoryRange.SetAutoFilter();
+        ws.AutoFilter.Column(3).AddFilter("Yes");
+        ws.AutoFilter.Reapply();
 
         row++;
         ws.Cell(row, 1).Value = "Run Start (UTC)";
@@ -482,15 +522,15 @@ public sealed class ExcelReportService : IExcelReportService
             new("Site_Topology", "Site–Edge–Trunk Topology", report.Options.RunSiteTopologyAudit, report.SiteTopologyFindings.Count, "Critical", "Sites with no active edges, offline edges, orphaned edge–site bindings, or trunks that are down/out-of-service"),
             new("Edge_Performance", "Edge Performance & Distribution", report.Options.RunSiteTopologyAudit && report.Options.RunOperationalEventLogs, report.EdgePerformanceObservations.Count(o => o.IsAnomalous), "High", "Per-edge conversation distribution heuristics derived from operational events and site topology"),
             new("Prompt_Hygiene", "Architect Prompt Hygiene", report.Options.RunPromptHygieneAudit, report.PromptHygieneFindings.Count, "Warning", "Prompts with no language resources or all resources missing both audio and TTS — callers will hear silence"),
-            new("Finding_Lifecycle", "Finding Lifecycle", report.FindingLifecycleWasComputed, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
-            new("Historical_Drift", "Historical Drift", report.HistoricalDriftWasComputed, report.HistoricalDriftFindings.Count, "High", "Material telephony, routing, and topology relationship changes compared to the previous saved snapshot"),
-            new("Best_Practice_Guidance", "Best Practice Guidance", report.BestPracticeGuidanceWasComputed, report.BestPracticeGuidanceFindings.Count, "Info", "Mapped policy guidance, remediation, ownership, and glossary context derived from the shared best-practices catalog"),
+            new("Finding_Lifecycle", "Finding Lifecycle", false, report.FindingLifecycleFindings.Count, "Info", "New, recurrent, and resolved findings compared to the previous saved snapshot"),
+            new("Historical_Drift", "Historical Drift", false, report.HistoricalDriftFindings.Count, "High", "Material telephony, routing, and topology relationship changes compared to the previous saved snapshot"),
+            new("Best_Practice_Guidance", "Best Practice Guidance", false, report.BestPracticeGuidanceFindings.Count, "Info", "Mapped policy guidance, remediation, ownership, and glossary context derived from the shared best-practices catalog"),
         };
 
         if (carePacket is not null)
         {
-            rows.Add(new SummaryAuditRow("Care_Case_Summary", "Care Case Summary", true, carePacket.EscalationCandidates.Count, "High", "Escalation candidates with support readiness, blast radius, and case narrative detail"));
-            rows.Add(new SummaryAuditRow("Relationship_Explainability", "Relationship and Dependency Views", true, carePacket.EscalationCandidates.Count, "High", "Dependency chain, evidence chain, impact explanation, and recent change context for escalation candidates"));
+            rows.Add(new SummaryAuditRow("Care_Case_Summary", "Care Case Summary", false, carePacket.EscalationCandidates.Count, "High", "Escalation candidates with support readiness, blast radius, and case narrative detail"));
+            rows.Add(new SummaryAuditRow("Relationship_Explainability", "Relationship and Dependency Views", false, carePacket.EscalationCandidates.Count, "High", "Dependency chain, evidence chain, impact explanation, and recent change context for escalation candidates"));
         }
 
         return rows;

@@ -275,26 +275,6 @@ public sealed class BestPracticesIntegrationTests
             new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = false,
-                IncludeExtensions = false,
-                IncludeGroups = false,
-                IncludeQueues = false,
-                IncludeFlows = false,
-                IncludeInactiveUsers = false,
-                IncludeDids = false,
-                IncludeAuditLogs = false,
-                IncludeOperationalEvents = false,
-                IncludeOutboundEvents = false,
-                IncludeStaleLicenses = false,
-                IncludeLicenseOverProvisioning = false,
-                IncludeRoleGroupOverlap = false,
-                IncludeSiteTopology = false,
-                IncludeEdgePerformance = false,
-                IncludePromptHygiene = false,
-                IncludeChangeAdjacency = false,
-                IncludeFlappingDetection = false,
-                IncludeHotSpot = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false,
                 IncludeBestPracticeGuidance = true
             });
 

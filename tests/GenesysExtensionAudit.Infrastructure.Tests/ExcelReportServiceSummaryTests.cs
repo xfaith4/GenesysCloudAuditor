@@ -57,26 +57,7 @@ public sealed class ExcelReportServiceSummaryTests
             scopeOptions: new ExcelWorkbookScopeOptions
             {
                 IncludeSummary = false,
-                IncludeExtensions = false,
-                IncludeGroups = false,
-                IncludeQueues = false,
-                IncludeFlows = false,
-                IncludeInactiveUsers = false,
-                IncludeDids = false,
-                IncludeAuditLogs = false,
-                IncludeOperationalEvents = false,
-                IncludeOutboundEvents = false,
-                IncludeStaleLicenses = false,
-                IncludeLicenseOverProvisioning = false,
-                IncludeRoleGroupOverlap = false,
-                IncludeSiteTopology = false,
-                IncludeEdgePerformance = true,
-                IncludePromptHygiene = false,
-                IncludeChangeAdjacency = false,
-                IncludeFlappingDetection = false,
-                IncludeHotSpot = false,
-                IncludeFindingLifecycle = false,
-                IncludeHistoricalDrift = false
+                IncludeEdgePerformance = true
             });
 
         using var stream = new MemoryStream(bytes);
@@ -359,27 +340,7 @@ public sealed class ExcelReportServiceSummaryTests
 
     private static ExcelWorkbookScopeOptions SummaryOnlyScope() => new()
     {
-        IncludeSummary = true,
-        IncludeExtensions = false,
-        IncludeGroups = false,
-        IncludeQueues = false,
-        IncludeFlows = false,
-        IncludeInactiveUsers = false,
-        IncludeDids = false,
-        IncludeAuditLogs = false,
-        IncludeOperationalEvents = false,
-        IncludeOutboundEvents = false,
-        IncludeStaleLicenses = false,
-        IncludeLicenseOverProvisioning = false,
-        IncludeRoleGroupOverlap = false,
-        IncludeSiteTopology = false,
-        IncludeEdgePerformance = false,
-        IncludePromptHygiene = false,
-        IncludeChangeAdjacency = false,
-        IncludeFlappingDetection = false,
-        IncludeHotSpot = false,
-        IncludeFindingLifecycle = false,
-        IncludeHistoricalDrift = false
+        IncludeSummary = true
     };
 
     private static void AssertContains(IReadOnlyCollection<string> values, string expectedSubstring)
