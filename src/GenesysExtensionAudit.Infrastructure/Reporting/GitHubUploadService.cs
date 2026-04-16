@@ -266,9 +266,8 @@ public sealed class GitHubUploadService : IGitHubUploadService
 
     private static string BuildFallbackFileUrl(GitHubOptions opts, string filePath, string branch)
     {
-        var folder = (opts.FolderPath ?? string.Empty).Trim('/');
-        var unescaped = string.IsNullOrWhiteSpace(folder) ? opts.FolderPath : $"{folder}/{opts.FolderPath}";
-        return $"https://github.com/{opts.Owner}/{opts.Repository}/blob/{branch}/{unescaped}";
+        var decodedPath = Uri.UnescapeDataString(filePath);
+        return $"https://github.com/{opts.Owner}/{opts.Repository}/blob/{branch}/{decodedPath}";
     }
 
     private static string BranchOrDefault(string? branch)

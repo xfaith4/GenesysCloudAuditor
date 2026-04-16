@@ -32,7 +32,7 @@
 | `Empty_Groups` | 5 | Warning | 2025-11-14 08:31:02 UTC | mypurecloud.com | false | 1842 | 1786 | 47.3 |
 | `Empty_Queues` | 3 | Warning | 2025-11-14 08:31:02 UTC | mypurecloud.com | false | 1842 | 1786 | 47.3 |
 | `Stale_Flows` | 9 | Warning | 2025-11-14 08:31:02 UTC | mypurecloud.com | false | 1842 | 1786 | 47.3 |
-| `Inactive_Users` | 0 | Warning | 2025-11-14 08:31:02 UTC | mypurecloud.com | false | 1842 | 1786 | 47.3 |
+| `Stale_Tokens` | 0 | Warning | 2025-11-14 08:31:02 UTC | mypurecloud.com | false | 1842 | 1786 | 47.3 |
 | `DID_Mismatches` | 6 | Warning | 2025-11-14 08:31:02 UTC | mypurecloud.com | false | 1842 | 1786 | 47.3 |
 
 ---
@@ -42,7 +42,7 @@
 - **Critical findings require immediate action.** Duplicate profile extensions and ownership mismatches directly impact call routing and may cause callers to reach the wrong agent or no agent at all.
 - **Warning findings should be investigated.** They may represent stale configuration, deprovisioning gaps, or data quality issues that grow into larger problems over time.
 - **Zero findings is the goal.** A healthy org will show `0` for all Critical rows and low counts for Warning rows that reflect expected org maintenance backlogs.
-- **`Inactive_Users = 0`** when `IncludeInactive=false` — run the audit with `IncludeInactive=true` to include inactive accounts in the scan.
+- **`Stale_Tokens = 0`** means no users exceeded the configured stale-token threshold during this run.
 
 ---
 

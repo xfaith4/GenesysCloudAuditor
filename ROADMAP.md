@@ -715,6 +715,19 @@ At minimum, indexed documents should support:
 ### Why this matters
 
 This enables centralized search, long-term retention, dashboarding, triage workflows, and correlation with external operational telemetry in Elastic-based environments.
+
+---
+
+# Documentation and Repository Hygiene Backlog
+
+Pending documentation/repository cleanup items:
+
+| Item | Priority | Status |
+| --- | --- | --- |
+| Rename scaffold-era solution filename (`GenesysExtensionAudit_scaffold.sln` -> `GenesysExtensionAudit.sln`) | Medium | Planned |
+| Add/refresh product screenshots for `Run Audit`, `Schedule Audits`, and report output docs | Medium | Planned |
+| Define and publish contributor documentation standards as repository contributor volume grows | Medium | Planned |
+
 -----
 # Rule Authoring and Extensibility
 

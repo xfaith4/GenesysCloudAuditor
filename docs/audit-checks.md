@@ -143,11 +143,21 @@ Before any comparison, raw extension strings from both sources are passed throug
 
 ---
 
-### Inactive Users — `Inactive_Users`
+### Stale Token Users — `Stale_Tokens`
 
 **Severity:** Warning
 
-**What:** User accounts that have not been active recently. Only populated when `IncludeInactive=true`.
+**What:** User accounts whose token last-issued timestamp exceeds the configured inactivity threshold.
+
+**Export columns:** `UserId`, `UserName`, `Email`, `State`, `LastLoginDate`
+
+---
+
+### Users Missing Location — `Users_No_Location`
+
+**Severity:** Warning
+
+**What:** Users that have no location configured on their account.
 
 **Export columns:** `UserId`, `UserName`, `Email`, `State`, `LastLoginDate`
 
@@ -237,7 +247,7 @@ TargetId        : string (GUID of the assigned entity)
 | User has no Work Phone extension | Excluded from extension checks |
 | Extension is a full E.164 number | Flagged as `Invalid_Extensions` (not treated as a valid short extension) |
 | `IncludeInactive=false` | Inactive users excluded from all extension checks |
-| `IncludeInactive=true` | Inactive users included in all checks; reported in `Inactive_Users` |
+| `IncludeInactive=true` | Inactive users included in all checks; stale-token findings become more complete |
 | Leading zeros differ | Treated as distinct extensions when `PreserveLeadingZeros=true` |
 | Paginated API returns a different sort order mid-run | Run timestamp recorded; minor drift noted in Summary |
 

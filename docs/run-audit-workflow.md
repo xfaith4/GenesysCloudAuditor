@@ -34,7 +34,7 @@ Available toggles:
 - DIDs
 - Audit Logs
 - Operational Event Logs
-- OutboundEvents
+- Outbound Events
 
 `Select All` updates all path flags at once.
 
@@ -89,4 +89,3 @@ If runner auto-discovery fails, set `Scheduling:RunnerExecutablePath` in app set
 - [setup and operations guide](setup-and-operations.md)
 - [architecture guide](application-architecture.md)
 - [QA matrix](detailed-qa-matrix.md)
-

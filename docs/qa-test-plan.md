@@ -46,12 +46,12 @@ This document defines the end-to-end quality assurance test matrix for GenesysCl
 
 | ID | Test | Pass Criteria |
 |---|---|---|
-| D1 | All expected sheets present | `Summary`, `Ext_Duplicates_Profile`, `Ext_Ownership_Mismatch`, `Ext_Assign_vs_Profile`, `Invalid_Extensions`, `Empty_Groups`, `Empty_Queues`, `Stale_Flows`, `Inactive_Users`, `DID_Mismatches` all created |
-| D2 | CSV headers correct and stable | First row of each file matches defined schema exactly |
-| D3 | Row counts correct | Rows equal sum of individual finding detail rows |
-| D4 | UTF-8 BOM present | File begins with bytes `EF BB BF` |
-| D5 | CSV quoting for special characters | Commas, quotes, and newlines in data are RFC-correctly escaped |
-| D6 | Overwrite behavior | `Overwrite=false` raises `IOException`; `Overwrite=true` replaces existing files |
+| D1 | All expected workbook sheets present | `Summary`, `Ext_Duplicates_Profile`, `Ext_Ownership_Mismatch`, `Ext_Assign_vs_Profile`, `Invalid_Extensions`, `Empty_Groups`, `Empty_Queues`, `Stale_Flows`, `Stale_Tokens`, `Users_No_Location`, `DID_Mismatches` are created when their corresponding audits are enabled |
+| D2 | Worksheet headers correct and stable | Header row for each worksheet matches documented schema |
+| D3 | Row counts correct | Worksheet row counts match generated finding counts in `Summary` |
+| D4 | Workbook opens and formulas/tables are intact | `.xlsx` opens without repair prompts in Excel |
+| D5 | Special character handling in worksheet cells | Commas, quotes, and newlines are preserved correctly in Excel cells |
+| D6 | Save/export overwrite behavior | Existing destination file behavior is consistent and surfaced clearly to the user |
 
 ---
 
@@ -105,7 +105,7 @@ Manual smoke testing is sufficient initially. If automating, use **WinAppDriver*
 | Pagination | No missing pages; correct `state` query parameter behavior in both modes |
 | Rate limits | Retries obey `Retry-After`; bounded retry count; no infinite loops |
 | Cancellation | Cancels within <1 second of request for mock delays; no partial export; no resource leaks |
-| Export | All expected sheets generated; correct headers, rows, and UTF-8 BOM; special characters properly quoted |
+| Export | All expected workbook sheets generated; correct headers and rows; workbook opens cleanly |
 | UI | No UI-thread blocking; command states consistent; results view usable for large tenant outputs |
 
 ---

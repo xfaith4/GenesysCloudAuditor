@@ -43,10 +43,9 @@ Tests -> Infrastructure (+ transitively Core/Domain)
 
 ## Migration Note
 
-This repository still uses a scaffold-era solution filename. Renaming to `GenesysExtensionAudit.sln` is a future cleanup task and not required for runtime behavior.
+The current solution filename is `GenesysExtensionAudit_scaffold.sln`.
 
 ## Related Documents
 
 - [architecture guide](application-architecture.md)
 - [README](../README.md)
-

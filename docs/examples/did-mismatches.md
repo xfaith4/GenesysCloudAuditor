@@ -63,4 +63,3 @@
 
 - A DID assigned to an active user with no issues will appear in the raw data but will not generate a row in this sheet — only anomalies are reported.
 - The `InactiveUser` finding is only generated when `IncludeInactive=true`. Run the audit in inclusive mode to catch all DID-to-inactive-user assignments.
-- DID ownership mismatch (profile claims a DID assigned to a different user in telephony) is a planned future check — see [ROADMAP.md](../../ROADMAP.md).
