@@ -45,7 +45,7 @@ At minimum, confirm you have:
 - the correct **Genesys Cloud region**
 - permissions/scopes sufficient to read the users, routing, telephony, architect, and other relevant audit domains
 
-If your org uses centrally managed OAuth provisioning, confirm the application registration details before troubleshooting the code. Many “app bugs” are really auth gremlins in a trench coat.
+If your org uses centrally managed OAuth provisioning, confirm the application registration details before troubleshooting the code.
 
 ---
 
@@ -149,8 +149,7 @@ Determines whether inactive users are included in certain audit paths.
 
 #### `Genesys:MaxRequestsPerSecond`
 
-Use a conservative starting value.
-It is better to be slightly slower than to get smacked repeatedly with `429` responses like an impatient API goblin.
+Use a conservative starting value. It is usually better to run slightly slower than to trigger repeated `429` responses.
 
 #### `Audit:*`
 
@@ -219,7 +218,7 @@ The desktop app should allow you to:
 - inspect findings
 - export a workbook
 
-If the UI starts but no data is returned, check auth, region, permissions, and throttling before blaming the poor innocent window.
+If the UI starts but no data is returned, check auth, region, permissions, and throttling first.
 
 ---
 
@@ -235,7 +234,7 @@ dotnet run --project src\GenesysExtensionAudit.Runner\GenesysExtensionAudit.Runn
 
 Then execute a real run with your intended parameters.
 
-If your runner supports additional arguments such as output path, schedule profile, SharePoint upload, or specific audit scopes, document those in a later `docs/Operations.md` file.
+For additional runner parameters such as schedule profiles, upload targets, and audit scope controls, see [docs/setup-and-operations.md](docs/setup-and-operations.md) and [docs/run-audit-workflow.md](docs/run-audit-workflow.md).
 
 ---
 
@@ -473,13 +472,6 @@ Good recurring use cases include:
 - support evidence collection after incidents
 - baseline snapshot generation
 
-Recommended later documentation split:
-
-- keep this file focused on getting started
-- document full scheduled-run patterns in `docs/Operations.md`
-
----
-
 ## 13. Recommended First Operational Pattern
 
 A practical early pattern for real usage:
@@ -516,12 +508,10 @@ After completing initial setup, the most useful next documents are:
 
 - [README.md](README.md)
 - [ROADMAP.md](ROADMAP.md)
-- `docs/Configuration.md`
-- `docs/Operations.md`
-- `docs/Audit-Checks.md`
-- `docs/Troubleshooting.md`
-
-If those docs do not exist yet, that is not a crisis. It just means the doc ecosystem is still evolving and has not fully molted into its final form.
+- [docs/README.md](docs/README.md)
+- [docs/setup-and-operations.md](docs/setup-and-operations.md)
+- [docs/audit-checks.md](docs/audit-checks.md)
+- [docs/authentication.md](docs/authentication.md)
 
 ---
 
@@ -545,15 +535,4 @@ Use this after initial setup:
 
 ## Notes
 
-This Quick Start intentionally focuses on the shortest path to successful execution.
-
-It does not yet attempt to fully document:
-
-- detailed endpoint permissions
-- complete configuration reference
-- audit rule internals
-- historical snapshot behavior
-- support case packet structure
-- advanced scheduling / automation patterns
-
-Those belong in the deeper docs as the project matures.
+This Quick Start intentionally focuses on the shortest path to successful execution. Use the docs index for deeper operational and architecture details.

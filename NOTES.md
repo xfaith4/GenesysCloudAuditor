@@ -17,9 +17,7 @@ Use this file before publishing external docs or customer-facing release notes.
 
 ## Documentation Debt
 
-- Historical filenames in `docs/` are intentionally preserved for traceability but should be renamed in a future cleanup pass.
-- Add screenshots for `Run Audit`, `Schedule Audits`, and report output once UI stabilizes.
-- Add a contributor documentation standard (`docs/style-guide.md`) if the repository grows.
+Open documentation debt items are tracked in [ROADMAP.md](ROADMAP.md) under **Documentation and Repository Hygiene Backlog**.
 
 ## Privacy Guardrails
 

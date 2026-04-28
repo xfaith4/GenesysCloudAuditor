@@ -1,8 +1,8 @@
-# Example: Inactive_Users
+# Example: Stale_Tokens
 
-**Sheet name:** `Inactive_Users`  
+**Sheet name:** `Stale_Tokens`  
 **Severity:** 🟡 Warning  
-**Purpose:** Lists user accounts that are in an inactive or deactivated state. This sheet is only populated when the audit is run with `IncludeInactive=true`.
+**Purpose:** Lists users whose token last-issued timestamp exceeds the configured inactivity threshold. This sheet is only populated when `RunInactiveUserAudit=true`.
 
 ---
 
@@ -13,7 +13,7 @@
 | `UserId` | string (GUID) | Genesys Cloud user ID |
 | `UserName` | string | Display name |
 | `Email` | string | User email address |
-| `UserState` | string | `inactive`, `deleted` |
+| `UserState` | string | User state from Genesys (`active`, `inactive`, `deleted`) |
 | `Title` | string | Job title (if set) |
 | `Department` | string | Department (if set) |
 | `Division` | string | Division the account belongs to |
@@ -50,7 +50,7 @@
 
 **Dormant Admin** has an administrative role but the account has been inactive since 2022. This is a security concern — dormant admin accounts should have their roles removed immediately.
 
-**Action:** Revoke administrative roles from inactive accounts. This finding also appears in the planned **Security Audit** checks.
+**Action:** Revoke administrative roles from inactive accounts.
 
 ### Long-Inactive Accounts
 
@@ -69,6 +69,6 @@ Accounts inactive for more than 90 days with no extension and no admin role are 
 
 ## Notes
 
-- This sheet is empty when `IncludeInactive=false` (the default). Enable `IncludeInactive=true` in `appsettings.json` to include inactive users in the scan.
+- This sheet can contain users in any state if their token age exceeds the configured threshold. Enabling `IncludeInactive=true` broadens user collection and usually increases this finding set.
 - `deleted` state users are included when present — Genesys Cloud retains deleted user records for audit purposes.
 - `LastLoginDate` may be `null` for accounts that were provisioned but never logged in.

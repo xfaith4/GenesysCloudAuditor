@@ -16,7 +16,7 @@ This folder contains representative examples of the output produced by GenesysCl
 | [empty-groups.md](empty-groups.md) | `Empty_Groups` | 🟡 Warning | Groups with zero or one member |
 | [empty-queues.md](empty-queues.md) | `Empty_Queues` | 🟡 Warning | Queues with no agents or duplicate names |
 | [stale-flows.md](stale-flows.md) | `Stale_Flows` | 🟡 Warning | Unpublished or long-stale Architect flows |
-| [inactive-users.md](inactive-users.md) | `Inactive_Users` | 🟡 Warning | Stale or deactivated user accounts |
+| [inactive-users.md](inactive-users.md) | `Stale_Tokens` | 🟡 Warning | Users whose token last-issued timestamp is older than threshold |
 | [did-mismatches.md](did-mismatches.md) | `DID_Mismatches` | 🟡 Warning | Unassigned, orphaned, or misassigned DIDs |
 
 ---

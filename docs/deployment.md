@@ -54,7 +54,7 @@ Compress-Archive -Path .\artifacts\publish\win-x64\* `
 
 ## Versioning
 
-The project uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`):
+The project uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`) with MinVer tag-based version derivation.
 
 | Part | When to increment |
 |---|---|
@@ -62,15 +62,7 @@ The project uses **Semantic Versioning** (`MAJOR.MINOR.PATCH`):
 | `MINOR` | New audit checks, new export sheets, new configuration options |
 | `PATCH` | Bug fixes, performance improvements, documentation updates |
 
-Version is controlled in `Directory.Build.props`:
-
-```xml
-<PropertyGroup>
-  <Version>1.0.0</Version>
-  <AssemblyVersion>1.0.0.0</AssemblyVersion>
-  <FileVersion>1.0.0.0</FileVersion>
-</PropertyGroup>
-```
+Version derivation is configured in `Directory.Build.props` with MinVer and the `v` tag prefix. Create a Git tag (for example `v1.2.3`) to anchor release versioning.
 
 ---
 
