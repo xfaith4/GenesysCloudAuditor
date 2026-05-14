@@ -738,7 +738,6 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
 
             ProgressPercent = 100;
             ProgressMessage = "Completed.";
-            StatusMessage = "Completed.";
             AppendProgressLine("Audit run completed.");
         }
         catch (OperationCanceledException)
@@ -1018,9 +1017,12 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             LastExportPath = outputDirectory;
             OnPropertyChanged(nameof(HasExport));
             StatusMessage = $"Saved {generatedFiles.Count} report(s) to {outputDirectory}";
+            ProgressMessage = StatusMessage;
 
             await TryPushToGitHubAsync(generatedFiles, ct).ConfigureAwait(true);
             await TryExportToElasticAsync(report, carePacket, snapshotComparison.Snapshot, ct).ConfigureAwait(true);
+            StatusMessage = "Saving audit snapshot...";
+            ProgressMessage = StatusMessage;
             await _snapshotService
                 .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDirectory, snapshotPrefix, ct)
                 .ConfigureAwait(true);
@@ -1054,6 +1056,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         LastExportPath = consolidatedPath;
         OnPropertyChanged(nameof(HasExport));
         StatusMessage = $"Saved: {Path.GetFileName(consolidatedPath)}";
+        ProgressMessage = StatusMessage;
 
         await TryPushToGitHubAsync(
             [
@@ -1063,6 +1066,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             ],
             ct).ConfigureAwait(true);
         await TryExportToElasticAsync(report, carePacket, snapshotComparison.Snapshot, ct).ConfigureAwait(true);
+        StatusMessage = "Saving audit snapshot...";
+        ProgressMessage = StatusMessage;
         await _snapshotService
             .SaveSnapshotAsync(snapshotComparison.Snapshot, outputDirectory, snapshotPrefix, ct)
             .ConfigureAwait(true);
@@ -1325,6 +1330,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             return;
 
         StatusMessage = "Pushing report(s) to GitHub...";
+        ProgressMessage = StatusMessage;
         var pushedCount = 0;
         var lastUrl = string.Empty;
         foreach (var filePath in filePaths)
@@ -1342,6 +1348,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             {
                 ErrorMessage = $"GitHub push failed for {Path.GetFileName(filePath)}: {ex.Message}";
                 StatusMessage = $"Saved locally ({pushedCount}/{filePaths.Count} pushed to GitHub)";
+                ProgressMessage = StatusMessage;
                 return;
             }
         }
@@ -1349,6 +1356,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         StatusMessage = filePaths.Count == 1
             ? $"Saved and pushed to GitHub: {lastUrl}"
             : $"Saved locally and pushed {pushedCount} report(s) to GitHub.";
+        ProgressMessage = StatusMessage;
     }
 
     private async Task TryExportToElasticAsync(
@@ -1360,6 +1368,8 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         if (!PushToElasticSearch)
             return;
 
+        StatusMessage = "Exporting normalized findings to Elastic...";
+        ProgressMessage = StatusMessage;
         var elasticResult = await _elasticAuditExportService
             .ExportAsync(report, carePacket, snapshot, ct)
             .ConfigureAwait(true);
@@ -1367,6 +1377,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
         if (elasticResult.Succeeded)
         {
             StatusMessage = $"{StatusMessage} Elastic: {elasticResult.DocumentsSucceeded}/{elasticResult.DocumentsAttempted} document(s) indexed.";
+            ProgressMessage = StatusMessage;
             return;
         }
 
@@ -1374,6 +1385,7 @@ public sealed class RunAuditViewModel : INotifyPropertyChanged
             ? elasticResult.Message
             : $"{elasticResult.Message} {elasticResult.ResponseDetails}";
         StatusMessage = $"{StatusMessage} Elastic export failed.";
+        ProgressMessage = StatusMessage;
     }
 
     private void BuildLastRunSummary(AuditReportData report)

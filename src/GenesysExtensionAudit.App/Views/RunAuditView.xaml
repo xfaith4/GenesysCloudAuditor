@@ -279,6 +279,31 @@
                         Padding="16,8" />
             </StackPanel>
 
+            <Border Margin="0,0,0,16"
+                    Padding="12"
+                    Background="#F9FAFB"
+                    BorderBrush="#E5E7EB"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Visibility="{Binding HasExport, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Last Export"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,6" />
+                    <TextBlock Text="Consolidated mode stores the workbook path here. Separate mode stores the destination folder."
+                               Foreground="#6B7280"
+                               FontSize="11"
+                               Margin="0,0,0,6"
+                               TextWrapping="Wrap" />
+                    <TextBox Text="{Binding LastExportPath}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             Padding="0" />
+                </StackPanel>
+            </Border>
+
             <!-- ─── Export Options ─── -->
             <GroupBox Header="Export Options" Padding="12" Margin="0,0,0,16">
                 <StackPanel>
