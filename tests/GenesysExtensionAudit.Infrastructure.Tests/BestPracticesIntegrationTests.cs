@@ -235,6 +235,45 @@ public sealed class BestPracticesIntegrationTests
         Assert.DoesNotContain("OutboundEventFinding", result.UnmatchedFindingTypes);
         Assert.DoesNotContain("HotSpotFinding", result.UnmatchedFindingTypes);
     }
+    [Fact]
+    public void Enricher_MapsAuditLogSignalFindings_ToBestPracticeGuidance()
+    {
+        var service = CreateContentService(rootPath: GetSharedPackageRoot());
+        var enricher = CreateEnricher(service);
+        var report = new AuditReportData
+        {
+            AuditLogSignalFindings =
+            [
+                new AuditLogSignalFinding(
+                    FindingCode: AuditLogSignalCode.DivisionScopeChange,
+                    SignalCategory: "Security / Scope",
+                    FirstEventUtc: new DateTimeOffset(2026, 04, 08, 12, 00, 00, TimeSpan.Zero),
+                    LastEventUtc: new DateTimeOffset(2026, 04, 08, 12, 10, 00, TimeSpan.Zero),
+                    EventCount: 2,
+                    ServiceName: "Authorization",
+                    Action: "update",
+                    UserName: "Admin One",
+                    UserEmail: "admin.one@example.invalid",
+                    UserId: "user-1",
+                    ClientId: null,
+                    EntityType: "Division",
+                    EntityName: "Core",
+                    EntityId: "division-1",
+                    Issue: "Division scope changed.",
+                    Severity: FindingSeverity.High,
+                    Category: FindingCategory.ChangeReviewRequired,
+                    RecommendedAction: "Review scope change.")
+            ]
+        };
+
+        var result = enricher.Enrich(report);
+
+        var match = Assert.Single(result.Matches);
+        Assert.Equal(AuditLogSignalCode.DivisionScopeChange, match.SourceFindingType);
+        Assert.Equal("AUDIT_SIGNAL_DIVISION_SCOPE_CHANGE", match.MappingFindingType);
+        Assert.Contains("security.division_scope.enforced", match.BestPracticeKeys);
+        Assert.DoesNotContain(AuditLogSignalCode.DivisionScopeChange, result.UnmatchedFindingTypes);
+    }
 
     [Fact]
     public async Task ExcelReport_WritesBestPracticeGuidanceSheet()

@@ -68,6 +68,14 @@
       "recommended_action_short": "Reduce OAuth scopes to the least required set."
     },
     {
+      "finding_type": "AUDIT_SIGNAL_OAUTH_CLIENT_CHANGE",
+      "best_practice_keys": [
+        "api.oauth.minimum_scope"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Validate OAuth client changes against minimum-scope and approved automation design."
+    },
+    {
       "finding_type": "EdgeCapacityInsufficientForNPlus1",
       "best_practice_keys": [
         "edge.redundancy.n_plus_1"
@@ -132,12 +140,28 @@
       "recommended_action_short": "Require validation and controlled publish discipline."
     },
     {
+      "finding_type": "AUDIT_SIGNAL_FLOW_PUBLICATION_CHANGE",
+      "best_practice_keys": [
+        "architect.validation_and_versioning_used"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Enforce flow validation/versioning discipline around publish and rollback activity."
+    },
+    {
       "finding_type": "RoleAssignmentOverprivileged",
       "best_practice_keys": [
         "security.least_privilege.default"
       ],
       "default_severity": "High",
       "recommended_action_short": "Reduce privileges to align with function."
+    },
+    {
+      "finding_type": "AUDIT_SIGNAL_ACCESS_CONTROL_CHANGE",
+      "best_practice_keys": [
+        "security.least_privilege.default"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Review access-control changes against least-privilege policy and approved change intent."
     },
     {
       "finding_type": "MasterAdminAssignedForRoutineUse",
@@ -162,6 +186,14 @@
       ],
       "default_severity": "High",
       "recommended_action_short": "Reduce division scope to match ownership."
+    },
+    {
+      "finding_type": "AUDIT_SIGNAL_DIVISION_SCOPE_CHANGE",
+      "best_practice_keys": [
+        "security.division_scope.enforced"
+      ],
+      "default_severity": "High",
+      "recommended_action_short": "Confirm division scope changes align to documented ownership boundaries."
     },
     {
       "finding_type": "TelephonyLimitApproachingThreshold",
@@ -194,6 +226,14 @@
       ],
       "default_severity": "Medium",
       "recommended_action_short": "Represent repeatable configuration as code."
+    },
+    {
+      "finding_type": "AUDIT_SIGNAL_QUEUE_MEMBERSHIP_CHURN",
+      "best_practice_keys": [
+        "devops.cx_as_code.prefer_for_repeatability"
+      ],
+      "default_severity": "Medium",
+      "recommended_action_short": "Stabilize queue membership management through repeatable, governed change workflows."
     },
     {
       "finding_type": "PromotionProcessManualAndUnvalidated",
