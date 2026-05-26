@@ -95,6 +95,179 @@ Future work is grouped into five major capability layers:
 
 ---
 
+## Execution status board (agent-chunked)
+
+Use this section as the primary execution board for AI coding agent runs.
+
+### Status legend
+
+- `- [x] [COMPLETED]` = done
+- `- [ ] [IN-PROGRESS]` = partially implemented and still active
+- `- [ ] [INCOMPLETE]` = not started/planned
+
+### Phase 1 — Correlation Foundation
+
+#### Chunk 1.1 (engine foundation; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Build canonical correlation engine contract (object, relations, normalization, contradiction rules, severity/confidence, evidence fragments)
+
+#### Chunk 1.2 (user-station-extension-DID-site; target <= 8 tasks)
+
+- [x] [COMPLETED] User telephony completeness check
+- [ ] [IN-PROGRESS] DID ownership mismatch hardening
+- [x] [COMPLETED] Station-user assignment conflict check
+- [ ] [INCOMPLETE] User-site telephony contradiction check
+- [ ] [INCOMPLETE] Ghost telephony assignment check
+- [ ] [INCOMPLETE] Multiple ownership contradiction check
+
+#### Chunk 1.3 (queue serviceability; target <= 8 tasks)
+
+- [x] [COMPLETED] Queue non-serviceable membership check
+- [ ] [INCOMPLETE] Queue skill/language mismatch check
+- [ ] [IN-PROGRESS] Queue membership drift check
+- [ ] [IN-PROGRESS] Duplicate semantic queue detection
+- [ ] [INCOMPLETE] Queue routing dependency completeness check
+
+#### Chunk 1.4 (flow dependency; target <= 8 tasks)
+
+- [x] [COMPLETED] IVR-flow stale/deleted/draft dependency checks
+- [ ] [INCOMPLETE] Dead route dependency traversal checks
+- [ ] [INCOMPLETE] Flow dependency drift after publish checks
+- [ ] [INCOMPLETE] Critical entry-point fragility checks
+
+#### Chunk 1.5 (site-edge-trunk topology; target <= 8 tasks)
+
+- [x] [COMPLETED] Trunk-edge orphan checks
+- [x] [COMPLETED] Site-edge mismatch checks
+- [x] [COMPLETED] Edge load distribution skew checks
+- [x] [COMPLETED] Secondary-edge unexpected live-load checks
+- [ ] [INCOMPLETE] Station topology contradiction checks
+- [ ] [INCOMPLETE] DID inventory orphan checks
+
+### Phase 2 — Operational and Time-Based Intelligence
+
+#### Chunk 2.1 (change-to-symptom; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Regression chain builder
+- [x] [COMPLETED] Change adjacency marker
+- [ ] [INCOMPLETE] Suspect release window grouping
+
+#### Chunk 2.2 (flapping/instability; target <= 8 tasks)
+
+- [x] [COMPLETED] Assignment flapping detection
+- [x] [COMPLETED] Publish churn detection
+- [x] [COMPLETED] Resource oscillation detection
+
+#### Chunk 2.3 (hot spots; target <= 8 tasks)
+
+- [x] [COMPLETED] Chronic object ranking
+- [ ] [IN-PROGRESS] Domain instability index scoring
+- [x] [COMPLETED] Blast-radius concentration ranking
+
+#### Chunk 2.4 (best-practice sentinel; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Rule registry and metadata model
+- [ ] [INCOMPLETE] Source/provenance tracking
+- [ ] [INCOMPLETE] Sentinel worksheet + summary rollup
+- [ ] [INCOMPLETE] Best-practice mapping hygiene hardening
+- [ ] [INCOMPLETE] Audit-log signaling engine
+- [ ] [INCOMPLETE] Admin role change detection
+- [ ] [INCOMPLETE] Platform configuration change detector
+- [ ] [INCOMPLETE] Weekly drift sentinel and exception model
+
+### Phase 3 — Actionability and Escalation Intelligence
+
+#### Chunk 3.1 (recommended action model; target <= 8 tasks)
+
+- [x] [COMPLETED] Emit severity/category/action-oriented guidance in major correlation findings
+
+#### Chunk 3.2 (platform-issue qualification; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Persistent contradiction detector across repeated runs
+- [ ] [IN-PROGRESS] No-local-cause qualifier
+- [x] [COMPLETED] Support-readiness scorer
+
+#### Chunk 3.3 (Care packet exports; target <= 8 tasks)
+
+- [x] [COMPLETED] Support case summary export
+- [x] [COMPLETED] Evidence JSON export
+- [ ] [IN-PROGRESS] Timeline appendix export
+
+### Phase 4 — Historical Baselines and Drift Intelligence
+
+#### Chunk 4.1 (snapshot persistence; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Snapshot save/load
+- [ ] [INCOMPLETE] Historical diff engine
+- [ ] [INCOMPLETE] Chronic anomaly ledger
+- [ ] [INCOMPLETE] Finding lifecycle classification
+
+#### Chunk 4.2 (drift detection; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Membership drift checks
+- [ ] [INCOMPLETE] Telephony ownership drift checks
+- [ ] [INCOMPLETE] Routing drift checks
+- [ ] [INCOMPLETE] Security drift checks
+
+### Phase 5 — Reporting, UX, and Explainability
+
+#### Chunk 5.1 (summary and triage; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Executive summary sheet
+- [ ] [INCOMPLETE] Open-case recommended counter
+- [ ] [INCOMPLETE] Top impacted objects rollup
+- [ ] [INCOMPLETE] Domain health scoring
+
+#### Chunk 5.2 (relationship views; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Object dependency tree
+- [ ] [INCOMPLETE] Finding evidence chain
+- [ ] [INCOMPLETE] Why-this-matters explanation layer
+- [ ] [INCOMPLETE] Recent change context inline view
+
+#### Chunk 5.3 (workbook/export UX; target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Summary-first workbook layout
+- [ ] [INCOMPLETE] Cross-sheet linking
+- [x] [COMPLETED] JSON evidence export path
+- [x] [COMPLETED] Care evidence HTML summary export
+- [ ] [INCOMPLETE] Rule metadata export completeness
+
+#### Chunk 5.4 (ElasticSearch integration; target <= 8 tasks)
+
+- [x] [COMPLETED] Elastic export toggle + endpoint/index configuration
+- [x] [COMPLETED] Environment-variable token loading
+- [x] [COMPLETED] Bulk indexing payload + optional run summary
+- [x] [COMPLETED] Export status/failure reporting
+- [ ] [IN-PROGRESS] Retry-safe/idempotent delivery hardening
+- [ ] [IN-PROGRESS] Connection-test UX
+- [ ] [IN-PROGRESS] Rule/version metadata depth in indexed documents
+
+### Phase-adjacent backlog chunks
+
+#### Documentation/repository hygiene chunk (target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Rename scaffold-era solution filename to canonical name
+- [ ] [INCOMPLETE] Add/refresh product screenshots in core docs
+- [ ] [INCOMPLETE] Publish contributor documentation standards
+
+#### Rule authoring/extensibility chunk (target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Define and adopt stable rule authoring contract for future checks
+
+#### Testing/validation roadmap chunk (target <= 8 tasks)
+
+- [ ] [INCOMPLETE] Collector contract tests expansion
+- [ ] [INCOMPLETE] Correlation tests expansion
+- [ ] [INCOMPLETE] Rule provenance tests
+- [ ] [INCOMPLETE] Severity/confidence guard tests
+- [ ] [INCOMPLETE] Snapshot diff determinism tests
+- [ ] [INCOMPLETE] Export integrity tests
+- [ ] [INCOMPLETE] Care packet fixture tests expansion
+- [ ] [INCOMPLETE] Release-readiness gate execution and evidence capture
+
+---
+
 # Phase 1 — Correlation Foundation
 
 This phase delivers the biggest leap in real-world usefulness.
