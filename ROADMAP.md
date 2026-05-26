@@ -771,6 +771,18 @@ This enables:
 | Snapshot diff tests       | Ensure historical change tracking is deterministic          |
 | Export validation tests   | Verify workbook/JSON/HTML output integrity                  |
 | Care packet fixture tests | Ensure escalation bundles contain the expected evidence set |
+| Release readiness check   | Execute QA/release gates for a tagged release candidate and capture pass/fail evidence |
+
+## Release readiness check (current-scope gate)
+
+The project is now ready for a formal release-readiness check for the currently implemented capability set.
+This check is a gate for release candidates and does not imply all long-term roadmap phases are complete.
+
+| Item | Status |
+| --- | --- |
+| Release-readiness rehearsal using `QA.md` and `docs/detailed-qa-matrix.md` | Planned |
+| Packaging/signing checklist execution from `docs/release-packaging-and-signing.md` | Planned |
+| Evidence capture (tested commit SHA, gate results, and sanitized workbook artifact) | Planned |
 
 ---
 
