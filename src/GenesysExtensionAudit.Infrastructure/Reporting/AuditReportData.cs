@@ -219,6 +219,13 @@ public static class AuditLogSignalCode
     /// <summary>Role, permission, or other access-control related changes.</summary>
     public const string AccessControlChange = "AUDIT_SIGNAL_ACCESS_CONTROL_CHANGE";
 
+    /// <summary>
+    /// Explicit privileged role grant or revoke — a role was directly granted to or revoked from
+    /// an identity via a formal grant/revoke action. Distinct from generic access-control updates.
+    /// Maps to sentinel rule SENTINEL-SEC-002.
+    /// </summary>
+    public const string AdminRoleGrantRevoke = "AUDIT_SIGNAL_ADMIN_ROLE_GRANT_REVOKE";
+
     /// <summary>Division or scope-related changes that may broaden or reduce reach.</summary>
     public const string DivisionScopeChange = "AUDIT_SIGNAL_DIVISION_SCOPE_CHANGE";
 
@@ -230,6 +237,13 @@ public static class AuditLogSignalCode
 
     /// <summary>Flow publish, rollback, restore, or related publication activity that merits review.</summary>
     public const string FlowPublicationChange = "AUDIT_SIGNAL_FLOW_PUBLICATION_CHANGE";
+
+    /// <summary>
+    /// Configuration change to a core platform infrastructure object: site, edge, trunk, IVR,
+    /// telephony location, or schedule group. These changes can cause routing disruptions and should
+    /// be correlated against topology and telephony findings. Maps to sentinel rule SENTINEL-INFRA-001.
+    /// </summary>
+    public const string PlatformConfigChange = "AUDIT_SIGNAL_PLATFORM_CONFIG_CHANGE";
 }
 
 // ─── Phase 4.1 — Finding lifecycle classification ───────────────────────────

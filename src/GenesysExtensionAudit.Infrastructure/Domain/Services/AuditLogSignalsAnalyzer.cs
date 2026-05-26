@@ -66,6 +66,12 @@ public sealed class AuditLogSignalsAnalyzer
 
         var issue = match.Code switch
         {
+            AuditLogSignalCode.AdminRoleGrantRevoke =>
+                $"{events.Count} audit-log event(s) indicate privileged role grant or revoke activity affecting {entityDisplay} " +
+                $"via service '{serviceDisplay}' and action '{actionDisplay}'. " +
+                "Explicit role grants and revocations directly alter administrative reach across the tenant. " +
+                "These changes should align with approved access management processes and be reviewed against the principle of least privilege.",
+
             AuditLogSignalCode.DivisionScopeChange =>
                 $"{events.Count} audit-log event(s) indicate division or scope-related changes affecting {entityDisplay} " +
                 $"via service '{serviceDisplay}' and action '{actionDisplay}'. Scope changes can materially alter visibility, " +
@@ -84,6 +90,11 @@ public sealed class AuditLogSignalsAnalyzer
                 $"{events.Count} audit-log event(s) indicate flow publication activity affecting {entityDisplay}. " +
                 $"Observed action set: {actionSummary}. Publish, restore, rollback, or unpublish activity can change live routing behavior quickly and should be reviewed against recent incidents or downstream findings.",
 
+            AuditLogSignalCode.PlatformConfigChange =>
+                $"{events.Count} audit-log event(s) indicate platform infrastructure configuration changes affecting {entityDisplay}. " +
+                $"Observed action set: {actionSummary}. Changes to sites, edges, trunks, IVR configurations, or telephony resources " +
+                "can cause routing disruptions if made without adequate testing or change management review.",
+
             _ =>
                 $"{events.Count} audit-log event(s) indicate access-control related changes affecting {entityDisplay} " +
                 $"via service '{serviceDisplay}' and action '{actionDisplay}'. Role or permission changes can broaden or reduce administrative " +
@@ -92,6 +103,9 @@ public sealed class AuditLogSignalsAnalyzer
 
         var recommendedAction = match.Code switch
         {
+            AuditLogSignalCode.AdminRoleGrantRevoke =>
+                "Review the role grant or revocation, confirm the actor had authority to make this change, verify the role scope aligns with the principle of least privilege, and check whether downstream audit findings may be related to the access change.",
+
             AuditLogSignalCode.DivisionScopeChange =>
                 "Review the division/scope change, confirm the actor and intended blast radius, and compare the timing to any routing, access, or ownership anomalies detected in this run.",
 
@@ -103,6 +117,9 @@ public sealed class AuditLogSignalsAnalyzer
 
             AuditLogSignalCode.FlowPublicationChange =>
                 "Review the flow publication timeline, confirm whether the publish or rollback activity was intentional, and compare it to any IVR, queue, or customer-impact findings from the same window.",
+
+            AuditLogSignalCode.PlatformConfigChange =>
+                "Review the infrastructure change, confirm it was part of an approved change window or planned maintenance, and compare the timing against any telephony, routing, or site-topology findings detected in this run.",
 
             _ =>
                 "Review the access-control change, confirm whether the role or permission update was approved, and verify that it aligns with the current operational and security model."
@@ -140,6 +157,7 @@ public sealed class AuditLogSignalsAnalyzer
         {
             AuditLogSignalCode.QueueMembershipChurn => $"{match.Code}|{entityKey}",
             AuditLogSignalCode.FlowPublicationChange => $"{match.Code}|{entityKey}",
+            AuditLogSignalCode.PlatformConfigChange => $"{match.Code}|{entityKey}|{actionKey}",
             _ => $"{match.Code}|{entityKey}|{actorKey}|{actionKey}"
         };
     }
@@ -168,6 +186,18 @@ public sealed class AuditLogSignalsAnalyzer
             return new SignalMatch(
                 AuditLogSignalCode.OAuthClientChange,
                 "Security / OAuth",
+                FindingSeverity.High);
+        }
+
+        // AdminRoleGrantRevoke: check before the generic access-control catch-all.
+        // Fires when the action is explicitly a grant or revoke on a role entity.
+        var isRoleType = ContainsAny(corpus, "role");
+        var isGrantRevoke = ContainsAny(action, "grant", "revoke");
+        if (isRoleType && isGrantRevoke)
+        {
+            return new SignalMatch(
+                AuditLogSignalCode.AdminRoleGrantRevoke,
+                "Security / Privileged Access",
                 FindingSeverity.High);
         }
 
@@ -202,6 +232,18 @@ public sealed class AuditLogSignalsAnalyzer
                 FindingSeverity.Medium);
         }
 
+        // PlatformConfigChange: core infrastructure objects excluding queues and flows
+        // (those have dedicated higher-priority signal codes above).
+        var isPlatformEntity = ContainsAny(corpus, "site", "edge", "trunk", "ivr", "telephony", "location", "schedulegroup", "schedule");
+        var isConfigAction = ContainsAny(action, "create", "update", "delete", "patch");
+        if (isPlatformEntity && isConfigAction && !queueLike && !flowLike)
+        {
+            return new SignalMatch(
+                AuditLogSignalCode.PlatformConfigChange,
+                "Infrastructure / Platform Config",
+                FindingSeverity.Medium);
+        }
+
         return null;
     }
 
@@ -231,11 +273,16 @@ public sealed class AuditLogSignalsAnalyzer
             AuditLogSignalCode.QueueMembershipChurn => FindingSeverity.Medium,
             AuditLogSignalCode.FlowPublicationChange when distinctActions.Any(IsRollbackLikeAction) || eventCount >= 4 => FindingSeverity.High,
             AuditLogSignalCode.FlowPublicationChange => FindingSeverity.Medium,
+            AuditLogSignalCode.PlatformConfigChange when distinctActions.Any(IsDeleteLikeAction) => FindingSeverity.High,
+            AuditLogSignalCode.PlatformConfigChange => FindingSeverity.Medium,
             _ => fallback
         };
 
     private static bool IsRollbackLikeAction(string? action)
         => ContainsAny(action, "rollback", "restore", "revert", "unpublish");
+
+    private static bool IsDeleteLikeAction(string? action)
+        => ContainsAny(action, "delete", "remove", "destroy");
 
     private static string BuildActorDisplay(AuditLogFinding log)
         => log.UserName
