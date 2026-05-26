@@ -2,6 +2,7 @@ using ClosedXML.Excel;
 using GenesysExtensionAudit.Application;
 using GenesysExtensionAudit.Domain.Services;
 using GenesysExtensionAudit.Infrastructure.BestPractices;
+using GenesysExtensionAudit.Infrastructure.Domain.Services;
 
 namespace GenesysExtensionAudit.Infrastructure.Reporting;
 
@@ -1709,13 +1710,15 @@ public sealed class ExcelReportService : IExcelReportService
         [
             "First Event (UTC)", "Last Event (UTC)", "Signal", "Severity", "Category",
             "Service", "Action", "Actor", "Actor Email", "Actor User ID", "Client ID",
-            "Entity Type", "Entity Name", "Entity ID", "Event Count", "Issue", "Recommended Action"
+            "Entity Type", "Entity Name", "Entity ID", "Event Count", "Issue", "Recommended Action",
+            "Rule ID", "Provenance Basis"
         ];
         WriteSheetHeader(ws, "Audit Log Signals", report, findings.Count, headers);
 
         var row = 4;
         foreach (var f in findings)
         {
+            var rule = SentinelRuleRegistry.GetMetadata(f.FindingCode);
             WriteRow(
                 ws,
                 row,
@@ -1735,13 +1738,15 @@ public sealed class ExcelReportService : IExcelReportService
                 f.EntityId,
                 f.EventCount,
                 f.Issue,
-                f.RecommendedAction);
-            ApplyAltRow(ws, row, 17);
+                f.RecommendedAction,
+                rule?.RuleId ?? string.Empty,
+                rule?.ProvenanceBasis ?? string.Empty);
+            ApplyAltRow(ws, row, 19);
             ApplySeverityFill(ws.Cell(row, 4), f.Severity);
             row++;
         }
 
-        AdjustColumns(ws, 17);
+        AdjustColumns(ws, 19);
     }
 
     private static void WriteEdgePerformanceSheet(IXLWorkbook wb, AuditReportData report)

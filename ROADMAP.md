@@ -503,17 +503,19 @@ The intent is to scan selected Genesys Cloud API domains on a recurring cadence,
 
 | Scope item                             | Priority | Description                                                                                           | Status |
 | -------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------- | ------ |
-| Rule registry and metadata model       | High     | Define a common structure for source-backed best-practice rules, rule IDs, versions, owner, and APIs | Planned |
-| Source/provenance tracking             | High     | Persist the documentation source or internal standard that justifies each rule                        | Planned |
-| Sentinel worksheet and summary rollup  | High     | Add a triage-first export showing only interpreted best-practice signals, not raw event dumps         | Planned |
+| Rule registry and metadata model       | High     | Define a common structure for source-backed best-practice rules, rule IDs, versions, owner, and APIs | **Implemented** |
+| Source/provenance tracking             | High     | Persist the documentation source or internal standard that justifies each rule                        | **Implemented** |
+| Sentinel worksheet and summary rollup  | High     | Add a triage-first export showing only interpreted best-practice signals, not raw event dumps         | Partial (Audit_Log_Signals sheet with rule metadata columns; dedicated sentinel-first sheet planned) |
 | Best-practice mapping hygiene hardening | High    | Normalize aliases, remove raw event/rollup enrichment noise, and map only actionable finding types   | Planned |
-| Audit-log signaling engine             | High     | Convert raw audit logs into categorized signals such as risky change, unusual churn, role drift       | Planned |
-| Admin role change detection            | High     | Flag privileged role grants/removals, division scope changes, and admin access changes                | Planned |
-| Platform configuration change detector | High     | Detect significant queue, flow, IVR, site, edge, trunk, prompt, and telephony configuration changes  | Planned |
+| Audit-log signaling engine             | High     | Convert raw audit logs into categorized signals such as risky change, unusual churn, role drift       | **Implemented** |
+| Admin role change detection            | High     | Flag privileged role grants/removals, division scope changes, and admin access changes                | **Implemented** |
+| Platform configuration change detector | High     | Detect significant queue, flow, IVR, site, edge, trunk, prompt, and telephony configuration changes  | **Implemented** |
 | CX as Code change-awareness            | Medium   | Distinguish likely managed change windows from ad hoc admin changes when patterns suggest automation  | Planned |
 | Weekly drift sentinel                  | High     | Compare current findings and normalized state against prior weekly baselines                           | Planned |
 | Best-practice exception model          | Medium   | Allow intentional deviations to be recorded so recurring approved exceptions do not create noise      | Planned |
 | Signal severity and confidence model   | High     | Score signals by operational risk, blast radius, persistence, and alignment with documented guidance  | Planned |
+
+`SentinelRuleRegistry` is implemented in `Domain/Services` and maps all seven `AuditLogSignalCode` constants to formal rule metadata: rule ID, rule name, domain, signal category, default severity, provenance source, plain-language provenance basis, review cadence, and owner role. The two new signal codes `AdminRoleGrantRevoke` (`SENTINEL-SEC-002`) and `PlatformConfigChange` (`SENTINEL-INFRA-001`) are now detected by `AuditLogSignalsAnalyzer` and exported with rule ID and provenance basis in the `Audit_Log_Signals` worksheet. Remaining Phase 2.4 work is the dedicated sentinel-triage-first worksheet layout, best-practice mapping hygiene hardening, weekly drift sentinel, and the exception model.
 
 ### Initial sentinel domains
 
@@ -963,8 +965,8 @@ This check is a gate for release candidates and does not imply all long-term roa
 
 ## Near-term priority
 
-1. Build the rule registry and source/provenance model for best-practice sentinel checks
-2. Add automated audit-log signal interpretation for change, churn, and admin-risk events
+1. ~~Build the rule registry and source/provenance model for best-practice sentinel checks~~ **Done** — `SentinelRuleRegistry` implemented with rule IDs, provenance sources, and documented rule bases for all seven signal codes.
+2. ~~Add automated audit-log signal interpretation for change, churn, and admin-risk events~~ **Done** — `AdminRoleGrantRevoke` (`SENTINEL-SEC-002`) and `PlatformConfigChange` (`SENTINEL-INFRA-001`) added to `AuditLogSignalsAnalyzer`. All seven signal codes now have registry metadata and are exported with rule context in the workbook.
 3. Finish the remaining unimplemented Phase 1 correlation checks
 4. Expand weekly drift signaling across configuration, role, and topology domains
 5. Add timeline appendix generation for Care packets
